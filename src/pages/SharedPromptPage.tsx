@@ -202,7 +202,7 @@ export const SharedPromptPage: React.FC = () => {
                 <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
                   Share My Prompt
                 </Link>
-                {' '}• A futuristic prompt sharing platform
+                {' '}• A Sharing prompt platform
               </p>
             </div>
           </div>
