@@ -1,0 +1,131 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: #000000;
+  color: #00ffff;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 255, 0.5);
+}
+
+/* Prose styles for markdown content */
+.prose {
+  color: rgba(165, 243, 252, 0.9);
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  color: rgb(165, 243, 252);
+  font-weight: 700;
+}
+
+.prose strong {
+  color: rgb(165, 243, 252);
+  font-weight: 700;
+}
+
+.prose em {
+  color: rgb(165, 243, 252);
+  font-style: italic;
+}
+
+.prose code {
+  background: rgba(0, 255, 255, 0.1);
+  color: rgb(34, 211, 238);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.prose pre {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  color: rgb(165, 243, 252);
+}
+
+.prose blockquote {
+  border-left: 4px solid rgba(0, 255, 255, 0.5);
+  padding-left: 1rem;
+  margin-left: 0;
+  font-style: italic;
+  color: rgba(165, 243, 252, 0.8);
+}
+
+.prose ul, .prose ol {
+  color: rgba(165, 243, 252, 0.9);
+}
+
+.prose li {
+  margin: 0.25rem 0;
+}
+
+/* Animation keyframes */
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+.glitch:hover {
+  animation: glitch 0.3s ease-in-out;
+}
+
+/* Custom focus styles */
+input:focus, textarea:focus, button:focus {
+  outline: none;
+}
+
+/* Smooth transitions */
+* {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Selection styles */
+::selection {
+  background: rgba(0, 255, 255, 0.3);
+  color: rgb(165, 243, 252);
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
