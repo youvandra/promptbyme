@@ -31,13 +31,14 @@ export const SharedPromptPage: React.FC = () => {
       try {
         const promptData = await fetchPromptById(id)
         if (!promptData) {
-          setError('Prompt not found or access denied')
+          setError('Prompt not found')
         } else if (promptData.access === 'private') {
           setError('This prompt is private and cannot be accessed')
         } else {
           setPrompt(promptData)
         }
       } catch (err) {
+        console.error('Error loading prompt:', err)
         setError('Failed to load prompt')
       } finally {
         setLoading(false)
@@ -158,7 +159,7 @@ export const SharedPromptPage: React.FC = () => {
             <div className="flex items-start justify-between mb-6">
               <div className="flex-1">
                 {prompt.title && (
-                  <h2 className="text-2xl md:text-3xl font-bold text-cyan-100 mb-4 font-mono">
+                  <h2 className="text-2xl md:text-3xl font-bold text-cyan-100 mb-4 font-mono break-words">
                     {prompt.title}
                   </h2>
                 )}
@@ -174,7 +175,7 @@ export const SharedPromptPage: React.FC = () => {
               
               <button
                 onClick={() => copyToClipboard(prompt.content)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-cyan-300 hover:text-cyan-100 hover:border-cyan-400/50 rounded-lg transition-all duration-300 font-mono text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-cyan-300 hover:text-cyan-100 hover:border-cyan-400/50 rounded-lg transition-all duration-300 font-mono text-sm flex-shrink-0"
               >
                 <Copy size={16} />
                 <span>Copy</span>
@@ -189,6 +190,7 @@ export const SharedPromptPage: React.FC = () => {
                 style={{
                   wordBreak: 'break-word',
                   overflowWrap: 'break-word',
+                  hyphens: 'auto',
                 }}
               />
             </div>

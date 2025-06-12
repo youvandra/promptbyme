@@ -57,13 +57,18 @@ export const usePromptStore = create<PromptState>((set, get) => ({
 
   fetchPromptById: async (id: string) => {
     try {
+      // First try to get the prompt without any filters to see if it exists
       const { data, error } = await supabase
         .from('prompts')
         .select('*')
         .eq('id', id)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching prompt by ID:', error)
+        return null
+      }
+      
       return data
     } catch (error) {
       console.error('Error fetching prompt:', error)
