@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Terminal, Copy, Eye, Lock } from 'lucide-react'
+import { ArrowLeft, Terminal, Copy, Eye, Lock, Heart } from 'lucide-react'
 import { marked } from 'marked'
 import { AnimatedBackground } from '../components/AnimatedBackground'
 import { GlitchText } from '../components/GlitchText'
 import { Toast } from '../components/Toast'
 import { BoltBadge } from '../components/BoltBadge'
 import { usePromptStore } from '../store/promptStore'
+import { useAuthStore } from '../store/authStore'
+import { useLikeStore } from '../store/likeStore'
 import { Database } from '../lib/supabase'
 
 type Prompt = Database['public']['Tables']['prompts']['Row']
@@ -17,8 +19,11 @@ export const SharedPromptPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [isLiking, setIsLiking] = useState(false)
   
   const { fetchPromptById, incrementViews } = usePromptStore()
+  const { user } = useAuthStore()
+  const { toggleLike, isLiked, fetchUserLikes } = useLikeStore()
 
   useEffect(() => {
     const loadPrompt = async () => {
@@ -50,12 +55,43 @@ export const SharedPromptPage: React.FC = () => {
     loadPrompt()
   }, [id, fetchPromptById, incrementViews])
 
+  useEffect(() => {
+    if (user) {
+      fetchUserLikes(user.id)
+    }
+  }, [user, fetchUserLikes])
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
       setToast({ message: '> Content copied to clipboard', type: 'success' })
     } catch (err) {
       setToast({ message: 'Failed to copy content', type: 'error' })
+    }
+  }
+
+  const handleLike = async () => {
+    if (!user || !prompt || isLiking) return
+    
+    setIsLiking(true)
+    try {
+      const newLikeStatus = await toggleLike(prompt.id, user.id)
+      
+      // Update local prompt state to reflect the change immediately
+      setPrompt(prev => prev ? {
+        ...prev,
+        like_count: (prev.like_count || 0) + (newLikeStatus ? 1 : -1)
+      } : null)
+      
+      setToast({ 
+        message: newLikeStatus ? '> Prompt liked' : '> Prompt unliked', 
+        type: 'success' 
+      })
+    } catch (error) {
+      console.error('Failed to toggle like:', error)
+      setToast({ message: 'Failed to update like', type: 'error' })
+    } finally {
+      setIsLiking(false)
     }
   }
 
@@ -86,6 +122,8 @@ export const SharedPromptPage: React.FC = () => {
       return { __html: prompt.content.replace(/\n/g, '<br>') }
     }
   }
+
+  const userHasLiked = user && prompt ? isLiked(prompt.id) : false
 
   if (loading) {
     return (
@@ -183,17 +221,40 @@ export const SharedPromptPage: React.FC = () => {
                     <span className="font-mono text-purple-400">{formatViews(prompt.views || 0)} views</span>
                   </div>
                   <span>•</span>
+                  <div className="flex items-center gap-1">
+                    <Heart size={14} className="text-red-400" />
+                    <span className="font-mono text-red-400">{formatViews(prompt.like_count || 0)} likes</span>
+                  </div>
+                  <span>•</span>
                   <span className="font-mono">{formatDate(prompt.created_at)}</span>
                 </div>
               </div>
               
-              <button
-                onClick={() => copyToClipboard(prompt.content)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-cyan-300 hover:text-cyan-100 hover:border-cyan-400/50 rounded-lg transition-all duration-300 font-mono text-sm flex-shrink-0"
-              >
-                <Copy size={16} />
-                <span>Copy</span>
-              </button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Like button - only show for authenticated users */}
+                {user && (
+                  <button
+                    onClick={handleLike}
+                    disabled={isLiking}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 font-mono text-sm ${
+                      userHasLiked
+                        ? 'bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30'
+                        : 'bg-red-500/10 border-red-500/30 text-red-400/70 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/50'
+                    } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <Heart size={16} className={userHasLiked ? 'fill-current' : ''} />
+                    <span>{userHasLiked ? 'Liked' : 'Like'}</span>
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => copyToClipboard(prompt.content)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-cyan-300 hover:text-cyan-100 hover:border-cyan-400/50 rounded-lg transition-all duration-300 font-mono text-sm"
+                >
+                  <Copy size={16} />
+                  <span>Copy</span>
+                </button>
+              </div>
             </div>
 
             {/* Content */}

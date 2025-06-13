@@ -28,6 +28,7 @@ export type Database = {
           created_at: string | null
           tags: string[] | null
           views: number | null
+          like_count: number | null
         }
         Insert: {
           id?: string
@@ -38,6 +39,7 @@ export type Database = {
           created_at?: string | null
           tags?: string[] | null
           views?: number | null
+          like_count?: number | null
         }
         Update: {
           id?: string
@@ -48,6 +50,27 @@ export type Database = {
           created_at?: string | null
           tags?: string[] | null
           views?: number | null
+          like_count?: number | null
+        }
+      }
+      likes: {
+        Row: {
+          id: string
+          user_id: string
+          prompt_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          prompt_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          prompt_id?: string
+          created_at?: string
         }
       }
     }

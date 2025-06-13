@@ -9,6 +9,7 @@ import { Toast } from '../components/Toast'
 import { BoltBadge } from '../components/BoltBadge'
 import { useAuthStore } from '../store/authStore'
 import { usePromptStore } from '../store/promptStore'
+import { useLikeStore } from '../store/likeStore'
 
 export const HomePage: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -23,6 +24,7 @@ export const HomePage: React.FC = () => {
     deletePrompt,
     subscribeToUserPrompts 
   } = usePromptStore()
+  const { fetchUserLikes } = useLikeStore()
 
   useEffect(() => {
     initialize()
@@ -31,10 +33,11 @@ export const HomePage: React.FC = () => {
   useEffect(() => {
     if (user) {
       fetchUserPrompts(user.id)
+      fetchUserLikes(user.id)
       const unsubscribe = subscribeToUserPrompts(user.id)
       return unsubscribe
     }
-  }, [user, fetchUserPrompts, subscribeToUserPrompts])
+  }, [user, fetchUserPrompts, fetchUserLikes, subscribeToUserPrompts])
 
   const handleCreatePrompt = async (title: string, content: string, access: 'public' | 'private') => {
     if (!user) {
@@ -179,6 +182,7 @@ export const HomePage: React.FC = () => {
                     access={prompt.access}
                     createdAt={prompt.created_at}
                     views={prompt.views}
+                    likeCount={prompt.like_count}
                     onDelete={handleDeletePrompt}
                   />
                 ))}

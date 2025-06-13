@@ -10,7 +10,7 @@ interface PromptState {
   fetchUserPrompts: (userId: string) => Promise<void>
   fetchPublicPrompts: () => Promise<void>
   fetchPromptById: (id: string) => Promise<Prompt | null>
-  createPrompt: (prompt: Omit<Prompt, 'id' | 'created_at' | 'views'>) => Promise<void>
+  createPrompt: (prompt: Omit<Prompt, 'id' | 'created_at' | 'views' | 'like_count'>) => Promise<void>
   deletePrompt: (id: string) => Promise<void>
   incrementViews: (id: string) => Promise<void>
   subscribeToUserPrompts: (userId: string) => () => void
@@ -81,7 +81,7 @@ export const usePromptStore = create<PromptState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('prompts')
-        .insert([{ ...prompt, views: 0 }])
+        .insert([{ ...prompt, views: 0, like_count: 0 }])
         .select()
         .single()
 

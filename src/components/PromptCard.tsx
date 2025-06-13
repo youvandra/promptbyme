@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
-import { Copy, Trash2, Eye, Lock, ExternalLink } from 'lucide-react'
+import { Copy, Trash2, Eye, Lock, ExternalLink, Heart } from 'lucide-react'
 import { marked } from 'marked'
+import { useAuthStore } from '../store/authStore'
+import { useLikeStore } from '../store/likeStore'
 
 interface PromptCardProps {
   id: string
@@ -9,6 +11,7 @@ interface PromptCardProps {
   access: 'public' | 'private'
   createdAt: string
   views?: number
+  likeCount?: number
   onDelete?: (id: string) => void
   showActions?: boolean
 }
@@ -20,11 +23,16 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   access,
   createdAt,
   views = 0,
+  likeCount = 0,
   onDelete,
   showActions = true,
 }) => {
   const [copied, setCopied] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isLiking, setIsLiking] = useState(false)
+  
+  const { user } = useAuthStore()
+  const { toggleLike, isLiked } = useLikeStore()
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -39,6 +47,19 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   const copyLink = async () => {
     const link = `${window.location.origin}/p/${id}`
     await copyToClipboard(link)
+  }
+
+  const handleLike = async () => {
+    if (!user || isLiking) return
+    
+    setIsLiking(true)
+    try {
+      await toggleLike(id, user.id)
+    } catch (error) {
+      console.error('Failed to toggle like:', error)
+    } finally {
+      setIsLiking(false)
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -74,6 +95,8 @@ export const PromptCard: React.FC<PromptCardProps> = ({
     }
   }
 
+  const userHasLiked = user ? isLiked(id) : false
+
   return (
     <div className="group relative bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 hover:border-cyan-400/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/20 flex flex-col h-full">
       {/* Glow effect */}
@@ -104,6 +127,11 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                     <Eye size={14} className="text-purple-400" />
                     <span className="font-mono text-purple-400">{formatViews(views)}</span>
                   </div>
+                  <span>•</span>
+                  <div className="flex items-center gap-1">
+                    <Heart size={14} className="text-red-400" />
+                    <span className="font-mono text-red-400">{formatViews(likeCount)}</span>
+                  </div>
                 </>
               )}
               <span>•</span>
@@ -113,6 +141,22 @@ export const PromptCard: React.FC<PromptCardProps> = ({
           
           {showActions && (
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2 flex-shrink-0">
+              {/* Like button - only show for public prompts and authenticated users */}
+              {access === 'public' && user && (
+                <button
+                  onClick={handleLike}
+                  disabled={isLiking}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
+                    userHasLiked
+                      ? 'text-red-400 bg-red-500/20 hover:bg-red-500/30'
+                      : 'text-red-400/50 hover:text-red-400 hover:bg-red-500/20'
+                  } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title={userHasLiked ? 'Unlike' : 'Like'}
+                >
+                  <Heart size={16} className={userHasLiked ? 'fill-current' : ''} />
+                </button>
+              )}
+              
               <button
                 onClick={() => copyToClipboard(content)}
                 className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 rounded-lg transition-all duration-200"
