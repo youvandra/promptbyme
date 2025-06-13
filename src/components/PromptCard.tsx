@@ -16,7 +16,6 @@ interface PromptCardProps {
   originalPromptId?: string | null
   onDelete?: (id: string) => void
   showActions?: boolean
-  showLikeButton?: boolean // New prop to control like button visibility
 }
 
 export const PromptCard: React.FC<PromptCardProps> = ({
@@ -31,7 +30,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   originalPromptId = null,
   onDelete,
   showActions = true,
-  showLikeButton = false, // Default to false (hidden in gallery)
 }) => {
   const [copied, setCopied] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -66,19 +64,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({
     } finally {
       setIsLiking(false)
     }
-  }
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    // Only handle click if the card is expanded and the click is not on interactive elements
-    if (isExpanded && !isClickOnInteractiveElement(e)) {
-      setIsExpanded(false)
-    }
-  }
-
-  const isClickOnInteractiveElement = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement
-    // Check if click is on button, link, or any interactive element
-    return target.closest('button') || target.closest('a') || target.closest('[role="button"]')
   }
 
   const formatDate = (dateString: string) => {
@@ -118,12 +103,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   const isForkedPrompt = originalPromptId !== null
 
   return (
-    <div 
-      className={`group relative bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 hover:border-cyan-400/50 transition-all duration-500 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/20 flex flex-col h-full overflow-hidden ${
-        isExpanded ? 'cursor-pointer' : ''
-      }`}
-      onClick={handleCardClick}
-    >
+    <div className="group relative bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 hover:border-cyan-400/50 transition-all duration-500 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/20 flex flex-col h-full overflow-hidden">
       {/* Glow effect */}
       <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       
@@ -143,13 +123,10 @@ export const PromptCard: React.FC<PromptCardProps> = ({
           
           {showActions && (
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 ml-2 flex-shrink-0">
-              {/* Like button - only show when showLikeButton is true (for shared prompt page) */}
-              {showLikeButton && access === 'public' && user && (
+              {/* Like button - only show for public prompts and authenticated users */}
+              {access === 'public' && user && (
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleLike()
-                  }}
+                  onClick={handleLike}
                   disabled={isLiking}
                   className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-110 ${
                     userHasLiked
@@ -163,20 +140,14 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               )}
               
               <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  copyToClipboard(content)
-                }}
+                onClick={() => copyToClipboard(content)}
                 className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 rounded-lg transition-all duration-300 transform hover:scale-110"
                 title="Copy content"
               >
                 <Copy size={16} />
               </button>
               <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  copyLink()
-                }}
+                onClick={copyLink}
                 className="p-2 text-purple-400 hover:text-purple-300 hover:bg-purple-500/20 rounded-lg transition-all duration-300 transform hover:scale-110"
                 title="Copy link"
               >
@@ -184,10 +155,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               </button>
               {onDelete && (
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDelete(id)
-                  }}
+                  onClick={() => onDelete(id)}
                   className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all duration-300 transform hover:scale-110"
                   title="Delete prompt"
                 >
@@ -270,10 +238,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
           {/* Show more/less button on the right */}
           {shouldTruncate && (
             <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setIsExpanded(!isExpanded)
-              }}
+              onClick={() => setIsExpanded(!isExpanded)}
               className="text-cyan-400 hover:text-cyan-300 font-mono text-xs transition-colors duration-200 flex-shrink-0"
             >
               {isExpanded ? 'Show less' : 'Show more'}
