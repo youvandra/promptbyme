@@ -6,6 +6,7 @@ import { AnimatedBackground } from '../components/AnimatedBackground'
 import { GlitchText } from '../components/GlitchText'
 import { Toast } from '../components/Toast'
 import { BoltBadge } from '../components/BoltBadge'
+import { AuthModal } from '../components/AuthModal'
 import { usePromptStore } from '../store/promptStore'
 import { useAuthStore } from '../store/authStore'
 import { useLikeStore } from '../store/likeStore'
@@ -20,6 +21,8 @@ export const SharedPromptPage: React.FC = () => {
   const [error, setError] = useState('')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [isLiking, setIsLiking] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [pendingLike, setPendingLike] = useState(false)
   
   const { fetchPromptById, incrementViews } = usePromptStore()
   const { user } = useAuthStore()
@@ -58,6 +61,12 @@ export const SharedPromptPage: React.FC = () => {
   useEffect(() => {
     if (user) {
       fetchUserLikes(user.id)
+      
+      // If user just logged in and there was a pending like, execute it
+      if (pendingLike && prompt) {
+        setPendingLike(false)
+        handleLike()
+      }
     }
   }, [user, fetchUserLikes])
 
@@ -71,7 +80,16 @@ export const SharedPromptPage: React.FC = () => {
   }
 
   const handleLike = async () => {
-    if (!user || !prompt || isLiking) return
+    if (!prompt) return
+
+    // If user is not authenticated, show auth modal
+    if (!user) {
+      setPendingLike(true)
+      setShowAuthModal(true)
+      return
+    }
+
+    if (isLiking) return
     
     setIsLiking(true)
     try {
@@ -93,6 +111,11 @@ export const SharedPromptPage: React.FC = () => {
     } finally {
       setIsLiking(false)
     }
+  }
+
+  const handleAuthModalClose = () => {
+    setShowAuthModal(false)
+    setPendingLike(false)
   }
 
   const formatDate = (dateString: string) => {
@@ -231,21 +254,25 @@ export const SharedPromptPage: React.FC = () => {
               </div>
               
               <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Like button - only show for authenticated users */}
-                {user && (
-                  <button
-                    onClick={handleLike}
-                    disabled={isLiking}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 font-mono text-sm ${
-                      userHasLiked
-                        ? 'bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30'
-                        : 'bg-red-500/10 border-red-500/30 text-red-400/70 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/50'
-                    } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <Heart size={16} className={userHasLiked ? 'fill-current' : ''} />
-                    <span>{userHasLiked ? 'Liked' : 'Like'}</span>
-                  </button>
-                )}
+                {/* Like button - show for everyone, but require auth to use */}
+                <button
+                  onClick={handleLike}
+                  disabled={isLiking}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 font-mono text-sm ${
+                    userHasLiked
+                      ? 'bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30'
+                      : 'bg-red-500/10 border-red-500/30 text-red-400/70 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/50'
+                  } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title={user ? (userHasLiked ? 'Unlike' : 'Like') : 'Sign in to like this prompt'}
+                >
+                  <Heart size={16} className={userHasLiked ? 'fill-current' : ''} />
+                  <span>
+                    {user 
+                      ? (userHasLiked ? 'Liked' : 'Like')
+                      : 'Like'
+                    }
+                  </span>
+                </button>
                 
                 <button
                   onClick={() => copyToClipboard(prompt.content)}
@@ -281,8 +308,34 @@ export const SharedPromptPage: React.FC = () => {
               </p>
             </div>
           </div>
+
+          {/* Call to action for non-authenticated users */}
+          {!user && (
+            <div className="mt-8 text-center">
+              <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-6">
+                <h3 className="text-xl font-bold text-cyan-100 mb-2 font-mono">
+                  Join the Community
+                </h3>
+                <p className="text-cyan-300/80 font-mono mb-4">
+                  Sign up to like prompts, save your favorites, and share your own AI prompts with the world.
+                </p>
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
+                >
+                  Get Started
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={handleAuthModalClose} 
+      />
 
       {/* Toast */}
       {toast && (
