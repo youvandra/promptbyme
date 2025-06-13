@@ -10,8 +10,9 @@ interface PromptState {
   fetchUserPrompts: (userId: string) => Promise<void>
   fetchPublicPrompts: () => Promise<void>
   fetchPromptById: (id: string) => Promise<Prompt | null>
-  createPrompt: (prompt: Omit<Prompt, 'id' | 'created_at'>) => Promise<void>
+  createPrompt: (prompt: Omit<Prompt, 'id' | 'created_at' | 'views'>) => Promise<void>
   deletePrompt: (id: string) => Promise<void>
+  incrementViews: (id: string) => Promise<void>
   subscribeToUserPrompts: (userId: string) => () => void
 }
 
@@ -80,7 +81,7 @@ export const usePromptStore = create<PromptState>((set, get) => ({
     try {
       const { error } = await supabase
         .from('prompts')
-        .insert([prompt])
+        .insert([{ ...prompt, views: 0 }])
 
       if (error) throw error
     } catch (error) {
@@ -104,6 +105,30 @@ export const usePromptStore = create<PromptState>((set, get) => ({
     } catch (error) {
       console.error('Error deleting prompt:', error)
       throw error
+    }
+  },
+
+  incrementViews: async (id: string) => {
+    try {
+      // First get the current view count
+      const { data: currentPrompt, error: fetchError } = await supabase
+        .from('prompts')
+        .select('views')
+        .eq('id', id)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      // Increment the view count
+      const { error: updateError } = await supabase
+        .from('prompts')
+        .update({ views: (currentPrompt.views || 0) + 1 })
+        .eq('id', id)
+
+      if (updateError) throw updateError
+    } catch (error) {
+      console.error('Error incrementing views:', error)
+      // Don't throw error to prevent breaking the UI if view tracking fails
     }
   },
 

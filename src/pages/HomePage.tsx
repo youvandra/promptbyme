@@ -178,6 +178,7 @@ export const HomePage: React.FC = () => {
                     content={prompt.content}
                     access={prompt.access}
                     createdAt={prompt.created_at}
+                    views={prompt.views}
                     onDelete={handleDeletePrompt}
                   />
                 ))}

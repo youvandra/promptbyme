@@ -8,6 +8,7 @@ interface PromptCardProps {
   content: string
   access: 'public' | 'private'
   createdAt: string
+  views?: number
   onDelete?: (id: string) => void
   showActions?: boolean
 }
@@ -18,6 +19,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   content,
   access,
   createdAt,
+  views = 0,
   onDelete,
   showActions = true,
 }) => {
@@ -46,6 +48,13 @@ export const PromptCard: React.FC<PromptCardProps> = ({
       hour: '2-digit',
       minute: '2-digit',
     })
+  }
+
+  const formatViews = (count: number) => {
+    if (count === 0) return '0'
+    if (count < 1000) return count.toString()
+    if (count < 1000000) return `${(count / 1000).toFixed(1)}k`
+    return `${(count / 1000000).toFixed(1)}M`
   }
 
   const truncateText = (text: string, maxLength: number = 150) => {
@@ -79,13 +88,24 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                 {title}
               </h3>
             )}
-            <div className="flex items-center gap-2 text-sm text-cyan-500/70">
-              {access === 'private' ? (
-                <Lock size={14} />
-              ) : (
-                <Eye size={14} />
+            <div className="flex items-center gap-2 text-sm text-cyan-500/70 flex-wrap">
+              <div className="flex items-center gap-1">
+                {access === 'private' ? (
+                  <Lock size={14} />
+                ) : (
+                  <Eye size={14} />
+                )}
+                <span className="font-mono">{access}</span>
+              </div>
+              {access === 'public' && (
+                <>
+                  <span>•</span>
+                  <div className="flex items-center gap-1">
+                    <Eye size={14} className="text-purple-400" />
+                    <span className="font-mono text-purple-400">{formatViews(views)}</span>
+                  </div>
+                </>
               )}
-              <span className="font-mono">{access}</span>
               <span>•</span>
               <span className="font-mono">{formatDate(createdAt)}</span>
             </div>

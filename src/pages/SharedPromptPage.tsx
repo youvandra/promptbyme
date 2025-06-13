@@ -18,7 +18,7 @@ export const SharedPromptPage: React.FC = () => {
   const [error, setError] = useState('')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   
-  const { fetchPromptById } = usePromptStore()
+  const { fetchPromptById, incrementViews } = usePromptStore()
 
   useEffect(() => {
     const loadPrompt = async () => {
@@ -36,6 +36,8 @@ export const SharedPromptPage: React.FC = () => {
           setError('This prompt is private and cannot be accessed')
         } else {
           setPrompt(promptData)
+          // Increment view count for public prompts
+          await incrementViews(id)
         }
       } catch (err) {
         console.error('Error loading prompt:', err)
@@ -46,7 +48,7 @@ export const SharedPromptPage: React.FC = () => {
     }
 
     loadPrompt()
-  }, [id, fetchPromptById])
+  }, [id, fetchPromptById, incrementViews])
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -65,6 +67,13 @@ export const SharedPromptPage: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit',
     })
+  }
+
+  const formatViews = (count: number) => {
+    if (count === 0) return '0'
+    if (count < 1000) return count.toString()
+    if (count < 1000000) return `${(count / 1000).toFixed(1)}k`
+    return `${(count / 1000000).toFixed(1)}M`
   }
 
   const renderContent = () => {
@@ -163,10 +172,15 @@ export const SharedPromptPage: React.FC = () => {
                     {prompt.title}
                   </h2>
                 )}
-                <div className="flex items-center gap-3 text-sm text-cyan-500/70">
+                <div className="flex items-center gap-3 text-sm text-cyan-500/70 flex-wrap">
                   <div className="flex items-center gap-2">
                     <Eye size={14} />
                     <span className="font-mono">Public</span>
+                  </div>
+                  <span>•</span>
+                  <div className="flex items-center gap-1">
+                    <Eye size={14} className="text-purple-400" />
+                    <span className="font-mono text-purple-400">{formatViews(prompt.views || 0)} views</span>
                   </div>
                   <span>•</span>
                   <span className="font-mono">{formatDate(prompt.created_at)}</span>

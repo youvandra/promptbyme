@@ -27,6 +27,7 @@ export type Database = {
           access: 'public' | 'private'
           created_at: string
           tags: string[]
+          views: number
         }
         Insert: {
           id?: string
@@ -36,6 +37,7 @@ export type Database = {
           access?: 'public' | 'private'
           created_at?: string
           tags?: string[]
+          views?: number
         }
         Update: {
           id?: string
@@ -45,6 +47,7 @@ export type Database = {
           access?: 'public' | 'private'
           created_at?: string
           tags?: string[]
+          views?: number
         }
       }
     }
