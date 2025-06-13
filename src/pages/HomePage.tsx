@@ -84,7 +84,7 @@ export const HomePage: React.FC = () => {
           {/* Header - Only show for non-logged users */}
           {!user && (
             <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
-              <div className="max-w-6xl mx-auto px-4 py-6">
+              <div className="max-w-6xl mx-auto px-6 py-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Terminal className="text-cyan-400" size={32} />
@@ -130,8 +130,8 @@ export const HomePage: React.FC = () => {
           )}
 
           {/* Main Content */}
-          <main className="relative z-10 flex-1">
-            <div className={`w-full px-4 py-8 ${user ? 'max-w-4xl' : 'max-w-6xl mx-auto'}`}>
+          <main className="relative z-10 flex-1 flex items-start justify-center">
+            <div className={`w-full max-w-5xl mx-auto px-6 py-8 ${user ? '' : ''}`}>
               {/* Hero Section */}
               <div className="text-center mb-12">
                 <h2 className="text-4xl md:text-6xl font-bold font-mono mb-6 bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">

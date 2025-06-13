@@ -103,7 +103,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
 
         {/* Navigation */}
         <nav className="flex-1 p-6">
-          <div className="space-y-2">
+          <div className="space-y-3">
             {navItems.map((item) => {
               const Icon = item.icon
               const active = isActive(item.path)
@@ -114,7 +114,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                   to={item.path}
                   onClick={onToggle}
                   className={`
-                    group flex items-center gap-3 p-3 rounded-lg transition-all duration-300
+                    group flex items-center gap-3 p-4 rounded-lg transition-all duration-300
                     ${active 
                       ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/50 text-cyan-100' 
                       : 'text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10'
@@ -135,9 +135,9 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
           </div>
         </nav>
 
-        {/* Bottom Section - User Info and Exit */}
+        {/* Bottom Section - User Info and Exit with proper spacing */}
         {user && (
-          <div className="border-t border-cyan-500/20">
+          <div className="mt-auto border-t border-cyan-500/20">
             {/* User Profile Link */}
             <Link
               to="/profile"
