@@ -129,7 +129,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               {/* Fork indicator */}
               {isForkedPrompt && (
                 <>
-                  <span>•</span>
+                  <span className="text-orange-400">•</span>
                   <div className="flex items-center gap-1">
                     <GitFork size={14} className="text-orange-400" />
                     <span className="font-mono text-orange-400">forked prompt</span>
@@ -139,13 +139,15 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               
               {access === 'public' && (
                 <>
-                  <span>•</span>
+                  <span className="text-purple-400">•</span>
                   <div className="flex items-center gap-1">
+                    <span className="text-purple-400">•</span>
                     <Eye size={14} className="text-purple-400" />
                     <span className="font-mono text-purple-400">{formatViews(views)}</span>
                   </div>
-                  <span>•</span>
+                  <span className="text-red-400">•</span>
                   <div className="flex items-center gap-1">
+                    <span className="text-red-400">•</span>
                     <Heart size={14} className="text-red-400" />
                     <span className="font-mono text-red-400">{formatViews(likeCount)}</span>
                   </div>
@@ -153,8 +155,9 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                   {/* Fork count - only show for original prompts */}
                   {!isForkedPrompt && forkCount > 0 && (
                     <>
-                      <span>•</span>
+                      <span className="text-green-400">•</span>
                       <div className="flex items-center gap-1">
+                        <span className="text-green-400">•</span>
                         <GitFork size={14} className="text-green-400" />
                         <span className="font-mono text-green-400">{formatViews(forkCount)}</span>
                       </div>
@@ -162,7 +165,8 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                   )}
                 </>
               )}
-              <span>•</span>
+              <span className="text-cyan-500/70">•</span>
+              <span className="text-cyan-500/70">•</span>
               <span className="font-mono">{formatDate(createdAt)}</span>
             </div>
           </div>
