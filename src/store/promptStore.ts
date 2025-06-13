@@ -10,7 +10,8 @@ interface PromptState {
   fetchUserPrompts: (userId: string) => Promise<void>
   fetchPublicPrompts: () => Promise<void>
   fetchPromptById: (id: string) => Promise<Prompt | null>
-  createPrompt: (prompt: Omit<Prompt, 'id' | 'created_at' | 'views' | 'like_count'>) => Promise<void>
+  createPrompt: (prompt: Omit<Prompt, 'id' | 'created_at' | 'views' | 'like_count' | 'fork_count'>) => Promise<void>
+  forkPrompt: (originalPromptId: string, userId: string, title?: string) => Promise<void>
   deletePrompt: (id: string) => Promise<void>
   incrementViews: (id: string) => Promise<void>
   subscribeToUserPrompts: (userId: string) => () => void
@@ -81,7 +82,7 @@ export const usePromptStore = create<PromptState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('prompts')
-        .insert([{ ...prompt, views: 0, like_count: 0 }])
+        .insert([{ ...prompt, views: 0, like_count: 0, fork_count: 0 }])
         .select()
         .single()
 
@@ -92,6 +93,52 @@ export const usePromptStore = create<PromptState>((set, get) => ({
       set({ prompts: [data, ...prompts] })
     } catch (error) {
       console.error('Error creating prompt:', error)
+      throw error
+    }
+  },
+
+  forkPrompt: async (originalPromptId: string, userId: string, title?: string) => {
+    try {
+      // First, get the original prompt
+      const { data: originalPrompt, error: fetchError } = await supabase
+        .from('prompts')
+        .select('*')
+        .eq('id', originalPromptId)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      // Check if the original prompt can be forked (must be original, not a fork itself)
+      if (originalPrompt.original_prompt_id !== null) {
+        throw new Error('Cannot fork a forked prompt. Only original prompts can be forked.')
+      }
+
+      // Create the forked prompt
+      const forkedPrompt = {
+        user_id: userId,
+        title: title || `Fork of: ${originalPrompt.title || 'Untitled'}`,
+        content: originalPrompt.content,
+        access: 'private' as const, // Forked prompts start as private
+        tags: originalPrompt.tags || [],
+        original_prompt_id: originalPromptId,
+        views: 0,
+        like_count: 0,
+        fork_count: 0
+      }
+
+      const { data, error } = await supabase
+        .from('prompts')
+        .insert([forkedPrompt])
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Add the forked prompt to the local state
+      const { prompts } = get()
+      set({ prompts: [data, ...prompts] })
+    } catch (error) {
+      console.error('Error forking prompt:', error)
       throw error
     }
   },

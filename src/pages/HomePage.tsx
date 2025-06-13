@@ -52,6 +52,7 @@ export const HomePage: React.FC = () => {
         content,
         access,
         tags: [],
+        original_prompt_id: null,
       })
       setToast({ message: '> Prompt saved. ::Sync complete', type: 'success' })
     } catch (error) {
@@ -183,6 +184,8 @@ export const HomePage: React.FC = () => {
                     createdAt={prompt.created_at}
                     views={prompt.views}
                     likeCount={prompt.like_count}
+                    forkCount={prompt.fork_count}
+                    originalPromptId={prompt.original_prompt_id}
                     onDelete={handleDeletePrompt}
                   />
                 ))}

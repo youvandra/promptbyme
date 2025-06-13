@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Copy, Trash2, Eye, Lock, ExternalLink, Heart } from 'lucide-react'
+import { Copy, Trash2, Eye, Lock, ExternalLink, Heart, GitFork } from 'lucide-react'
 import { marked } from 'marked'
 import { useAuthStore } from '../store/authStore'
 import { useLikeStore } from '../store/likeStore'
@@ -12,6 +12,8 @@ interface PromptCardProps {
   createdAt: string
   views?: number
   likeCount?: number
+  forkCount?: number
+  originalPromptId?: string | null
   onDelete?: (id: string) => void
   showActions?: boolean
 }
@@ -24,6 +26,8 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   createdAt,
   views = 0,
   likeCount = 0,
+  forkCount = 0,
+  originalPromptId = null,
   onDelete,
   showActions = true,
 }) => {
@@ -96,6 +100,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   }
 
   const userHasLiked = user ? isLiked(id) : false
+  const isForkedPrompt = originalPromptId !== null
 
   return (
     <div className="group relative bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 hover:border-cyan-400/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/20 flex flex-col h-full">
@@ -120,6 +125,18 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                 )}
                 <span className="font-mono">{access}</span>
               </div>
+              
+              {/* Fork indicator */}
+              {isForkedPrompt && (
+                <>
+                  <span>•</span>
+                  <div className="flex items-center gap-1">
+                    <GitFork size={14} className="text-orange-400" />
+                    <span className="font-mono text-orange-400">forked prompt</span>
+                  </div>
+                </>
+              )}
+              
               {access === 'public' && (
                 <>
                   <span>•</span>
@@ -132,6 +149,17 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                     <Heart size={14} className="text-red-400" />
                     <span className="font-mono text-red-400">{formatViews(likeCount)}</span>
                   </div>
+                  
+                  {/* Fork count - only show for original prompts */}
+                  {!isForkedPrompt && forkCount > 0 && (
+                    <>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <GitFork size={14} className="text-green-400" />
+                        <span className="font-mono text-green-400">{formatViews(forkCount)}</span>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
               <span>•</span>

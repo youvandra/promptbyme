@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Terminal, Copy, Eye, Lock, Heart } from 'lucide-react'
+import { ArrowLeft, Terminal, Copy, Eye, Lock, Heart, GitFork } from 'lucide-react'
 import { marked } from 'marked'
 import { AnimatedBackground } from '../components/AnimatedBackground'
 import { GlitchText } from '../components/GlitchText'
@@ -21,10 +21,11 @@ export const SharedPromptPage: React.FC = () => {
   const [error, setError] = useState('')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [isLiking, setIsLiking] = useState(false)
+  const [isForking, setIsForking] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
-  const [pendingLike, setPendingLike] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'like' | 'fork' | null>(null)
   
-  const { fetchPromptById, incrementViews } = usePromptStore()
+  const { fetchPromptById, incrementViews, forkPrompt } = usePromptStore()
   const { user, initialize } = useAuthStore()
   const { toggleLike, isLiked, fetchUserLikes } = useLikeStore()
 
@@ -68,10 +69,14 @@ export const SharedPromptPage: React.FC = () => {
     if (user) {
       fetchUserLikes(user.id)
       
-      // If user just logged in and there was a pending like, execute it
-      if (pendingLike && prompt) {
-        setPendingLike(false)
-        handleLike()
+      // If user just logged in and there was a pending action, execute it
+      if (pendingAction && prompt) {
+        setPendingAction(null)
+        if (pendingAction === 'like') {
+          handleLike()
+        } else if (pendingAction === 'fork') {
+          handleFork()
+        }
       }
     }
   }, [user, fetchUserLikes])
@@ -90,7 +95,7 @@ export const SharedPromptPage: React.FC = () => {
 
     // If user is not authenticated, show auth modal
     if (!user) {
-      setPendingLike(true)
+      setPendingAction('like')
       setShowAuthModal(true)
       return
     }
@@ -119,9 +124,46 @@ export const SharedPromptPage: React.FC = () => {
     }
   }
 
+  const handleFork = async () => {
+    if (!prompt) return
+
+    // If user is not authenticated, show auth modal
+    if (!user) {
+      setPendingAction('fork')
+      setShowAuthModal(true)
+      return
+    }
+
+    if (isForking) return
+
+    // Check if this is already a forked prompt
+    if (prompt.original_prompt_id !== null) {
+      setToast({ message: 'Cannot fork a forked prompt. Only original prompts can be forked.', type: 'error' })
+      return
+    }
+
+    setIsForking(true)
+    try {
+      await forkPrompt(prompt.id, user.id)
+      
+      // Update local prompt state to reflect the fork count increase
+      setPrompt(prev => prev ? {
+        ...prev,
+        fork_count: (prev.fork_count || 0) + 1
+      } : null)
+      
+      setToast({ message: '> Prompt forked to your gallery', type: 'success' })
+    } catch (error: any) {
+      console.error('Failed to fork prompt:', error)
+      setToast({ message: error.message || 'Failed to fork prompt', type: 'error' })
+    } finally {
+      setIsForking(false)
+    }
+  }
+
   const handleAuthModalClose = () => {
     setShowAuthModal(false)
-    setPendingLike(false)
+    setPendingAction(null)
   }
 
   const formatDate = (dateString: string) => {
@@ -153,6 +195,8 @@ export const SharedPromptPage: React.FC = () => {
   }
 
   const userHasLiked = user && prompt ? isLiked(prompt.id) : false
+  const isForkedPrompt = prompt?.original_prompt_id !== null
+  const canFork = prompt && !isForkedPrompt
 
   if (loading) {
     return (
@@ -244,6 +288,18 @@ export const SharedPromptPage: React.FC = () => {
                     <Eye size={14} />
                     <span className="font-mono">Public</span>
                   </div>
+                  
+                  {/* Fork indicator */}
+                  {isForkedPrompt && (
+                    <>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <GitFork size={14} className="text-orange-400" />
+                        <span className="font-mono text-orange-400">forked prompt</span>
+                      </div>
+                    </>
+                  )}
+                  
                   <span>•</span>
                   <div className="flex items-center gap-1">
                     <Eye size={14} className="text-purple-400" />
@@ -254,12 +310,46 @@ export const SharedPromptPage: React.FC = () => {
                     <Heart size={14} className="text-red-400" />
                     <span className="font-mono text-red-400">{formatViews(prompt.like_count || 0)} likes</span>
                   </div>
+                  
+                  {/* Fork count - only show for original prompts */}
+                  {canFork && (prompt.fork_count || 0) > 0 && (
+                    <>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <GitFork size={14} className="text-green-400" />
+                        <span className="font-mono text-green-400">{formatViews(prompt.fork_count || 0)} forks</span>
+                      </div>
+                    </>
+                  )}
+                  
                   <span>•</span>
                   <span className="font-mono">{formatDate(prompt.created_at)}</span>
                 </div>
               </div>
               
               <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Fork button - only show for original prompts */}
+                {canFork && (
+                  <button
+                    onClick={handleFork}
+                    disabled={isForking}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 font-mono text-sm ${
+                      isForking 
+                        ? 'opacity-50 cursor-not-allowed bg-green-500/10 border-green-500/30 text-green-400/50'
+                        : 'bg-green-500/10 border-green-500/30 text-green-400/70 hover:text-green-300 hover:bg-green-500/20 hover:border-green-500/50'
+                    }`}
+                    title={user ? 'Fork this prompt to your gallery' : 'Sign in to fork this prompt'}
+                  >
+                    <GitFork size={16} />
+                    <span>
+                      {isForking 
+                        ? 'Forking...'
+                        : 'Fork'
+                      }
+                    </span>
+                  </button>
+                )}
+                
                 {/* Like button - show for everyone, but require auth to use */}
                 <button
                   onClick={handleLike}
@@ -332,7 +422,7 @@ export const SharedPromptPage: React.FC = () => {
                   Join the Community
                 </h3>
                 <p className="text-cyan-300/80 font-mono mb-4">
-                  Sign up to like prompts, save your favorites, and share your own AI prompts with the world.
+                  Sign up to like prompts, fork them to your gallery, and share your own AI prompts with the world.
                 </p>
                 <button
                   onClick={() => setShowAuthModal(true)}

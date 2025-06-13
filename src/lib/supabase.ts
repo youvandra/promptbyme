@@ -29,6 +29,8 @@ export type Database = {
           tags: string[] | null
           views: number | null
           like_count: number | null
+          original_prompt_id: string | null
+          fork_count: number | null
         }
         Insert: {
           id?: string
@@ -40,6 +42,8 @@ export type Database = {
           tags?: string[] | null
           views?: number | null
           like_count?: number | null
+          original_prompt_id?: string | null
+          fork_count?: number | null
         }
         Update: {
           id?: string
@@ -51,6 +55,8 @@ export type Database = {
           tags?: string[] | null
           views?: number | null
           like_count?: number | null
+          original_prompt_id?: string | null
+          fork_count?: number | null
         }
       }
       likes: {
