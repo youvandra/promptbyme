@@ -108,7 +108,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
       <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       
       {/* Blur overlay that covers content on hover */}
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-lg pointer-events-none z-10" />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-lg pointer-events-none z-10" style={{ backdropFilter: 'blur(20px)' }} />
       
       {/* Stats overlay - appears in center on hover */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 pointer-events-none">
