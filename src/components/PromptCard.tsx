@@ -107,46 +107,46 @@ export const PromptCard: React.FC<PromptCardProps> = ({
       {/* Glow effect */}
       <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       
-      {/* Blur overlay that covers content on hover */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-lg pointer-events-none z-10" style={{ backdropFilter: 'blur(40px)' }} />
+      {/* Heavy blur overlay that covers content on hover */}
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-[60px] opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-lg pointer-events-none z-10" />
       
       {/* Stats overlay - appears in center on hover */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 pointer-events-none">
         <div className="flex items-center gap-4 text-lg text-cyan-300 font-semibold flex-wrap justify-center">
-          <div className="flex items-center gap-2 bg-black/80 px-3 py-2 rounded-lg backdrop-blur-sm border border-cyan-500/30">
+          <div className="flex items-center gap-2 bg-black/90 px-4 py-3 rounded-lg backdrop-blur-sm border border-cyan-500/50 shadow-lg">
             {access === 'private' ? (
-              <Lock size={16} className="text-red-400" />
+              <Lock size={18} className="text-red-400" />
             ) : (
-              <Eye size={16} className="text-green-400" />
+              <Eye size={18} className="text-green-400" />
             )}
-            <span className="font-mono text-sm">{access}</span>
+            <span className="font-mono text-base font-bold">{access}</span>
           </div>
           
           {/* Fork indicator */}
           {isForkedPrompt && (
-            <div className="flex items-center gap-2 bg-orange-500/20 px-3 py-2 rounded-lg backdrop-blur-sm border border-orange-500/30">
-              <GitFork size={16} className="text-orange-400" />
-              <span className="font-mono text-sm text-orange-400">forked</span>
+            <div className="flex items-center gap-2 bg-orange-500/30 px-4 py-3 rounded-lg backdrop-blur-sm border border-orange-500/50 shadow-lg">
+              <GitFork size={18} className="text-orange-400" />
+              <span className="font-mono text-base font-bold text-orange-400">forked</span>
             </div>
           )}
           
           {access === 'public' && (
             <>
-              <div className="flex items-center gap-2 bg-purple-500/20 px-3 py-2 rounded-lg backdrop-blur-sm border border-purple-500/30">
-                <Eye size={16} className="text-purple-400" />
-                <span className="font-mono text-sm text-purple-400">{formatViews(views)}</span>
+              <div className="flex items-center gap-2 bg-purple-500/30 px-4 py-3 rounded-lg backdrop-blur-sm border border-purple-500/50 shadow-lg">
+                <Eye size={18} className="text-purple-400" />
+                <span className="font-mono text-base font-bold text-purple-400">{formatViews(views)}</span>
               </div>
               
-              <div className="flex items-center gap-2 bg-red-500/20 px-3 py-2 rounded-lg backdrop-blur-sm border border-red-500/30">
-                <Heart size={16} className="text-red-400" />
-                <span className="font-mono text-sm text-red-400">{formatViews(likeCount)}</span>
+              <div className="flex items-center gap-2 bg-red-500/30 px-4 py-3 rounded-lg backdrop-blur-sm border border-red-500/50 shadow-lg">
+                <Heart size={18} className="text-red-400" />
+                <span className="font-mono text-base font-bold text-red-400">{formatViews(likeCount)}</span>
               </div>
               
               {/* Fork count - only show for original prompts */}
               {!isForkedPrompt && forkCount > 0 && (
-                <div className="flex items-center gap-2 bg-green-500/20 px-3 py-2 rounded-lg backdrop-blur-sm border border-green-500/30">
-                  <GitFork size={16} className="text-green-400" />
-                  <span className="font-mono text-sm text-green-400">{formatViews(forkCount)}</span>
+                <div className="flex items-center gap-2 bg-green-500/30 px-4 py-3 rounded-lg backdrop-blur-sm border border-green-500/50 shadow-lg">
+                  <GitFork size={18} className="text-green-400" />
+                  <span className="font-mono text-base font-bold text-green-400">{formatViews(forkCount)}</span>
                 </div>
               )}
             </>
