@@ -98,7 +98,7 @@ export const HomePage: React.FC = () => {
             <div className="flex items-center gap-3">
               <Terminal className="text-cyan-400" size={32} />
               <h1 className="text-2xl md:text-3xl font-bold font-mono">
-                <GlitchText text="Share My Prompt" />
+                <GlitchText text="promptby.me" />
               </h1>
             </div>
             

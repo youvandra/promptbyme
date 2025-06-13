@@ -152,7 +152,7 @@ export const SharedPromptPage: React.FC = () => {
             <div className="flex items-center gap-3">
               <Terminal className="text-cyan-400" size={24} />
               <h1 className="text-xl font-bold font-mono">
-                <GlitchText text="Shared Prompt" />
+                <GlitchText text="promptby.me" />
               </h1>
             </div>
           </div>
@@ -214,9 +214,9 @@ export const SharedPromptPage: React.FC = () => {
               <p className="text-center text-cyan-500/70 font-mono text-sm">
                 Created with{' '}
                 <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                  Share My Prompt
+                  promptby.me
                 </Link>
-                {' '}• A Sharing prompt platform
+                {' '}• AI prompt sharing platform
               </p>
             </div>
           </div>
