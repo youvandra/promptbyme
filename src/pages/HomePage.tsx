@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { User, LogOut, Terminal, Menu } from 'lucide-react'
+import { Terminal, Menu } from 'lucide-react'
 import { AnimatedBackground } from '../components/AnimatedBackground'
 import { GlitchText } from '../components/GlitchText'
 import { TerminalInput } from '../components/TerminalInput'
@@ -16,7 +16,7 @@ export const HomePage: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   
-  const { user, loading: authLoading, signOut, initialize } = useAuthStore()
+  const { user, loading: authLoading, initialize } = useAuthStore()
   const { 
     loading: promptLoading, 
     createPrompt,
@@ -57,15 +57,6 @@ export const HomePage: React.FC = () => {
     }
   }
 
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      setToast({ message: '> Session terminated. ::Goodbye', type: 'success' })
-    } catch (error) {
-      setToast({ message: 'Failed to sign out', type: 'error' })
-    }
-  }
-
   if (authLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -90,53 +81,53 @@ export const HomePage: React.FC = () => {
         
         {/* Main Content Area - Centered when no sidebar */}
         <div className={`flex-1 flex flex-col min-h-screen ${user ? 'lg:ml-80' : ''}`}>
-          {/* Header */}
-          <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
-            <div className={`mx-auto px-4 py-6 ${user ? 'container' : 'max-w-6xl'}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {/* Menu button for logged in users */}
-                  {user && (
-                    <button
-                      onClick={() => setSidebarOpen(!sidebarOpen)}
-                      className="lg:hidden text-cyan-400 hover:text-cyan-300 transition-colors mr-3"
-                    >
-                      <Menu size={24} />
-                    </button>
-                  )}
-                  <Terminal className="text-cyan-400" size={32} />
-                  <h1 className="text-2xl md:text-3xl font-bold font-mono">
-                    <GlitchText text="promptby.me" />
-                  </h1>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  {user ? (
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2 text-sm font-mono">
-                        <User size={16} className="text-cyan-400" />
-                        <span className="text-cyan-300 hidden sm:inline">{user.email}</span>
-                      </div>
-                      <button
-                        onClick={handleSignOut}
-                        className="flex items-center gap-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all duration-200 font-mono text-sm"
-                      >
-                        <LogOut size={16} />
-                        <span className="hidden sm:inline">Exit</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setShowAuthModal(true)}
-                      className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
-                    >
-                      Access Terminal
-                    </button>
-                  )}
+          {/* Header - Only show for non-logged users */}
+          {!user && (
+            <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
+              <div className="max-w-6xl mx-auto px-4 py-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Terminal className="text-cyan-400" size={32} />
+                    <h1 className="text-2xl md:text-3xl font-bold font-mono">
+                      <GlitchText text="promptby.me" />
+                    </h1>
+                  </div>
+                  
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
+                  >
+                    Access Terminal
+                  </button>
                 </div>
               </div>
-            </div>
-          </header>
+            </header>
+          )}
+
+          {/* Mobile Header for logged users */}
+          {user && (
+            <header className="lg:hidden relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
+              <div className="px-4 py-4">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
+                    <Menu size={24} />
+                  </button>
+                  
+                  <div className="flex items-center gap-2">
+                    <Terminal className="text-cyan-400" size={20} />
+                    <h1 className="text-lg font-bold font-mono">
+                      <GlitchText text="promptby.me" />
+                    </h1>
+                  </div>
+                  
+                  <div className="w-6" /> {/* Spacer for centering */}
+                </div>
+              </div>
+            </header>
+          )}
 
           {/* Main Content - Centered */}
           <main className="relative z-10 flex-1 flex items-center justify-center">
@@ -178,7 +169,7 @@ export const HomePage: React.FC = () => {
                       </div>
                       <div className="text-center">
                         <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                          <User className="text-purple-400" size={24} />
+                          <Terminal className="text-purple-400" size={24} />
                         </div>
                         <h4 className="font-mono font-bold text-cyan-100 mb-2">Share</h4>
                         <p className="text-cyan-300/80 font-mono text-sm">

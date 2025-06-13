@@ -6,12 +6,9 @@ import {
   FolderOpen, 
   LogOut, 
   X,
-  Home,
-  Heart,
-  GitFork
+  Home
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
-import { usePromptStore } from '../store/promptStore'
 import { GlitchText } from './GlitchText'
 
 interface SideNavbarProps {
@@ -22,7 +19,6 @@ interface SideNavbarProps {
 export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation()
   const { user, signOut } = useAuthStore()
-  const { prompts } = usePromptStore()
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   const handleSignOut = async () => {
@@ -59,13 +55,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   ]
 
   const isActive = (path: string) => location.pathname === path
-
-  // Calculate user stats
-  const stats = {
-    totalPrompts: prompts.length,
-    totalLikes: prompts.reduce((sum, p) => sum + (p.like_count || 0), 0),
-    totalForks: prompts.reduce((sum, p) => sum + (p.fork_count || 0), 0)
-  }
 
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
@@ -132,25 +121,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                 <p className="text-cyan-500/70 text-sm font-mono">
                   Active Terminal
                 </p>
-              </div>
-            </div>
-            
-            {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-black/40 rounded-lg p-3 text-center">
-                <FolderOpen size={16} className="text-cyan-400 mx-auto mb-1" />
-                <p className="text-xs text-cyan-500/70 font-mono">Prompts</p>
-                <p className="text-sm text-cyan-100 font-mono font-bold">{stats.totalPrompts}</p>
-              </div>
-              <div className="bg-black/40 rounded-lg p-3 text-center">
-                <Heart size={16} className="text-red-400 mx-auto mb-1" />
-                <p className="text-xs text-cyan-500/70 font-mono">Likes</p>
-                <p className="text-sm text-cyan-100 font-mono font-bold">{stats.totalLikes}</p>
-              </div>
-              <div className="bg-black/40 rounded-lg p-3 text-center">
-                <GitFork size={16} className="text-green-400 mx-auto mb-1" />
-                <p className="text-xs text-cyan-500/70 font-mono">Forks</p>
-                <p className="text-sm text-cyan-100 font-mono font-bold">{stats.totalForks}</p>
               </div>
             </div>
           </div>
