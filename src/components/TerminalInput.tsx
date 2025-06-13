@@ -42,7 +42,7 @@ export const TerminalInput: React.FC<TerminalInputProps> = ({ onSubmit, loading 
   }, [content])
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
+    <div className="w-full max-w-5xl mx-auto">
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Title Input */}
         <div className="relative">

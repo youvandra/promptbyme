@@ -139,7 +139,7 @@ export const ProfilePage: React.FC = () => {
 
           {/* Profile Content */}
           <div className="relative z-10 flex-1">
-            <div className="w-full max-w-full pr-12 mx-auto py-8">
+            <div className="w-full max-w-6xl pr-10 mx-auto py-8">
               {/* Page Header */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
                 <div>
