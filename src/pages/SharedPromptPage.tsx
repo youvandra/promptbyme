@@ -7,6 +7,7 @@ import { GlitchText } from '../components/GlitchText'
 import { Toast } from '../components/Toast'
 import { BoltBadge } from '../components/BoltBadge'
 import { AuthModal } from '../components/AuthModal'
+import { PromptCard } from '../components/PromptCard'
 import { usePromptStore } from '../store/promptStore'
 import { useAuthStore } from '../store/authStore'
 import { useLikeStore } from '../store/likeStore'
@@ -273,147 +274,53 @@ export const SharedPromptPage: React.FC = () => {
       {/* Main Content */}
       <main className="relative z-10 container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          {/* Prompt Card */}
-          <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8">
-            {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
-              <div className="flex-1 min-w-0">
-                {prompt.title && (
-                  <h2 className="text-2xl md:text-3xl font-bold text-cyan-100 mb-4 font-mono break-words">
-                    {prompt.title}
-                  </h2>
-                )}
-                <div className="flex items-center gap-3 text-sm text-cyan-500/70 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <Eye size={14} />
-                    <span className="font-mono">Public</span>
-                  </div>
-                  
-                  {/* Fork indicator */}
-                  {isForkedPrompt && (
-                    <span>•</span>
-                  )}
-                  {isForkedPrompt && (
-                    <div className="flex items-center gap-1">
-                      <GitFork size={14} className="text-orange-400" />
-                      <span className="font-mono text-orange-400">forked prompt</span>
-                    </div>
-                  )}
-                  
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <Eye size={14} className="text-purple-400" />
-                    <span className="font-mono text-purple-400">{formatViews(prompt.views || 0)} views</span>
-                  </div>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <Heart size={14} className="text-red-400" />
-                    <span className="font-mono text-red-400">{formatViews(prompt.like_count || 0)} likes</span>
-                  </div>
-                  
-                  {/* Fork count - only show for original prompts */}
-                  {canFork && (prompt.fork_count || 0) > 0 && (
-                    <span>•</span>
-                  )}
-                  {canFork && (prompt.fork_count || 0) > 0 && (
-                    <div className="flex items-center gap-1">
-                      <GitFork size={14} className="text-green-400" />
-                      <span className="font-mono text-green-400">{formatViews(prompt.fork_count || 0)} forks</span>
-                    </div>
-                  )}
-                  
-                  <span>•</span>
-                  <span className="font-mono">{formatDate(prompt.created_at || '')}</span>
-                </div>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-3 lg:flex-shrink-0">
-                {/* Fork button - only show for original prompts */}
-                {canFork && (
-                  <button
-                    onClick={handleFork}
-                    disabled={isForking}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 font-mono text-sm transform hover:scale-105 ${
-                      isForking 
-                        ? 'opacity-50 cursor-not-allowed bg-green-500/10 border-green-500/30 text-green-400/50'
-                        : 'bg-green-500/10 border-green-500/30 text-green-400 hover:text-green-300 hover:bg-green-500/20 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/20'
-                    }`}
-                    title={user ? 'Fork this prompt to your gallery' : 'Sign in to fork this prompt'}
-                  >
-                    <GitFork size={16} />
-                    <span>
-                      {isForking 
-                        ? 'Forking...'
-                        : 'Fork'
-                      }
-                    </span>
-                  </button>
-                )}
-                
-                {/* Like button */}
-                <button
-                  onClick={handleLike}
-                  disabled={isLiking}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 font-mono text-sm group transform hover:scale-105 ${
-                    userHasLiked
-                      ? 'bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30 hover:shadow-lg hover:shadow-red-500/20'
-                      : 'bg-red-500/10 border-red-500/30 text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/20'
-                  } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  title={user ? (userHasLiked ? 'Unlike this prompt' : 'Like this prompt') : 'Sign in to like this prompt'}
-                >
-                  <Heart 
-                    size={16} 
-                    className={`transition-all duration-200 ${
-                      userHasLiked 
-                        ? 'fill-current scale-110' 
-                        : 'group-hover:scale-110'
-                    }`} 
-                  />
-                  <span>
-                    {isLiking 
-                      ? '...'
-                      : user 
-                        ? (userHasLiked ? 'Liked' : 'Like')
-                        : 'Like'
-                    }
-                  </span>
-                </button>
-                
-                {/* Copy button */}
-                <button
-                  onClick={() => copyToClipboard(prompt.content)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-cyan-300 hover:text-cyan-100 hover:border-cyan-400/50 rounded-lg transition-all duration-300 font-mono text-sm transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/20"
-                >
-                  <Copy size={16} />
-                  <span>Copy</span>
-                </button>
-              </div>
-            </div>
+          {/* Use PromptCard component with like button enabled */}
+          <PromptCard
+            id={prompt.id}
+            title={prompt.title}
+            content={prompt.content}
+            access={prompt.access}
+            createdAt={prompt.created_at || ''}
+            views={prompt.views}
+            likeCount={prompt.like_count}
+            forkCount={prompt.fork_count}
+            originalPromptId={prompt.original_prompt_id}
+            showActions={true}
+            showLikeButton={true} // Enable like button for shared prompt page
+          />
 
-            {/* Content */}
-            <div className="bg-black/20 border border-cyan-500/20 rounded-lg p-6">
-              <div 
-                className="text-cyan-100/90 font-mono leading-relaxed prose prose-invert prose-cyan max-w-none"
-                dangerouslySetInnerHTML={renderContent()}
-                style={{
-                  wordBreak: 'break-word',
-                  overflowWrap: 'break-word',
-                  hyphens: 'auto',
-                }}
-              />
-            </div>
-
-            {/* Footer */}
-            <div className="mt-6 pt-6 border-t border-cyan-500/20">
-              <p className="text-center text-cyan-500/70 font-mono text-sm">
-                Created with{' '}
-                <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                  promptby.me
-                </Link>
-                {' '}• AI prompt sharing platform
-              </p>
-            </div>
+          {/* Additional action buttons for shared prompt */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+            {/* Fork button - only show for original prompts */}
+            {canFork && (
+              <button
+                onClick={handleFork}
+                disabled={isForking}
+                className={`flex items-center gap-2 px-6 py-3 rounded-lg border transition-all duration-300 font-mono text-sm transform hover:scale-105 ${
+                  isForking 
+                    ? 'opacity-50 cursor-not-allowed bg-green-500/10 border-green-500/30 text-green-400/50'
+                    : 'bg-green-500/10 border-green-500/30 text-green-400 hover:text-green-300 hover:bg-green-500/20 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/20'
+                }`}
+                title={user ? 'Fork this prompt to your gallery' : 'Sign in to fork this prompt'}
+              >
+                <GitFork size={18} />
+                <span>
+                  {isForking 
+                    ? 'Forking...'
+                    : 'Fork to Gallery'
+                  }
+                </span>
+              </button>
+            )}
+            
+            {/* Copy button */}
+            <button
+              onClick={() => copyToClipboard(prompt.content)}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-cyan-300 hover:text-cyan-100 hover:border-cyan-400/50 rounded-lg transition-all duration-300 font-mono text-sm transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/20"
+            >
+              <Copy size={18} />
+              <span>Copy Content</span>
+            </button>
           </div>
 
           {/* Call to action for non-authenticated users */}
