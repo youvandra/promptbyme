@@ -116,7 +116,7 @@ export const ProfilePage: React.FC = () => {
         <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-h-screen lg:ml-80">
+        <div className="flex-1 flex flex-col min-h-screen ml-10 lg:ml-10">
           {/* Mobile Header */}
           <header className="lg:hidden relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
             <div className="px-4 py-4">
