@@ -8,8 +8,7 @@ import {
   X,
   Home,
   Heart,
-  GitFork,
-  Eye
+  GitFork
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { usePromptStore } from '../store/promptStore'
