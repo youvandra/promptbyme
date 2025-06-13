@@ -131,7 +131,7 @@ export const HomePage: React.FC = () => {
 
           {/* Main Content */}
           <main className="relative z-10 flex-1">
-            <div className={`w-full ${user ? 'max-w-7xl pr-8' : 'max-w-7xl px-4'} mx-auto py-8`}>
+            <div className={`w-full ${user ? 'max-w-6xl pr-10' : 'max-w-6xl px-4'} mx-auto py-8`}>
               {/* Hero Section */}
               <div className="text-center mb-12">
                 <h2 className="text-4xl md:text-6xl font-bold font-mono mb-6 bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
@@ -152,7 +152,7 @@ export const HomePage: React.FC = () => {
 
               {/* Getting Started Guide for new users */}
               {!user && (
-                <div className="max-w-6xl mx-auto">
+                <div className="max-w-5xl mx-auto">
                   <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-8">
                     <h3 className="text-2xl font-bold text-cyan-100 mb-4 font-mono text-center">
                       Welcome to the Terminal
