@@ -29,7 +29,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         onClose()
       } else {
         await signUp(email, password)
-        setSuccess('Account created successfully! Please check your email for a confirmation link.')
+        setSuccess('Account created successfully!')
         // Don't close modal immediately for signup to show success message
         setTimeout(() => {
           onClose()
