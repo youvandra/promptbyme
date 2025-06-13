@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { FolderOpen, Search, Filter, Grid, List, Plus } from 'lucide-react'
+import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { AnimatedBackground } from '../components/AnimatedBackground'
 import { PromptCard } from '../components/PromptCard'
@@ -87,9 +87,8 @@ export const GalleryPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-black text-cyan-100 relative overflow-hidden">
         <AnimatedBackground />
-        <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         
-        <div className="lg:ml-80 min-h-screen flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <FolderOpen className="mx-auto text-cyan-400 mb-4" size={64} />
             <h1 className="text-4xl font-bold font-mono text-cyan-100 mb-4">
@@ -102,7 +101,7 @@ export const GalleryPage: React.FC = () => {
               to="/"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
             >
-              <Plus size={16} />
+              <ArrowLeft size={16} />
               <span>Go to Terminal</span>
             </Link>
           </div>
@@ -121,18 +120,27 @@ export const GalleryPage: React.FC = () => {
       <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       
       {/* Main Content */}
-      <div className="lg:ml-80 min-h-screen">
+      <div className="min-h-screen">
         {/* Header */}
         <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
           <div className="container mx-auto px-4 py-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold font-mono text-cyan-300 mb-2">
-                  Prompt Gallery
-                </h1>
-                <p className="text-cyan-500/70 font-mono text-sm">
-                  Your personal collection of AI prompts
-                </p>
+              <div className="flex items-center gap-4">
+                <Link
+                  to="/"
+                  className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors font-mono"
+                >
+                  <ArrowLeft size={20} />
+                  <span>Back</span>
+                </Link>
+                <div>
+                  <h1 className="text-2xl font-bold font-mono text-cyan-300">
+                    Prompt Gallery
+                  </h1>
+                  <p className="text-cyan-500/70 font-mono text-sm">
+                    Your personal collection of AI prompts
+                  </p>
+                </div>
               </div>
               
               <Link
@@ -146,8 +154,9 @@ export const GalleryPage: React.FC = () => {
           </div>
         </header>
 
-        {/* Stats Section */}
-        <div className="relative z-10 container mx-auto px-4 py-6">
+        {/* Content */}
+        <div className="relative z-10 container mx-auto px-4 py-8">
+          {/* Stats Section */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 text-center">
               <FolderOpen className="text-cyan-400 mx-auto mb-2" size={20} />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { User, Mail, Calendar, Settings, Shield, Trash2, Save } from 'lucide-react'
+import { User, Mail, Calendar, Settings, Shield, Trash2, Save, ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { AnimatedBackground } from '../components/AnimatedBackground'
 import { Toast } from '../components/Toast'
@@ -82,9 +82,8 @@ export const ProfilePage: React.FC = () => {
     return (
       <div className="min-h-screen bg-black text-cyan-100 relative overflow-hidden">
         <AnimatedBackground />
-        <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         
-        <div className="lg:ml-80 min-h-screen flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <User className="mx-auto text-cyan-400 mb-4" size={64} />
             <h1 className="text-4xl font-bold font-mono text-cyan-100 mb-4">
@@ -97,7 +96,7 @@ export const ProfilePage: React.FC = () => {
               to="/"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
             >
-              <User size={16} />
+              <ArrowLeft size={16} />
               <span>Go to Terminal</span>
             </Link>
           </div>
@@ -116,18 +115,27 @@ export const ProfilePage: React.FC = () => {
       <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       
       {/* Main Content */}
-      <div className="lg:ml-80 min-h-screen">
+      <div className="min-h-screen">
         {/* Header */}
         <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
           <div className="container mx-auto px-4 py-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold font-mono text-cyan-300 mb-2">
-                  User Profile
-                </h1>
-                <p className="text-cyan-500/70 font-mono text-sm">
-                  Manage your account settings and preferences
-                </p>
+              <div className="flex items-center gap-4">
+                <Link
+                  to="/"
+                  className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors font-mono"
+                >
+                  <ArrowLeft size={20} />
+                  <span>Back</span>
+                </Link>
+                <div>
+                  <h1 className="text-2xl font-bold font-mono text-cyan-300">
+                    User Profile
+                  </h1>
+                  <p className="text-cyan-500/70 font-mono text-sm">
+                    Manage your account settings and preferences
+                  </p>
+                </div>
               </div>
               
               <button

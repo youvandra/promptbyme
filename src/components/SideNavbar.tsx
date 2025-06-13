@@ -1,19 +1,18 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { 
   Terminal, 
   User, 
   FolderOpen, 
   LogOut, 
-  Menu, 
   X,
   Home,
-  Settings,
   Heart,
   GitFork,
   Eye
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
+import { usePromptStore } from '../store/promptStore'
 import { GlitchText } from './GlitchText'
 
 interface SideNavbarProps {
@@ -24,12 +23,14 @@ interface SideNavbarProps {
 export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation()
   const { user, signOut } = useAuthStore()
+  const { prompts } = usePromptStore()
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
     try {
       await signOut()
+      onToggle() // Close sidebar after sign out
     } catch (error) {
       console.error('Sign out error:', error)
     } finally {
@@ -48,19 +49,39 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       path: '/gallery',
       icon: FolderOpen,
       label: 'Gallery',
-      description: 'Your prompt collection',
-      requiresAuth: true
+      description: 'Your prompt collection'
     },
     {
       path: '/profile',
       icon: User,
       label: 'Profile',
-      description: 'Account settings',
-      requiresAuth: true
+      description: 'Account settings'
     }
   ]
 
   const isActive = (path: string) => location.pathname === path
+
+  // Calculate user stats
+  const stats = {
+    totalPrompts: prompts.length,
+    totalLikes: prompts.reduce((sum, p) => sum + (p.like_count || 0), 0),
+    totalForks: prompts.reduce((sum, p) => sum + (p.fork_count || 0), 0)
+  }
+
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen && window.innerWidth < 1024) {
+        const sidebar = document.getElementById('sidebar')
+        if (sidebar && !sidebar.contains(event.target as Node)) {
+          onToggle()
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isOpen, onToggle])
 
   return (
     <>
@@ -73,12 +94,15 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       )}
 
       {/* Sidebar */}
-      <div className={`
-        fixed top-0 left-0 h-full w-80 bg-black/95 backdrop-blur-md border-r border-cyan-500/30 z-50
-        transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:z-auto
-      `}>
+      <div 
+        id="sidebar"
+        className={`
+          fixed top-0 left-0 h-full w-80 bg-black/95 backdrop-blur-md border-r border-cyan-500/30 z-50
+          transform transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0 lg:static lg:z-auto
+        `}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-cyan-500/30">
           <div className="flex items-center gap-3">
@@ -117,17 +141,17 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
               <div className="bg-black/40 rounded-lg p-3 text-center">
                 <FolderOpen size={16} className="text-cyan-400 mx-auto mb-1" />
                 <p className="text-xs text-cyan-500/70 font-mono">Prompts</p>
-                <p className="text-sm text-cyan-100 font-mono font-bold">--</p>
+                <p className="text-sm text-cyan-100 font-mono font-bold">{stats.totalPrompts}</p>
               </div>
               <div className="bg-black/40 rounded-lg p-3 text-center">
                 <Heart size={16} className="text-red-400 mx-auto mb-1" />
                 <p className="text-xs text-cyan-500/70 font-mono">Likes</p>
-                <p className="text-sm text-cyan-100 font-mono font-bold">--</p>
+                <p className="text-sm text-cyan-100 font-mono font-bold">{stats.totalLikes}</p>
               </div>
               <div className="bg-black/40 rounded-lg p-3 text-center">
                 <GitFork size={16} className="text-green-400 mx-auto mb-1" />
                 <p className="text-xs text-cyan-500/70 font-mono">Forks</p>
-                <p className="text-sm text-cyan-100 font-mono font-bold">--</p>
+                <p className="text-sm text-cyan-100 font-mono font-bold">{stats.totalForks}</p>
               </div>
             </div>
           </div>
@@ -137,8 +161,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
         <nav className="flex-1 p-6">
           <div className="space-y-2">
             {navItems.map((item) => {
-              if (item.requiresAuth && !user) return null
-              
               const Icon = item.icon
               const active = isActive(item.path)
               
@@ -183,14 +205,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
           </div>
         )}
       </div>
-
-      {/* Mobile Toggle Button */}
-      <button
-        onClick={onToggle}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-black/80 backdrop-blur-md border border-cyan-500/30 rounded-lg p-2 text-cyan-400 hover:text-cyan-300 transition-colors"
-      >
-        <Menu size={20} />
-      </button>
     </>
   )
 }
