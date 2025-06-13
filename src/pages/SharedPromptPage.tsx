@@ -323,7 +323,7 @@ export const SharedPromptPage: React.FC = () => {
                   )}
                   
                   <span>•</span>
-                  <span className="font-mono">{formatDate(prompt.created_at)}</span>
+                  <span className="font-mono">{formatDate(prompt.created_at || '')}</span>
                 </div>
               </div>
               
