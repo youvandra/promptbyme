@@ -145,7 +145,7 @@ export const GalleryPage: React.FC = () => {
 
           {/* Content */}
           <div className="relative z-10 flex-1">
-            <div className="w-full max-w-6xl mx-auto px-6 py-8">
+            <div className="w-full max-w-7xl pl-4 pr-8 mx-auto py-8">
               {/* Page Header */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
                 <div>

@@ -79,14 +79,14 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       <div 
         id="sidebar"
         className={`
-          fixed top-0 left-0 h-full w-80 bg-black/95 backdrop-blur-md border-r border-cyan-500/30 z-50
+          fixed top-0 left-0 h-screen w-80 bg-black/95 backdrop-blur-md border-r border-cyan-500/30 z-50
           transform transition-transform duration-300 ease-in-out flex flex-col
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0 lg:relative lg:z-auto
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-cyan-500/30">
+        <div className="flex items-center justify-between p-6 border-b border-cyan-500/30 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Terminal className="text-cyan-400" size={24} />
             <h1 className="text-lg font-bold font-mono">
@@ -102,7 +102,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-6">
+        <nav className="flex-1 p-6 overflow-y-auto">
           <div className="space-y-3">
             {navItems.map((item) => {
               const Icon = item.icon
@@ -137,7 +137,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
 
         {/* Bottom Section - User Info and Exit with proper spacing */}
         {user && (
-          <div className="mt-auto border-t border-cyan-500/20">
+          <div className="mt-auto border-t border-cyan-500/20 flex-shrink-0">
             {/* User Profile Link */}
             <Link
               to="/profile"
