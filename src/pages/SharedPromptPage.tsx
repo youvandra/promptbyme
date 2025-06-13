@@ -291,13 +291,13 @@ export const SharedPromptPage: React.FC = () => {
                   
                   {/* Fork indicator */}
                   {isForkedPrompt && (
-                    <>
-                      <span>•</span>
-                      <div className="flex items-center gap-1">
-                        <GitFork size={14} className="text-orange-400" />
-                        <span className="font-mono text-orange-400">forked prompt</span>
-                      </div>
-                    </>
+                    <span>•</span>
+                  )}
+                  {isForkedPrompt && (
+                    <div className="flex items-center gap-1">
+                      <GitFork size={14} className="text-orange-400" />
+                      <span className="font-mono text-orange-400">forked prompt</span>
+                    </div>
                   )}
                   
                   <span>•</span>
@@ -313,13 +313,13 @@ export const SharedPromptPage: React.FC = () => {
                   
                   {/* Fork count - only show for original prompts */}
                   {canFork && (prompt.fork_count || 0) > 0 && (
-                    <>
-                      <span>•</span>
-                      <div className="flex items-center gap-1">
-                        <GitFork size={14} className="text-green-400" />
-                        <span className="font-mono text-green-400">{formatViews(prompt.fork_count || 0)} forks</span>
-                      </div>
-                    </>
+                    <span>•</span>
+                  )}
+                  {canFork && (prompt.fork_count || 0) > 0 && (
+                    <div className="flex items-center gap-1">
+                      <GitFork size={14} className="text-green-400" />
+                      <span className="font-mono text-green-400">{formatViews(prompt.fork_count || 0)} forks</span>
+                    </div>
                   )}
                   
                   <span>•</span>

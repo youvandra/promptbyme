@@ -128,40 +128,45 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               
               {/* Fork indicator */}
               {isForkedPrompt && (
-                <>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <GitFork size={14} className="text-orange-400" />
-                    <span className="font-mono text-orange-400">forked prompt</span>
-                  </div>
-                </>
+                <span>•</span>
+              )}
+              {isForkedPrompt && (
+                <div className="flex items-center gap-1">
+                  <GitFork size={14} className="text-orange-400" />
+                  <span className="font-mono text-orange-400">forked prompt</span>
+                </div>
               )}
               
               {access === 'public' && (
-                <>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <Eye size={14} className="text-purple-400" />
-                    <span className="font-mono text-purple-400">{formatViews(views)}</span>
-                  </div>
-                  <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <Heart size={14} className="text-red-400" />
-                    <span className="font-mono text-red-400">{formatViews(likeCount)}</span>
-                  </div>
-                  
-                  {/* Fork count - only show for original prompts */}
-                  {!isForkedPrompt && forkCount > 0 && (
-                    <>
-                      <span>•</span>
-                      <div className="flex items-center gap-1">
-                        <GitFork size={14} className="text-green-400" />
-                        <span className="font-mono text-green-400">{formatViews(forkCount)}</span>
-                      </div>
-                    </>
-                  )}
-                </>
+                <span>•</span>
               )}
+              {access === 'public' && (
+                <div className="flex items-center gap-1">
+                  <Eye size={14} className="text-purple-400" />
+                  <span className="font-mono text-purple-400">{formatViews(views)}</span>
+                </div>
+              )}
+              {access === 'public' && (
+                <span>•</span>
+              )}
+              {access === 'public' && (
+                <div className="flex items-center gap-1">
+                  <Heart size={14} className="text-red-400" />
+                  <span className="font-mono text-red-400">{formatViews(likeCount)}</span>
+                </div>
+              )}
+              
+              {/* Fork count - only show for original prompts */}
+              {access === 'public' && !isForkedPrompt && forkCount > 0 && (
+                <span>•</span>
+              )}
+              {access === 'public' && !isForkedPrompt && forkCount > 0 && (
+                <div className="flex items-center gap-1">
+                  <GitFork size={14} className="text-green-400" />
+                  <span className="font-mono text-green-400">{formatViews(forkCount)}</span>
+                </div>
+              )}
+              
               <span>•</span>
               <span className="font-mono">{formatDate(createdAt)}</span>
             </div>
