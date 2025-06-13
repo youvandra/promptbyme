@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft, Menu } from 'lucide-react'
+import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft, Menu, Eye, Lock, Heart, GitFork, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { AnimatedBackground } from '../components/AnimatedBackground'
 import { PromptCard } from '../components/PromptCard'
@@ -67,7 +67,14 @@ export const GalleryPage: React.FC = () => {
     private: prompts.filter(p => p.access === 'private').length,
     totalLikes: prompts.reduce((sum, p) => sum + (p.like_count || 0), 0),
     totalViews: prompts.reduce((sum, p) => sum + (p.views || 0), 0),
-    totalForks: prompts.reduce((sum, p) => sum + (p.fork_count || 0), 0)
+    totalForks: prompts.reduce((sum, p) => sum + (p.fork_count || 0), 0),
+    forkedPrompts: prompts.filter(p => p.original_prompt_id !== null).length
+  }
+
+  const formatNumber = (num: number) => {
+    if (num < 1000) return num.toString()
+    if (num < 1000000) return `${(num / 1000).toFixed(1)}k`
+    return `${(num / 1000000).toFixed(1)}M`
   }
 
   if (authLoading) {
@@ -166,42 +173,57 @@ export const GalleryPage: React.FC = () => {
                 </Link>
               </div>
 
-              {/* Stats Section */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-                <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 text-center">
-                  <FolderOpen className="text-cyan-400 mx-auto mb-2" size={20} />
-                  <p className="text-2xl font-bold text-cyan-100 font-mono">{stats.total}</p>
-                  <p className="text-xs text-cyan-500/70 font-mono">Total</p>
-                </div>
-                <div className="bg-black/40 backdrop-blur-md border border-green-500/30 rounded-lg p-4 text-center">
-                  <div className="w-5 h-5 bg-green-400 rounded-full mx-auto mb-2"></div>
-                  <p className="text-2xl font-bold text-green-100 font-mono">{stats.public}</p>
-                  <p className="text-xs text-green-500/70 font-mono">Public</p>
-                </div>
-                <div className="bg-black/40 backdrop-blur-md border border-red-500/30 rounded-lg p-4 text-center">
-                  <div className="w-5 h-5 bg-red-400 rounded-full mx-auto mb-2"></div>
-                  <p className="text-2xl font-bold text-red-100 font-mono">{stats.private}</p>
-                  <p className="text-xs text-red-500/70 font-mono">Private</p>
-                </div>
-                <div className="bg-black/40 backdrop-blur-md border border-purple-500/30 rounded-lg p-4 text-center">
-                  <div className="w-5 h-5 bg-purple-400 rounded-full mx-auto mb-2"></div>
-                  <p className="text-2xl font-bold text-purple-100 font-mono">{stats.totalViews}</p>
-                  <p className="text-xs text-purple-500/70 font-mono">Views</p>
-                </div>
-                <div className="bg-black/40 backdrop-blur-md border border-pink-500/30 rounded-lg p-4 text-center">
-                  <div className="w-5 h-5 bg-pink-400 rounded-full mx-auto mb-2"></div>
-                  <p className="text-2xl font-bold text-pink-100 font-mono">{stats.totalLikes}</p>
-                  <p className="text-xs text-pink-500/70 font-mono">Likes</p>
-                </div>
-                <div className="bg-black/40 backdrop-blur-md border border-orange-500/30 rounded-lg p-4 text-center">
-                  <div className="w-5 h-5 bg-orange-400 rounded-full mx-auto mb-2"></div>
-                  <p className="text-2xl font-bold text-orange-100 font-mono">{stats.totalForks}</p>
-                  <p className="text-xs text-orange-500/70 font-mono">Forks</p>
-                </div>
-                <div className="bg-black/40 backdrop-blur-md border border-yellow-500/30 rounded-lg p-4 text-center">
-                  <div className="w-5 h-5 bg-yellow-400 rounded-full mx-auto mb-2"></div>
-                  <p className="text-2xl font-bold text-yellow-100 font-mono">{prompts.filter(p => p.original_prompt_id !== null).length}</p>
-                  <p className="text-xs text-yellow-500/70 font-mono">Forked</p>
+              {/* Single Line Stats */}
+              <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 mb-8">
+                <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
+                  {/* Total */}
+                  <div className="flex items-center gap-2">
+                    <FolderOpen className="text-cyan-400" size={18} />
+                    <span className="text-2xl font-bold text-cyan-100 font-mono">{stats.total}</span>
+                    <span className="text-sm text-cyan-500/70 font-mono">Total</span>
+                  </div>
+                  
+                  {/* Public */}
+                  <div className="flex items-center gap-2">
+                    <Eye className="text-green-400" size={18} />
+                    <span className="text-2xl font-bold text-green-100 font-mono">{stats.public}</span>
+                    <span className="text-sm text-green-500/70 font-mono">Public</span>
+                  </div>
+                  
+                  {/* Private */}
+                  <div className="flex items-center gap-2">
+                    <Lock className="text-red-400" size={18} />
+                    <span className="text-2xl font-bold text-red-100 font-mono">{stats.private}</span>
+                    <span className="text-sm text-red-500/70 font-mono">Private</span>
+                  </div>
+                  
+                  {/* Views */}
+                  <div className="flex items-center gap-2">
+                    <Users className="text-purple-400" size={18} />
+                    <span className="text-2xl font-bold text-purple-100 font-mono">{formatNumber(stats.totalViews)}</span>
+                    <span className="text-sm text-purple-500/70 font-mono">Views</span>
+                  </div>
+                  
+                  {/* Likes */}
+                  <div className="flex items-center gap-2">
+                    <Heart className="text-pink-400" size={18} />
+                    <span className="text-2xl font-bold text-pink-100 font-mono">{formatNumber(stats.totalLikes)}</span>
+                    <span className="text-sm text-pink-500/70 font-mono">Likes</span>
+                  </div>
+                  
+                  {/* Forks Created */}
+                  <div className="flex items-center gap-2">
+                    <GitFork className="text-orange-400" size={18} />
+                    <span className="text-2xl font-bold text-orange-100 font-mono">{formatNumber(stats.totalForks)}</span>
+                    <span className="text-sm text-orange-500/70 font-mono">Forks</span>
+                  </div>
+                  
+                  {/* Forked Prompts */}
+                  <div className="flex items-center gap-2">
+                    <GitFork className="text-yellow-400 scale-x-[-1]" size={18} />
+                    <span className="text-2xl font-bold text-yellow-100 font-mono">{stats.forkedPrompts}</span>
+                    <span className="text-sm text-yellow-500/70 font-mono">Forked</span>
+                  </div>
                 </div>
               </div>
 
