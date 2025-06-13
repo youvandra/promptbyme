@@ -80,7 +80,7 @@ export const HomePage: React.FC = () => {
         {user && <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />}
         
         {/* Main Content Area */}
-        <div className={`flex-1 flex flex-col min-h-screen ${user ? 'lg:ml-80' : ''}`}>
+        <div className={`flex-1 flex flex-col min-h-screen ${user ? 'lg:ml-0' : ''}`}>
           {/* Header - Only show for non-logged users */}
           {!user && (
             <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
