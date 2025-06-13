@@ -25,8 +25,13 @@ export const SharedPromptPage: React.FC = () => {
   const [pendingLike, setPendingLike] = useState(false)
   
   const { fetchPromptById, incrementViews } = usePromptStore()
-  const { user } = useAuthStore()
+  const { user, initialize } = useAuthStore()
   const { toggleLike, isLiked, fetchUserLikes } = useLikeStore()
+
+  // Initialize auth state when component mounts
+  useEffect(() => {
+    initialize()
+  }, [initialize])
 
   useEffect(() => {
     const loadPrompt = async () => {
@@ -58,6 +63,7 @@ export const SharedPromptPage: React.FC = () => {
     loadPrompt()
   }, [id, fetchPromptById, incrementViews])
 
+  // Load user likes when user is available
   useEffect(() => {
     if (user) {
       fetchUserLikes(user.id)
@@ -258,18 +264,27 @@ export const SharedPromptPage: React.FC = () => {
                 <button
                   onClick={handleLike}
                   disabled={isLiking}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 font-mono text-sm ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 font-mono text-sm group ${
                     userHasLiked
                       ? 'bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30'
                       : 'bg-red-500/10 border-red-500/30 text-red-400/70 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/50'
                   } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  title={user ? (userHasLiked ? 'Unlike' : 'Like') : 'Sign in to like this prompt'}
+                  title={user ? (userHasLiked ? 'Unlike this prompt' : 'Like this prompt') : 'Sign in to like this prompt'}
                 >
-                  <Heart size={16} className={userHasLiked ? 'fill-current' : ''} />
+                  <Heart 
+                    size={16} 
+                    className={`transition-all duration-200 ${
+                      userHasLiked 
+                        ? 'fill-current scale-110' 
+                        : 'group-hover:scale-110'
+                    }`} 
+                  />
                   <span>
-                    {user 
-                      ? (userHasLiked ? 'Liked' : 'Like')
-                      : 'Like'
+                    {isLiking 
+                      ? '...'
+                      : user 
+                        ? (userHasLiked ? 'Liked' : 'Like')
+                        : 'Like'
                     }
                   </span>
                 </button>
