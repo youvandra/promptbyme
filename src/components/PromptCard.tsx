@@ -107,56 +107,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({
       {/* Glow effect */}
       <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       
-      {/* EXTREME BLUR overlay on hover - makes text completely unreadable */}
-      <div className="absolute inset-0 bg-black/95 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-lg pointer-events-none z-10" style={{ backdropFilter: 'blur(100px)' }} />
-      
-      {/* Stats overlay - crystal clear and prominent on hover */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 pointer-events-none">
-        <div className="flex items-center gap-2 text-lg font-bold flex-wrap justify-center max-w-full px-2">
-          {/* Access Status */}
-          <div className="flex items-center gap-2 bg-black/98 px-4 py-3 rounded-xl backdrop-blur-sm border-2 border-cyan-400/80 shadow-2xl">
-            {access === 'private' ? (
-              <Lock size={20} className="text-red-300" />
-            ) : (
-              <Eye size={20} className="text-green-300" />
-            )}
-            <span className="font-mono text-base font-black text-white uppercase tracking-wider">{access}</span>
-          </div>
-          
-          {/* Fork indicator */}
-          {isForkedPrompt && (
-            <div className="flex items-center gap-2 bg-orange-600/90 px-4 py-3 rounded-xl backdrop-blur-sm border-2 border-orange-300/80 shadow-2xl">
-              <GitFork size={20} className="text-orange-100" />
-              <span className="font-mono text-base font-black text-orange-50 uppercase tracking-wider">FORKED</span>
-            </div>
-          )}
-          
-          {access === 'public' && (
-            <>
-              {/* Views */}
-              <div className="flex items-center gap-2 bg-purple-600/90 px-4 py-3 rounded-xl backdrop-blur-sm border-2 border-purple-300/80 shadow-2xl">
-                <Eye size={20} className="text-purple-100" />
-                <span className="font-mono text-base font-black text-purple-50">{formatViews(views)}</span>
-              </div>
-              
-              {/* Likes */}
-              <div className="flex items-center gap-2 bg-red-600/90 px-4 py-3 rounded-xl backdrop-blur-sm border-2 border-red-300/80 shadow-2xl">
-                <Heart size={20} className="text-red-100" />
-                <span className="font-mono text-base font-black text-red-50">{formatViews(likeCount)}</span>
-              </div>
-              
-              {/* Fork count - only show for original prompts */}
-              {!isForkedPrompt && forkCount > 0 && (
-                <div className="flex items-center gap-2 bg-green-600/90 px-4 py-3 rounded-xl backdrop-blur-sm border-2 border-green-300/80 shadow-2xl">
-                  <GitFork size={20} className="text-green-100" />
-                  <span className="font-mono text-base font-black text-green-50">{formatViews(forkCount)}</span>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-      
       <div className="relative z-30 flex flex-col h-full">
         {/* Header - Always visible */}
         <div className="flex items-start justify-between mb-4">
@@ -172,7 +122,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
           </div>
           
           {showActions && (
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 ml-2 flex-shrink-0 z-40">
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 ml-2 flex-shrink-0">
               {/* Like button - only show for public prompts and authenticated users */}
               {access === 'public' && user && (
                 <button
@@ -227,12 +177,69 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               hyphens: 'auto',
             }}
           />
-          
-          {/* Expand/Collapse button - stays clickable even when card is blurred */}
+        </div>
+
+        {/* Bottom section with stats and show more button */}
+        <div className="mt-4 flex items-center justify-between gap-4">
+          {/* Stats on the left */}
+          <div className="flex items-center gap-3 text-xs">
+            {/* Access indicator */}
+            <div className="flex items-center gap-1">
+              {access === 'private' ? (
+                <Lock size={12} className="text-red-400" />
+              ) : (
+                <Eye size={12} className="text-green-400" />
+              )}
+              <span className={`font-mono ${access === 'private' ? 'text-red-400' : 'text-green-400'}`}>
+                {access}
+              </span>
+            </div>
+
+            {/* Fork indicator */}
+            {isForkedPrompt && (
+              <>
+                <span className="text-cyan-500/50">•</span>
+                <div className="flex items-center gap-1">
+                  <GitFork size={12} className="text-orange-400" />
+                  <span className="font-mono text-orange-400">forked</span>
+                </div>
+              </>
+            )}
+
+            {/* Public prompt stats */}
+            {access === 'public' && (
+              <>
+                <span className="text-cyan-500/50">•</span>
+                <div className="flex items-center gap-1">
+                  <Eye size={12} className="text-purple-400" />
+                  <span className="font-mono text-purple-400">{formatViews(views)}</span>
+                </div>
+                
+                <span className="text-cyan-500/50">•</span>
+                <div className="flex items-center gap-1">
+                  <Heart size={12} className="text-red-400" />
+                  <span className="font-mono text-red-400">{formatViews(likeCount)}</span>
+                </div>
+                
+                {/* Fork count - only show for original prompts */}
+                {!isForkedPrompt && forkCount > 0 && (
+                  <>
+                    <span className="text-cyan-500/50">•</span>
+                    <div className="flex items-center gap-1">
+                      <GitFork size={12} className="text-green-400" />
+                      <span className="font-mono text-green-400">{formatViews(forkCount)}</span>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Show more/less button on the right */}
           {shouldTruncate && (
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="mt-3 text-cyan-400 hover:text-cyan-300 font-mono text-xs transition-colors duration-200 self-start z-50 relative bg-black/95 px-3 py-2 rounded-lg backdrop-blur-sm border border-cyan-400/60 shadow-xl font-bold"
+              className="text-cyan-400 hover:text-cyan-300 font-mono text-xs transition-colors duration-200 flex-shrink-0"
             >
               {isExpanded ? 'Show less' : 'Show more'}
             </button>
