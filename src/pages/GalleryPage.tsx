@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft } from 'lucide-react'
+import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft, Menu } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { AnimatedBackground } from '../components/AnimatedBackground'
 import { PromptCard } from '../components/PromptCard'
@@ -123,43 +123,50 @@ export const GalleryPage: React.FC = () => {
         
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-h-screen lg:ml-80">
-          {/* Header */}
-          <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
-            <div className="px-6 py-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <Link
-                    to="/"
-                    className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors font-mono"
-                  >
-                    <ArrowLeft size={20} />
-                    <span>Back</span>
-                  </Link>
-                  <div>
-                    <h1 className="text-2xl font-bold font-mono text-cyan-300">
-                      Prompt Gallery
-                    </h1>
-                    <p className="text-cyan-500/70 font-mono text-sm">
-                      Your personal collection of AI prompts
-                    </p>
-                  </div>
-                </div>
-                
-                <Link
-                  to="/"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105 self-start lg:self-auto"
+          {/* Mobile Header */}
+          <header className="lg:hidden relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
+            <div className="px-4 py-4">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="text-cyan-400 hover:text-cyan-300 transition-colors"
                 >
-                  <Plus size={16} />
-                  <span>Create Prompt</span>
-                </Link>
+                  <Menu size={24} />
+                </button>
+                
+                <h1 className="text-lg font-bold font-mono text-cyan-300">
+                  Gallery
+                </h1>
+                
+                <div className="w-6" /> {/* Spacer for centering */}
               </div>
             </div>
           </header>
 
           {/* Content */}
-          <div className="relative z-10 flex-1 px-6 py-8">
+          <div className="relative z-10 flex-1 px-4 py-6">
+            {/* Page Header */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+              <div>
+                <h1 className="text-2xl font-bold font-mono text-cyan-300">
+                  Prompt Gallery
+                </h1>
+                <p className="text-cyan-500/70 font-mono text-sm">
+                  Your personal collection of AI prompts
+                </p>
+              </div>
+              
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105 self-start lg:self-auto"
+              >
+                <Plus size={16} />
+                <span>Create Prompt</span>
+              </Link>
+            </div>
+
             {/* Stats Section */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
               <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 text-center">
                 <FolderOpen className="text-cyan-400 mx-auto mb-2" size={20} />
                 <p className="text-2xl font-bold text-cyan-100 font-mono">{stats.total}</p>
@@ -193,7 +200,7 @@ export const GalleryPage: React.FC = () => {
             </div>
 
             {/* Filters and Search */}
-            <div className="flex flex-col lg:flex-row gap-4 mb-8">
+            <div className="flex flex-col lg:flex-row gap-4 mb-6">
               {/* Search */}
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-500/50" size={18} />

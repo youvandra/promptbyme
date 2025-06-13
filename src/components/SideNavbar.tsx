@@ -45,12 +45,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       icon: FolderOpen,
       label: 'Gallery',
       description: 'Your prompt collection'
-    },
-    {
-      path: '/profile',
-      icon: User,
-      label: 'Profile',
-      description: 'Account settings'
     }
   ]
 
@@ -86,7 +80,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
         id="sidebar"
         className={`
           fixed top-0 left-0 h-full w-80 bg-black/95 backdrop-blur-md border-r border-cyan-500/30 z-50
-          transform transition-transform duration-300 ease-in-out
+          transform transition-transform duration-300 ease-in-out flex flex-col
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0 lg:relative lg:z-auto
         `}
@@ -106,25 +100,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
             <X size={20} />
           </button>
         </div>
-
-        {/* User Info */}
-        {user && (
-          <div className="p-6 border-b border-cyan-500/20">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center">
-                <User size={20} className="text-black" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-cyan-100 font-mono font-medium truncate">
-                  {user.email}
-                </p>
-                <p className="text-cyan-500/70 text-sm font-mono">
-                  Active Terminal
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Navigation */}
         <nav className="flex-1 p-6">
@@ -160,17 +135,48 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
           </div>
         </nav>
 
-        {/* Footer */}
+        {/* Bottom Section - User Info and Exit */}
         {user && (
-          <div className="p-6 border-t border-cyan-500/20">
-            <button
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-              className="w-full flex items-center gap-3 p-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-300 font-mono disabled:opacity-50"
+          <div className="border-t border-cyan-500/20">
+            {/* User Profile Link */}
+            <Link
+              to="/profile"
+              onClick={onToggle}
+              className={`
+                group flex items-center gap-3 p-4 transition-all duration-300 border-b border-cyan-500/10
+                ${location.pathname === '/profile'
+                  ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border-cyan-500/50 text-cyan-100' 
+                  : 'text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10'
+                }
+              `}
             >
-              <LogOut size={20} />
-              <span>{isSigningOut ? 'Terminating...' : 'Exit Terminal'}</span>
-            </button>
+              <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <User size={16} className="text-black" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-mono font-medium truncate">
+                  {user.email}
+                </p>
+                <p className="text-xs text-cyan-500/70 font-mono">
+                  View Profile
+                </p>
+              </div>
+              {location.pathname === '/profile' && (
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+              )}
+            </Link>
+
+            {/* Sign Out Button */}
+            <div className="p-4">
+              <button
+                onClick={handleSignOut}
+                disabled={isSigningOut}
+                className="w-full flex items-center gap-3 p-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-300 font-mono disabled:opacity-50"
+              >
+                <LogOut size={20} />
+                <span>{isSigningOut ? 'Terminating...' : 'Exit Terminal'}</span>
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { User, Mail, Calendar, Settings, Shield, Trash2, Save, ArrowLeft } from 'lucide-react'
+import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { AnimatedBackground } from '../components/AnimatedBackground'
 import { Toast } from '../components/Toast'
@@ -96,7 +96,6 @@ export const ProfilePage: React.FC = () => {
               to="/"
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
             >
-              <ArrowLeft size={16} />
               <span>Go to Terminal</span>
             </Link>
           </div>
@@ -118,52 +117,59 @@ export const ProfilePage: React.FC = () => {
         
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-h-screen lg:ml-80">
-          {/* Header */}
-          <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
-            <div className="px-6 py-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <Link
-                    to="/"
-                    className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors font-mono"
-                  >
-                    <ArrowLeft size={20} />
-                    <span>Back</span>
-                  </Link>
-                  <div>
-                    <h1 className="text-2xl font-bold font-mono text-cyan-300">
-                      User Profile
-                    </h1>
-                    <p className="text-cyan-500/70 font-mono text-sm">
-                      Manage your account settings and preferences
-                    </p>
-                  </div>
-                </div>
-                
+          {/* Mobile Header */}
+          <header className="lg:hidden relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
+            <div className="px-4 py-4">
+              <div className="flex items-center justify-between">
                 <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105 self-start lg:self-auto"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="text-cyan-400 hover:text-cyan-300 transition-colors"
                 >
-                  <Settings size={16} />
-                  <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
+                  <Menu size={24} />
                 </button>
+                
+                <h1 className="text-lg font-bold font-mono text-cyan-300">
+                  Profile
+                </h1>
+                
+                <div className="w-6" /> {/* Spacer for centering */}
               </div>
             </div>
           </header>
 
           {/* Profile Content */}
-          <div className="relative z-10 flex-1 px-6 py-8">
-            <div className="max-w-4xl space-y-8">
+          <div className="relative z-10 flex-1 px-4 py-6">
+            {/* Page Header */}
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+              <div>
+                <h1 className="text-2xl font-bold font-mono text-cyan-300">
+                  User Profile
+                </h1>
+                <p className="text-cyan-500/70 font-mono text-sm">
+                  Manage your account settings and preferences
+                </p>
+              </div>
+              
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105 self-start lg:self-auto"
+              >
+                <Settings size={16} />
+                <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
+              </button>
+            </div>
+
+            <div className="max-w-4xl space-y-6">
               {/* Profile Card */}
-              <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8">
-                <div className="flex flex-col lg:flex-row gap-8">
+              <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6">
+                <div className="flex flex-col lg:flex-row gap-6">
                   {/* Avatar Section */}
                   <div className="flex flex-col items-center lg:items-start">
-                    <div className="w-24 h-24 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center mb-4">
-                      <User size={40} className="text-black" />
+                    <div className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center mb-3">
+                      <User size={32} className="text-black" />
                     </div>
                     <div className="text-center lg:text-left">
-                      <h2 className="text-xl font-bold text-cyan-100 font-mono mb-1">
+                      <h2 className="text-lg font-bold text-cyan-100 font-mono mb-1">
                         {formData.displayName || 'Anonymous User'}
                       </h2>
                       <p className="text-cyan-500/70 font-mono text-sm">
@@ -173,7 +179,7 @@ export const ProfilePage: React.FC = () => {
                   </div>
 
                   {/* Profile Info */}
-                  <div className="flex-1 space-y-6">
+                  <div className="flex-1 space-y-4">
                     {isEditing ? (
                       <div className="space-y-4">
                         <div>
@@ -209,26 +215,26 @@ export const ProfilePage: React.FC = () => {
                         </button>
                       </div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <div className="flex items-center gap-3">
-                          <Mail className="text-cyan-400" size={18} />
-                          <span className="font-mono text-cyan-100">{user.email}</span>
+                          <Mail className="text-cyan-400" size={16} />
+                          <span className="font-mono text-cyan-100 text-sm">{user.email}</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Calendar className="text-cyan-400" size={18} />
-                          <span className="font-mono text-cyan-100">
+                          <Calendar className="text-cyan-400" size={16} />
+                          <span className="font-mono text-cyan-100 text-sm">
                             Joined {formatDate(user.created_at)}
                           </span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Shield className="text-cyan-400" size={18} />
-                          <span className="font-mono text-cyan-100">
+                          <Shield className="text-cyan-400" size={16} />
+                          <span className="font-mono text-cyan-100 text-sm">
                             Email {user.email_confirmed_at ? 'Verified' : 'Pending'}
                           </span>
                         </div>
                         {formData.bio && (
-                          <div className="mt-4">
-                            <p className="text-cyan-300/80 font-mono leading-relaxed">
+                          <div className="mt-3">
+                            <p className="text-cyan-300/80 font-mono text-sm leading-relaxed">
                               {formData.bio}
                             </p>
                           </div>
@@ -240,69 +246,69 @@ export const ProfilePage: React.FC = () => {
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-cyan-100 font-mono">{stats.totalPrompts}</p>
-                  <p className="text-xs text-cyan-500/70 font-mono">Total Prompts</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-cyan-100 font-mono">{stats.totalPrompts}</p>
+                  <p className="text-xs text-cyan-500/70 font-mono">Total</p>
                 </div>
-                <div className="bg-black/40 backdrop-blur-md border border-green-500/30 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-green-100 font-mono">{stats.publicPrompts}</p>
+                <div className="bg-black/40 backdrop-blur-md border border-green-500/30 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-green-100 font-mono">{stats.publicPrompts}</p>
                   <p className="text-xs text-green-500/70 font-mono">Public</p>
                 </div>
-                <div className="bg-black/40 backdrop-blur-md border border-red-500/30 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-red-100 font-mono">{stats.privatePrompts}</p>
+                <div className="bg-black/40 backdrop-blur-md border border-red-500/30 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-red-100 font-mono">{stats.privatePrompts}</p>
                   <p className="text-xs text-red-500/70 font-mono">Private</p>
                 </div>
-                <div className="bg-black/40 backdrop-blur-md border border-purple-500/30 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-purple-100 font-mono">{stats.totalViews}</p>
+                <div className="bg-black/40 backdrop-blur-md border border-purple-500/30 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-purple-100 font-mono">{stats.totalViews}</p>
                   <p className="text-xs text-purple-500/70 font-mono">Views</p>
                 </div>
-                <div className="bg-black/40 backdrop-blur-md border border-pink-500/30 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-pink-100 font-mono">{stats.totalLikes}</p>
+                <div className="bg-black/40 backdrop-blur-md border border-pink-500/30 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-pink-100 font-mono">{stats.totalLikes}</p>
                   <p className="text-xs text-pink-500/70 font-mono">Likes</p>
                 </div>
-                <div className="bg-black/40 backdrop-blur-md border border-orange-500/30 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-orange-100 font-mono">{stats.totalForks}</p>
-                  <p className="text-xs text-orange-500/70 font-mono">Forks Given</p>
+                <div className="bg-black/40 backdrop-blur-md border border-orange-500/30 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-orange-100 font-mono">{stats.totalForks}</p>
+                  <p className="text-xs text-orange-500/70 font-mono">Forks</p>
                 </div>
-                <div className="bg-black/40 backdrop-blur-md border border-yellow-500/30 rounded-lg p-4 text-center">
-                  <p className="text-2xl font-bold text-yellow-100 font-mono">{stats.forkedPrompts}</p>
+                <div className="bg-black/40 backdrop-blur-md border border-yellow-500/30 rounded-lg p-3 text-center">
+                  <p className="text-xl font-bold text-yellow-100 font-mono">{stats.forkedPrompts}</p>
                   <p className="text-xs text-yellow-500/70 font-mono">Forked</p>
                 </div>
               </div>
 
               {/* Account Settings */}
-              <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8">
-                <h3 className="text-xl font-bold text-cyan-100 font-mono mb-6">
+              <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6">
+                <h3 className="text-lg font-bold text-cyan-100 font-mono mb-4">
                   Account Settings
                 </h3>
                 
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-black/20 rounded-lg border border-cyan-500/20">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg border border-cyan-500/20">
                     <div>
-                      <h4 className="font-mono font-bold text-cyan-100">Email Notifications</h4>
-                      <p className="text-sm text-cyan-500/70 font-mono">Receive updates about your prompts</p>
+                      <h4 className="font-mono font-bold text-cyan-100 text-sm">Email Notifications</h4>
+                      <p className="text-xs text-cyan-500/70 font-mono">Receive updates about your prompts</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                      <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
                     </label>
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-black/20 rounded-lg border border-cyan-500/20">
+                  <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg border border-cyan-500/20">
                     <div>
-                      <h4 className="font-mono font-bold text-cyan-100">Public Profile</h4>
-                      <p className="text-sm text-cyan-500/70 font-mono">Allow others to see your public prompts</p>
+                      <h4 className="font-mono font-bold text-cyan-100 text-sm">Public Profile</h4>
+                      <p className="text-xs text-cyan-500/70 font-mono">Allow others to see your public prompts</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                      <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
                     </label>
                   </div>
 
-                  <div className="border-t border-cyan-500/20 pt-6">
-                    <button className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all duration-300 font-mono">
-                      <Trash2 size={16} />
+                  <div className="border-t border-cyan-500/20 pt-4">
+                    <button className="flex items-center gap-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all duration-300 font-mono text-sm">
+                      <Trash2 size={14} />
                       <span>Delete Account</span>
                     </button>
                     <p className="text-xs text-cyan-500/50 font-mono mt-2">
