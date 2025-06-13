@@ -120,7 +120,7 @@ export const ProfilePage: React.FC = () => {
         <div className="flex-1 flex flex-col min-h-screen lg:ml-80">
           {/* Header */}
           <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
-            <div className="container mx-auto px-4 py-6">
+            <div className="px-6 py-6">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <Link
@@ -152,8 +152,8 @@ export const ProfilePage: React.FC = () => {
           </header>
 
           {/* Profile Content */}
-          <div className="relative z-10 flex-1 container mx-auto px-4 py-8">
-            <div className="max-w-4xl mx-auto space-y-8">
+          <div className="relative z-10 flex-1 px-6 py-8">
+            <div className="max-w-4xl space-y-8">
               {/* Profile Card */}
               <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8">
                 <div className="flex flex-col lg:flex-row gap-8">

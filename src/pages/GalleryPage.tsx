@@ -125,7 +125,7 @@ export const GalleryPage: React.FC = () => {
         <div className="flex-1 flex flex-col min-h-screen lg:ml-80">
           {/* Header */}
           <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
-            <div className="container mx-auto px-4 py-6">
+            <div className="px-6 py-6">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <Link
@@ -157,7 +157,7 @@ export const GalleryPage: React.FC = () => {
           </header>
 
           {/* Content */}
-          <div className="relative z-10 flex-1 container mx-auto px-4 py-8">
+          <div className="relative z-10 flex-1 px-6 py-8">
             {/* Stats Section */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
               <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-4 text-center">

@@ -79,7 +79,7 @@ export const HomePage: React.FC = () => {
         {/* Side Navbar - Only shows when user is logged in */}
         {user && <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />}
         
-        {/* Main Content Area - Centered when no sidebar */}
+        {/* Main Content Area */}
         <div className={`flex-1 flex flex-col min-h-screen ${user ? 'lg:ml-80' : ''}`}>
           {/* Header - Only show for non-logged users */}
           {!user && (
@@ -129,9 +129,9 @@ export const HomePage: React.FC = () => {
             </header>
           )}
 
-          {/* Main Content - Centered */}
+          {/* Main Content */}
           <main className="relative z-10 flex-1 flex items-center justify-center">
-            <div className={`w-full px-4 py-12 ${user ? 'container mx-auto' : 'max-w-6xl mx-auto'}`}>
+            <div className={`w-full px-6 py-12 ${user ? 'max-w-5xl' : 'max-w-6xl mx-auto'}`}>
               {/* Hero Section */}
               <div className="text-center mb-16">
                 <h2 className="text-4xl md:text-6xl font-bold font-mono mb-6 bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
