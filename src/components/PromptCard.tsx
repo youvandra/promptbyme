@@ -103,83 +103,84 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   const isForkedPrompt = originalPromptId !== null
 
   return (
-    <div className="group relative bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 hover:border-cyan-400/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/20 flex flex-col h-full">
+    <div className="group relative bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 hover:border-cyan-400/50 transition-all duration-500 transform hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/20 flex flex-col h-full overflow-hidden">
       {/* Glow effect */}
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      
+      {/* Blur overlay for top half on hover */}
+      <div className="absolute inset-0 top-0 h-1/2 bg-black/20 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-t-lg pointer-events-none z-20" />
       
       <div className="relative z-10 flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-4 transition-all duration-500">
           <div className="flex-1 min-w-0">
             {title && (
               <h3 className="text-lg font-bold text-cyan-100 mb-2 font-mono truncate">
                 {title}
               </h3>
             )}
-            <div className="flex items-center gap-2 text-sm text-cyan-500/70 flex-wrap">
-              <div className="flex items-center gap-1">
+            
+            {/* Stats - Move to center on hover */}
+            <div className="flex items-center gap-2 text-sm text-cyan-500/70 flex-wrap transition-all duration-500 group-hover:transform group-hover:translate-y-8 group-hover:justify-center group-hover:text-cyan-300 group-hover:font-semibold group-hover:text-base group-hover:z-30 relative">
+              <div className="flex items-center gap-1 group-hover:bg-black/60 group-hover:px-2 group-hover:py-1 group-hover:rounded-md group-hover:backdrop-blur-sm transition-all duration-500">
                 {access === 'private' ? (
-                  <Lock size={14} />
+                  <Lock size={14} className="group-hover:scale-110 transition-transform duration-300" />
                 ) : (
-                  <Eye size={14} />
+                  <Eye size={14} className="group-hover:scale-110 transition-transform duration-300" />
                 )}
                 <span className="font-mono">{access}</span>
               </div>
               
               {/* Fork indicator */}
               {isForkedPrompt && (
-                <span>•</span>
-              )}
-              {isForkedPrompt && (
-                <div className="flex items-center gap-1">
-                  <GitFork size={14} className="text-orange-400" />
-                  <span className="font-mono text-orange-400">forked prompt</span>
-                </div>
-              )}
-              
-              {access === 'public' && (
-                <span>•</span>
-              )}
-              {access === 'public' && (
-                <div className="flex items-center gap-1">
-                  <Eye size={14} className="text-purple-400" />
-                  <span className="font-mono text-purple-400">{formatViews(views)}</span>
-                </div>
-              )}
-              {access === 'public' && (
-                <span>•</span>
-              )}
-              {access === 'public' && (
-                <div className="flex items-center gap-1">
-                  <Heart size={14} className="text-red-400" />
-                  <span className="font-mono text-red-400">{formatViews(likeCount)}</span>
-                </div>
+                <>
+                  <span className="group-hover:text-cyan-300">•</span>
+                  <div className="flex items-center gap-1 group-hover:bg-orange-500/20 group-hover:px-2 group-hover:py-1 group-hover:rounded-md group-hover:backdrop-blur-sm transition-all duration-500">
+                    <GitFork size={14} className="text-orange-400 group-hover:scale-110 transition-transform duration-300" />
+                    <span className="font-mono text-orange-400">forked</span>
+                  </div>
+                </>
               )}
               
-              {/* Fork count - only show for original prompts */}
-              {access === 'public' && !isForkedPrompt && forkCount > 0 && (
-                <span>•</span>
-              )}
-              {access === 'public' && !isForkedPrompt && forkCount > 0 && (
-                <div className="flex items-center gap-1">
-                  <GitFork size={14} className="text-green-400" />
-                  <span className="font-mono text-green-400">{formatViews(forkCount)}</span>
-                </div>
+              {access === 'public' && (
+                <>
+                  <span className="group-hover:text-cyan-300">•</span>
+                  <div className="flex items-center gap-1 group-hover:bg-purple-500/20 group-hover:px-2 group-hover:py-1 group-hover:rounded-md group-hover:backdrop-blur-sm transition-all duration-500">
+                    <Eye size={14} className="text-purple-400 group-hover:scale-110 transition-transform duration-300" />
+                    <span className="font-mono text-purple-400">{formatViews(views)}</span>
+                  </div>
+                  <span className="group-hover:text-cyan-300">•</span>
+                  <div className="flex items-center gap-1 group-hover:bg-red-500/20 group-hover:px-2 group-hover:py-1 group-hover:rounded-md group-hover:backdrop-blur-sm transition-all duration-500">
+                    <Heart size={14} className="text-red-400 group-hover:scale-110 transition-transform duration-300" />
+                    <span className="font-mono text-red-400">{formatViews(likeCount)}</span>
+                  </div>
+                  
+                  {/* Fork count - only show for original prompts */}
+                  {!isForkedPrompt && forkCount > 0 && (
+                    <>
+                      <span className="group-hover:text-cyan-300">•</span>
+                      <div className="flex items-center gap-1 group-hover:bg-green-500/20 group-hover:px-2 group-hover:py-1 group-hover:rounded-md group-hover:backdrop-blur-sm transition-all duration-500">
+                        <GitFork size={14} className="text-green-400 group-hover:scale-110 transition-transform duration-300" />
+                        <span className="font-mono text-green-400">{formatViews(forkCount)}</span>
+                      </div>
+                    </>
+                  )}
+                </>
               )}
               
-              <span>•</span>
-              <span className="font-mono">{formatDate(createdAt)}</span>
+              <span className="group-hover:text-cyan-300">•</span>
+              <span className="font-mono group-hover:bg-cyan-500/20 group-hover:px-2 group-hover:py-1 group-hover:rounded-md group-hover:backdrop-blur-sm transition-all duration-500">{formatDate(createdAt)}</span>
             </div>
           </div>
           
           {showActions && (
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2 flex-shrink-0">
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 ml-2 flex-shrink-0 group-hover:z-30 relative">
               {/* Like button - only show for public prompts and authenticated users */}
               {access === 'public' && user && (
                 <button
                   onClick={handleLike}
                   disabled={isLiking}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
+                  className={`p-2 rounded-lg transition-all duration-300 transform hover:scale-110 ${
                     userHasLiked
                       ? 'text-red-400 bg-red-500/20 hover:bg-red-500/30'
                       : 'text-red-400/50 hover:text-red-400 hover:bg-red-500/20'
@@ -192,14 +193,14 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               
               <button
                 onClick={() => copyToClipboard(content)}
-                className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 rounded-lg transition-all duration-200"
+                className="p-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/20 rounded-lg transition-all duration-300 transform hover:scale-110"
                 title="Copy content"
               >
                 <Copy size={16} />
               </button>
               <button
                 onClick={copyLink}
-                className="p-2 text-purple-400 hover:text-purple-300 hover:bg-purple-500/20 rounded-lg transition-all duration-200"
+                className="p-2 text-purple-400 hover:text-purple-300 hover:bg-purple-500/20 rounded-lg transition-all duration-300 transform hover:scale-110"
                 title="Copy link"
               >
                 <ExternalLink size={16} />
@@ -207,7 +208,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               {onDelete && (
                 <button
                   onClick={() => onDelete(id)}
-                  className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all duration-200"
+                  className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all duration-300 transform hover:scale-110"
                   title="Delete prompt"
                 >
                   <Trash2 size={16} />
@@ -218,9 +219,9 @@ export const PromptCard: React.FC<PromptCardProps> = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col group-hover:mt-8 transition-all duration-500">
           <div 
-            className="text-cyan-100/90 font-mono text-sm leading-relaxed prose prose-invert prose-cyan max-w-none flex-1"
+            className="text-cyan-100/90 font-mono text-sm leading-relaxed prose prose-invert prose-cyan max-w-none flex-1 group-hover:opacity-80 transition-opacity duration-500"
             dangerouslySetInnerHTML={renderContent()}
             style={{
               wordBreak: 'break-word',
@@ -243,7 +244,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
 
       {/* Copy feedback */}
       {copied && (
-        <div className="absolute top-2 right-2 bg-green-500 text-black px-2 py-1 rounded text-xs font-mono animate-pulse z-20">
+        <div className="absolute top-2 right-2 bg-green-500 text-black px-2 py-1 rounded text-xs font-mono animate-pulse z-30">
           Copied!
         </div>
       )}
