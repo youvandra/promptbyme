@@ -49,14 +49,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ user, loading: false })
 
         // Create user profile when user signs up or signs in for the first time
-        if (user && event === 'SIGNED_IN') {
+        if (user && (event === 'SIGNED_IN' || event === 'SIGNED_UP')) {
           try {
             // Check if user profile already exists
-            const { data: existingProfile } = await supabase
+            const { data: existingProfile, error: selectError } = await supabase
               .from('user_profiles')
               .select('id')
               .eq('id', user.id)
-              .single()
+              .maybeSingle()
+
+            // If there's an error checking for existing profile, log it but don't throw
+            if (selectError && selectError.code !== 'PGRST116') {
+              console.error('Error checking existing user profile:', selectError)
+              return
+            }
 
             // If no profile exists, create one
             if (!existingProfile) {
@@ -70,10 +76,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
               if (profileError) {
                 console.error('Error creating user profile:', profileError)
+                // Don't throw the error to prevent blocking the auth flow
               }
             }
           } catch (error) {
             console.error('Error handling user profile:', error)
+            // Don't throw the error to prevent blocking the auth flow
           }
         }
       })
