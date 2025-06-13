@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, Mail, Lock, User } from 'lucide-react'
+import { X, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
 interface AuthModalProps {
@@ -13,6 +13,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const { signIn, signUp } = useAuthStore()
 
@@ -20,19 +21,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccess('')
 
     try {
       if (isLogin) {
         await signIn(email, password)
+        onClose()
       } else {
         await signUp(email, password)
+        setSuccess('Account created successfully! Please check your email for a confirmation link.')
+        // Don't close modal immediately for signup to show success message
+        setTimeout(() => {
+          onClose()
+        }, 3000)
       }
-      onClose()
     } catch (err: any) {
-      setError(err.message || 'An error occurred')
+      setError(err.message || 'An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleModeSwitch = () => {
+    setIsLogin(!isLogin)
+    setError('')
+    setSuccess('')
+    setEmail('')
+    setPassword('')
   }
 
   if (!isOpen) return null
@@ -77,15 +92,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
+              placeholder="Password (min. 6 characters)"
               required
+              minLength={6}
               className="w-full bg-black/40 border border-cyan-500/30 rounded-lg pl-10 pr-4 py-3 text-cyan-100 placeholder-cyan-500/50 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 font-mono"
             />
           </div>
 
           {error && (
-            <div className="text-red-400 text-sm font-mono bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-              {error}
+            <div className="flex items-start gap-3 text-red-400 text-sm font-mono bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+              <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className="flex items-start gap-3 text-green-400 text-sm font-mono bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+              <CheckCircle size={16} className="flex-shrink-0 mt-0.5" />
+              <span>{success}</span>
             </div>
           )}
 
@@ -107,12 +131,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         <div className="mt-6 text-center">
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={handleModeSwitch}
             className="text-cyan-400 hover:text-cyan-300 font-mono text-sm transition-colors"
           >
             {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
           </button>
         </div>
+
+        {!isLogin && (
+          <div className="mt-4 text-xs text-cyan-500/60 font-mono text-center">
+            <p>Having trouble? Try using a different email address or check your Supabase project status.</p>
+          </div>
+        )}
       </div>
     </div>
   )
