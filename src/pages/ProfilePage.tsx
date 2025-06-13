@@ -246,38 +246,6 @@ export const ProfilePage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                  <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-3 text-center">
-                    <p className="text-xl font-bold text-cyan-100 font-mono">{stats.totalPrompts}</p>
-                    <p className="text-xs text-cyan-500/70 font-mono">Total</p>
-                  </div>
-                  <div className="bg-black/40 backdrop-blur-md border border-green-500/30 rounded-lg p-3 text-center">
-                    <p className="text-xl font-bold text-green-100 font-mono">{stats.publicPrompts}</p>
-                    <p className="text-xs text-green-500/70 font-mono">Public</p>
-                  </div>
-                  <div className="bg-black/40 backdrop-blur-md border border-red-500/30 rounded-lg p-3 text-center">
-                    <p className="text-xl font-bold text-red-100 font-mono">{stats.privatePrompts}</p>
-                    <p className="text-xs text-red-500/70 font-mono">Private</p>
-                  </div>
-                  <div className="bg-black/40 backdrop-blur-md border border-purple-500/30 rounded-lg p-3 text-center">
-                    <p className="text-xl font-bold text-purple-100 font-mono">{stats.totalViews}</p>
-                    <p className="text-xs text-purple-500/70 font-mono">Views</p>
-                  </div>
-                  <div className="bg-black/40 backdrop-blur-md border border-pink-500/30 rounded-lg p-3 text-center">
-                    <p className="text-xl font-bold text-pink-100 font-mono">{stats.totalLikes}</p>
-                    <p className="text-xs text-pink-500/70 font-mono">Likes</p>
-                  </div>
-                  <div className="bg-black/40 backdrop-blur-md border border-orange-500/30 rounded-lg p-3 text-center">
-                    <p className="text-xl font-bold text-orange-100 font-mono">{stats.totalForks}</p>
-                    <p className="text-xs text-orange-500/70 font-mono">Forks</p>
-                  </div>
-                  <div className="bg-black/40 backdrop-blur-md border border-yellow-500/30 rounded-lg p-3 text-center">
-                    <p className="text-xl font-bold text-yellow-100 font-mono">{stats.forkedPrompts}</p>
-                    <p className="text-xs text-yellow-500/70 font-mono">Forked</p>
-                  </div>
-                </div>
-
                 {/* Account Settings */}
                 <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6">
                   <h3 className="text-lg font-bold text-cyan-100 font-mono mb-4">

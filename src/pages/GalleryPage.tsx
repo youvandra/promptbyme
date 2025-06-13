@@ -198,6 +198,11 @@ export const GalleryPage: React.FC = () => {
                   <p className="text-2xl font-bold text-orange-100 font-mono">{stats.totalForks}</p>
                   <p className="text-xs text-orange-500/70 font-mono">Forks</p>
                 </div>
+                <div className="bg-black/40 backdrop-blur-md border border-yellow-500/30 rounded-lg p-4 text-center">
+                  <div className="w-5 h-5 bg-yellow-400 rounded-full mx-auto mb-2"></div>
+                  <p className="text-2xl font-bold text-yellow-100 font-mono">{prompts.filter(p => p.original_prompt_id !== null).length}</p>
+                  <p className="text-xs text-yellow-500/70 font-mono">Forked</p>
+                </div>
               </div>
 
               {/* Filters and Search */}
