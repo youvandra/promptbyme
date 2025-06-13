@@ -140,7 +140,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         {!isLogin && (
           <div className="mt-4 text-xs text-cyan-500/60 font-mono text-center">
-            <p>Having trouble? Try using a different email address or check your Supabase project status.</p>
+            <p>Having trouble? Try using a different email address.</p>
           </div>
         )}
       </div>
