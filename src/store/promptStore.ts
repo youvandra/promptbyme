@@ -79,11 +79,17 @@ export const usePromptStore = create<PromptState>((set, get) => ({
 
   createPrompt: async (prompt) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('prompts')
         .insert([{ ...prompt, views: 0 }])
+        .select()
+        .single()
 
       if (error) throw error
+
+      // Automatically add the new prompt to the local state
+      const { prompts } = get()
+      set({ prompts: [data, ...prompts] })
     } catch (error) {
       console.error('Error creating prompt:', error)
       throw error
