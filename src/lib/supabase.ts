@@ -18,6 +18,26 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export type Database = {
   public: {
     Tables: {
+      user_profiles: {
+        Row: {
+          id: string
+          username: string
+          email: string
+          created_at: string | null
+        }
+        Insert: {
+          id: string
+          username: string
+          email: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          username?: string
+          email?: string
+          created_at?: string | null
+        }
+      }
       prompts: {
         Row: {
           id: string
@@ -25,9 +45,9 @@ export type Database = {
           title: string | null
           content: string
           access: 'public' | 'private'
-          created_at: string
-          tags: string[]
-          views: number
+          created_at: string | null
+          tags: string[] | null
+          views: number | null
         }
         Insert: {
           id?: string
@@ -35,9 +55,9 @@ export type Database = {
           title?: string | null
           content: string
           access?: 'public' | 'private'
-          created_at?: string
-          tags?: string[]
-          views?: number
+          created_at?: string | null
+          tags?: string[] | null
+          views?: number | null
         }
         Update: {
           id?: string
@@ -45,9 +65,9 @@ export type Database = {
           title?: string | null
           content?: string
           access?: 'public' | 'private'
-          created_at?: string
-          tags?: string[]
-          views?: number
+          created_at?: string | null
+          tags?: string[] | null
+          views?: number | null
         }
       }
     }
