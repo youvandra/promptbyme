@@ -131,7 +131,7 @@ export const HomePage: React.FC = () => {
 
           {/* Main Content */}
           <main className="relative z-10 flex-1">
-            <div className={`w-full ${user ? 'max-w-7xl pl-4 pr-8' : 'max-w-6xl px-4'} mx-auto py-8`}>
+            <div className={`w-full ${user ? 'max-w-7xl pr-8' : 'max-w-6xl px-4'} mx-auto py-8`}>
               {/* Hero Section */}
               <div className="text-center mb-12">
                 <h2 className="text-4xl md:text-6xl font-bold font-mono mb-6 bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
