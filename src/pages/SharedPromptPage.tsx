@@ -292,24 +292,21 @@ export const SharedPromptPage: React.FC = () => {
                   {/* Fork indicator */}
                   {isForkedPrompt && (
                     <>
-                      <span className="text-orange-400">•</span>
+                      <span>•</span>
                       <div className="flex items-center gap-1">
-                        <span className="text-orange-400">•</span>
                         <GitFork size={14} className="text-orange-400" />
                         <span className="font-mono text-orange-400">forked prompt</span>
                       </div>
                     </>
                   )}
                   
-                  <span className="text-purple-400">•</span>
+                  <span>•</span>
                   <div className="flex items-center gap-1">
-                    <span className="text-purple-400">•</span>
                     <Eye size={14} className="text-purple-400" />
                     <span className="font-mono text-purple-400">{formatViews(prompt.views || 0)} views</span>
                   </div>
-                  <span className="text-red-400">•</span>
+                  <span>•</span>
                   <div className="flex items-center gap-1">
-                    <span className="text-red-400">•</span>
                     <Heart size={14} className="text-red-400" />
                     <span className="font-mono text-red-400">{formatViews(prompt.like_count || 0)} likes</span>
                   </div>
@@ -317,17 +314,15 @@ export const SharedPromptPage: React.FC = () => {
                   {/* Fork count - only show for original prompts */}
                   {canFork && (prompt.fork_count || 0) > 0 && (
                     <>
-                      <span className="text-green-400">•</span>
+                      <span>•</span>
                       <div className="flex items-center gap-1">
-                        <span className="text-green-400">•</span>
                         <GitFork size={14} className="text-green-400" />
                         <span className="font-mono text-green-400">{formatViews(prompt.fork_count || 0)} forks</span>
                       </div>
                     </>
                   )}
                   
-                  <span className="text-cyan-500/70">•</span>
-                  <span className="text-cyan-500/70">•</span>
+                  <span>•</span>
                   <span className="font-mono">{formatDate(prompt.created_at || '')}</span>
                 </div>
               </div>
