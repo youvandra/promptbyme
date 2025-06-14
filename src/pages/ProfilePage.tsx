@@ -6,6 +6,7 @@ import { BoltBadge } from '../components/BoltBadge'
 import { SideNavbar } from '../components/SideNavbar'
 import { useAuthStore } from '../store/authStore'
 import { usePromptStore } from '../store/promptStore'
+import { supabase } from '../lib/supabase'
 
 const ROLE_OPTIONS = [
   'Frontend Developer',
@@ -37,10 +38,7 @@ export const ProfilePage: React.FC = () => {
   const [formData, setFormData] = useState({
     email: '',
     displayName: '',
-    role: '',
-    bio: '',
-    location: '',
-    website: ''
+    role: ''
   })
   
   const { user, loading: authLoading, initialize } = useAuthStore()
@@ -56,10 +54,7 @@ export const ProfilePage: React.FC = () => {
       setFormData({
         email: user.email || '',
         displayName: user.user_metadata?.display_name || user.user_metadata?.full_name || '',
-        role: user.user_metadata?.role || '',
-        bio: user.user_metadata?.bio || '',
-        location: user.user_metadata?.location || '',
-        website: user.user_metadata?.website || ''
+        role: user.user_metadata?.role || ''
       })
       setProfileImage(user.user_metadata?.avatar_url || null)
     }
@@ -99,21 +94,66 @@ export const ProfilePage: React.FC = () => {
     }
   }
 
+  const uploadImageToStorage = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user?.id}-${Date.now()}.${fileExt}`
+      const filePath = `avatars/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        return null
+      }
+
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      return data.publicUrl
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      return null
+    }
+  }
+
   const handleSaveProfile = async () => {
+    if (!user) return
+
     setSaving(true)
     try {
-      // In a real app, you would:
-      // 1. Upload the image to storage (Supabase Storage, Cloudinary, etc.)
-      // 2. Update the user profile with the new data
-      // 3. Update the auth user metadata
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
+      let avatarUrl = profileImage
+
+      // Upload new image if one was selected
+      if (imageFile) {
+        const uploadedUrl = await uploadImageToStorage(imageFile)
+        if (uploadedUrl) {
+          avatarUrl = uploadedUrl
+        } else {
+          throw new Error('Failed to upload image')
+        }
+      }
+
+      // Update user metadata
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          display_name: formData.displayName,
+          role: formData.role,
+          avatar_url: avatarUrl
+        }
+      })
+
+      if (error) throw error
+
       setToast({ message: 'Profile updated successfully', type: 'success' })
       setIsEditing(false)
-    } catch (error) {
-      setToast({ message: 'Failed to update profile', type: 'error' })
+      setImageFile(null)
+    } catch (error: any) {
+      console.error('Error updating profile:', error)
+      setToast({ message: error.message || 'Failed to update profile', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -301,11 +341,6 @@ export const ProfilePage: React.FC = () => {
                           <p className="text-zinc-400 text-sm">
                             {formData.role || 'Member'}
                           </p>
-                          {formData.location && (
-                            <p className="text-zinc-500 text-xs mt-1">
-                              📍 {formData.location}
-                            </p>
-                          )}
                         </div>
                       )}
                     </div>
@@ -343,51 +378,6 @@ export const ProfilePage: React.FC = () => {
                                 ))}
                               </select>
                             </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm text-zinc-300 mb-2">
-                                Location
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.location}
-                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                placeholder="City, Country"
-                                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm text-zinc-300 mb-2">
-                                Website
-                              </label>
-                              <input
-                                type="url"
-                                value={formData.website}
-                                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                                placeholder="https://yourwebsite.com"
-                                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                              />
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm text-zinc-300 mb-2">
-                              Bio
-                            </label>
-                            <textarea
-                              value={formData.bio}
-                              onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                              placeholder="Tell us about yourself..."
-                              rows={4}
-                              maxLength={500}
-                              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
-                            />
-                            <p className="text-xs text-zinc-500 mt-1">
-                              {formData.bio.length}/500 characters
-                            </p>
                           </div>
                           
                           <div className="flex gap-3 pt-2">
@@ -456,38 +446,8 @@ export const ProfilePage: React.FC = () => {
                                   <p className="text-white text-sm">{formData.role}</p>
                                 </div>
                               )}
-                              
-                              {formData.location && (
-                                <div>
-                                  <p className="text-xs text-zinc-500">Location</p>
-                                  <p className="text-white text-sm">{formData.location}</p>
-                                </div>
-                              )}
-                              
-                              {formData.website && (
-                                <div>
-                                  <p className="text-xs text-zinc-500">Website</p>
-                                  <a 
-                                    href={formData.website} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-indigo-400 hover:text-indigo-300 text-sm transition-colors"
-                                  >
-                                    {formData.website}
-                                  </a>
-                                </div>
-                              )}
                             </div>
                           </div>
-                          
-                          {formData.bio && (
-                            <div className="pt-4 border-t border-zinc-800/50">
-                              <p className="text-xs text-zinc-500 mb-2">About</p>
-                              <p className="text-zinc-300 text-sm leading-relaxed">
-                                {formData.bio}
-                              </p>
-                            </div>
-                          )}
                         </div>
                       )}
                     </div>
