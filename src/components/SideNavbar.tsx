@@ -65,6 +65,30 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isOpen, onToggle])
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const getUserDisplayName = () => {
+    return user?.user_metadata?.display_name || 
+           user?.user_metadata?.full_name || 
+           user?.email?.split('@')[0] || 
+           'User'
+  }
+
+  const getUserRole = () => {
+    return user?.user_metadata?.role || 'Member'
+  }
+
+  const getProfileImage = () => {
+    return user?.user_metadata?.avatar_url
+  }
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -149,15 +173,25 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                 }
               `}
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <User size={14} className="text-white" />
+              <div className="w-8 h-8 flex-shrink-0">
+                {getProfileImage() ? (
+                  <img
+                    src={getProfileImage()}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full object-cover border border-zinc-600"
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                    {getInitials(getUserDisplayName())}
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">
-                  {user.email}
+                  {getUserDisplayName()}
                 </p>
-                <p className="text-xs opacity-70">
-                  View Profile
+                <p className="text-xs opacity-70 truncate">
+                  {getUserRole()}
                 </p>
               </div>
             </Link>

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu } from 'lucide-react'
+import React, { useEffect, useState, useRef } from 'react'
+import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Toast } from '../components/Toast'
 import { BoltBadge } from '../components/BoltBadge'
@@ -7,14 +7,40 @@ import { SideNavbar } from '../components/SideNavbar'
 import { useAuthStore } from '../store/authStore'
 import { usePromptStore } from '../store/promptStore'
 
+const ROLE_OPTIONS = [
+  'Frontend Developer',
+  'Backend Developer',
+  'Full Stack Developer',
+  'AI Engineer',
+  'Machine Learning Engineer',
+  'Data Scientist',
+  'DevOps Engineer',
+  'Product Manager',
+  'UI/UX Designer',
+  'Mobile Developer',
+  'Software Architect',
+  'Technical Writer',
+  'QA Engineer',
+  'Security Engineer',
+  'Other'
+]
+
 export const ProfilePage: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
   const [formData, setFormData] = useState({
     email: '',
     displayName: '',
-    bio: ''
+    role: '',
+    bio: '',
+    location: '',
+    website: ''
   })
   
   const { user, loading: authLoading, initialize } = useAuthStore()
@@ -29,18 +55,67 @@ export const ProfilePage: React.FC = () => {
       fetchUserPrompts(user.id)
       setFormData({
         email: user.email || '',
-        displayName: user.user_metadata?.display_name || '',
-        bio: user.user_metadata?.bio || ''
+        displayName: user.user_metadata?.display_name || user.user_metadata?.full_name || '',
+        role: user.user_metadata?.role || '',
+        bio: user.user_metadata?.bio || '',
+        location: user.user_metadata?.location || '',
+        website: user.user_metadata?.website || ''
       })
+      setProfileImage(user.user_metadata?.avatar_url || null)
     }
   }, [user, fetchUserPrompts])
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setToast({ message: 'Please select a valid image file', type: 'error' })
+        return
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setToast({ message: 'Image size must be less than 5MB', type: 'error' })
+        return
+      }
+
+      setImageFile(file)
+      
+      // Create preview URL
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setProfileImage(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeImage = () => {
+    setProfileImage(null)
+    setImageFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
   const handleSaveProfile = async () => {
+    setSaving(true)
     try {
+      // In a real app, you would:
+      // 1. Upload the image to storage (Supabase Storage, Cloudinary, etc.)
+      // 2. Update the user profile with the new data
+      // 3. Update the auth user metadata
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
       setToast({ message: 'Profile updated successfully', type: 'success' })
       setIsEditing(false)
     } catch (error) {
       setToast({ message: 'Failed to update profile', type: 'error' })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -50,6 +125,15 @@ export const ProfilePage: React.FC = () => {
       month: 'long',
       day: 'numeric'
     })
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
   }
 
   if (authLoading) {
@@ -136,7 +220,8 @@ export const ProfilePage: React.FC = () => {
                 
                 <button
                   onClick={() => setIsEditing(!isEditing)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto btn-hover"
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto btn-hover disabled:transform-none"
                 >
                   <Settings size={16} />
                   <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
@@ -149,35 +234,145 @@ export const ProfilePage: React.FC = () => {
                   <div className="flex flex-col lg:flex-row gap-6">
                     {/* Avatar Section */}
                     <div className="flex flex-col items-center lg:items-start">
-                      <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-3">
-                        <User size={32} className="text-white" />
+                      <div className="relative group">
+                        {profileImage ? (
+                          <img
+                            src={profileImage}
+                            alt="Profile"
+                            className="w-20 h-20 rounded-full object-cover border-2 border-zinc-700"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                            {formData.displayName ? getInitials(formData.displayName) : <User size={32} />}
+                          </div>
+                        )}
+                        
+                        {isEditing && (
+                          <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <button
+                              onClick={() => fileInputRef.current?.click()}
+                              className="p-2 bg-indigo-600 rounded-full hover:bg-indigo-700 transition-colors"
+                              title="Change photo"
+                            >
+                              <Camera size={16} />
+                            </button>
+                          </div>
+                        )}
+                        
+                        {isEditing && profileImage && (
+                          <button
+                            onClick={removeImage}
+                            className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+                            title="Remove photo"
+                          >
+                            <X size={12} />
+                          </button>
+                        )}
                       </div>
-                      <div className="text-center lg:text-left">
-                        <h2 className="text-lg font-semibold text-white mb-1">
-                          {formData.displayName || 'Anonymous User'}
-                        </h2>
-                        <p className="text-zinc-400 text-sm">
-                          Member
-                        </p>
-                      </div>
+                      
+                      {isEditing && (
+                        <div className="mt-3 text-center">
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+                          >
+                            <Upload size={14} />
+                            <span>Upload Photo</span>
+                          </button>
+                          <p className="text-xs text-zinc-500 mt-1">
+                            Max 5MB, JPG/PNG
+                          </p>
+                        </div>
+                      )}
+                      
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      
+                      {!isEditing && (
+                        <div className="text-center lg:text-left mt-3">
+                          <h2 className="text-lg font-semibold text-white mb-1">
+                            {formData.displayName || 'Anonymous User'}
+                          </h2>
+                          <p className="text-zinc-400 text-sm">
+                            {formData.role || 'Member'}
+                          </p>
+                          {formData.location && (
+                            <p className="text-zinc-500 text-xs mt-1">
+                              📍 {formData.location}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Profile Info */}
                     <div className="flex-1 space-y-4">
                       {isEditing ? (
                         <div className="space-y-4">
-                          <div>
-                            <label className="block text-sm text-zinc-300 mb-2">
-                              Display Name
-                            </label>
-                            <input
-                              type="text"
-                              value={formData.displayName}
-                              onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                              placeholder="Enter display name"
-                              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                            />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm text-zinc-300 mb-2">
+                                Display Name *
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.displayName}
+                                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                                placeholder="Enter your name"
+                                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm text-zinc-300 mb-2">
+                                Role
+                              </label>
+                              <select
+                                value={formData.role}
+                                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                              >
+                                <option value="">Select your role</option>
+                                {ROLE_OPTIONS.map(role => (
+                                  <option key={role} value={role}>{role}</option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm text-zinc-300 mb-2">
+                                Location
+                              </label>
+                              <input
+                                type="text"
+                                value={formData.location}
+                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                                placeholder="City, Country"
+                                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm text-zinc-300 mb-2">
+                                Website
+                              </label>
+                              <input
+                                type="url"
+                                value={formData.website}
+                                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                                placeholder="https://yourwebsite.com"
+                                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                              />
+                            </div>
+                          </div>
+                          
                           <div>
                             <label className="block text-sm text-zinc-300 mb-2">
                               Bio
@@ -186,38 +381,108 @@ export const ProfilePage: React.FC = () => {
                               value={formData.bio}
                               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                               placeholder="Tell us about yourself..."
-                              rows={3}
+                              rows={4}
+                              maxLength={500}
                               className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
                             />
+                            <p className="text-xs text-zinc-500 mt-1">
+                              {formData.bio.length}/500 characters
+                            </p>
                           </div>
-                          <button
-                            onClick={handleSaveProfile}
-                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all duration-200 btn-hover"
-                          >
-                            <Save size={16} />
-                            <span>Save Changes</span>
-                          </button>
+                          
+                          <div className="flex gap-3 pt-2">
+                            <button
+                              onClick={handleSaveProfile}
+                              disabled={saving || !formData.displayName.trim()}
+                              className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-xl transition-all duration-200 btn-hover disabled:transform-none"
+                            >
+                              {saving ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                  <span>Saving...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Save size={16} />
+                                  <span>Save Changes</span>
+                                </>
+                              )}
+                            </button>
+                            
+                            <button
+                              onClick={() => setIsEditing(false)}
+                              disabled={saving}
+                              className="px-4 py-2.5 text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
                       ) : (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <Mail className="text-indigo-400" size={16} />
-                            <span className="text-white text-sm">{user.email}</span>
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3">
+                                <Mail className="text-indigo-400" size={16} />
+                                <div>
+                                  <p className="text-xs text-zinc-500">Email</p>
+                                  <p className="text-white text-sm">{user.email}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-3">
+                                <Calendar className="text-indigo-400" size={16} />
+                                <div>
+                                  <p className="text-xs text-zinc-500">Joined</p>
+                                  <p className="text-white text-sm">{formatDate(user.created_at)}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-3">
+                                <Shield className="text-indigo-400" size={16} />
+                                <div>
+                                  <p className="text-xs text-zinc-500">Status</p>
+                                  <p className="text-white text-sm">
+                                    {user.email_confirmed_at ? 'Verified' : 'Pending Verification'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              {formData.role && (
+                                <div>
+                                  <p className="text-xs text-zinc-500">Role</p>
+                                  <p className="text-white text-sm">{formData.role}</p>
+                                </div>
+                              )}
+                              
+                              {formData.location && (
+                                <div>
+                                  <p className="text-xs text-zinc-500">Location</p>
+                                  <p className="text-white text-sm">{formData.location}</p>
+                                </div>
+                              )}
+                              
+                              {formData.website && (
+                                <div>
+                                  <p className="text-xs text-zinc-500">Website</p>
+                                  <a 
+                                    href={formData.website} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-indigo-400 hover:text-indigo-300 text-sm transition-colors"
+                                  >
+                                    {formData.website}
+                                  </a>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <Calendar className="text-indigo-400" size={16} />
-                            <span className="text-white text-sm">
-                              Joined {formatDate(user.created_at)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <Shield className="text-indigo-400" size={16} />
-                            <span className="text-white text-sm">
-                              Email {user.email_confirmed_at ? 'Verified' : 'Pending'}
-                            </span>
-                          </div>
+                          
                           {formData.bio && (
-                            <div className="mt-3">
+                            <div className="pt-4 border-t border-zinc-800/50">
+                              <p className="text-xs text-zinc-500 mb-2">About</p>
                               <p className="text-zinc-300 text-sm leading-relaxed">
                                 {formData.bio}
                               </p>
