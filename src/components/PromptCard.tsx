@@ -75,12 +75,12 @@ export const PromptCard: React.FC<PromptCardProps> = ({
     return `${(count / 1000000).toFixed(1)}M`
   }
 
-  const truncateText = (text: string, maxLength: number = 150) => {
+  const truncateText = (text: string, maxLength: number = 200) => {
     if (text.length <= maxLength) return text
     return text.substring(0, maxLength) + '...'
   }
 
-  const shouldTruncate = content.length > 150
+  const shouldTruncate = content.length > 200
   const displayContent = isExpanded ? content : truncateText(content)
 
   const renderContent = () => {
@@ -96,48 +96,57 @@ export const PromptCard: React.FC<PromptCardProps> = ({
 
   return (
     <div 
-      className={`group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-200 transform hover:scale-[1.02] flex flex-col h-full card-hover ${
+      className={`group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 sm:p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full card-hover ${
         shouldTruncate ? 'cursor-pointer' : ''
       }`}
       onClick={handleCardClick}
     >
       <div className="relative z-10 flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
           <div className="flex-1 min-w-0">
             {title && (
-              <h3 className="text-lg font-semibold text-white mb-2 truncate">
+              <h3 className="text-base sm:text-lg font-semibold text-white mb-2 line-clamp-2 break-words">
                 {title}
               </h3>
             )}
-            <div className="text-sm text-zinc-500">
+            <div className="text-xs sm:text-sm text-zinc-500">
               {formatDate(createdAt)}
             </div>
           </div>
           
           {showActions && (
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 ml-2 flex-shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex-shrink-0 self-start sm:self-auto">
               <button
-                onClick={() => copyToClipboard(content)}
-                className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  copyToClipboard(content)
+                }}
+                className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 touch-manipulation"
                 title="Copy content"
               >
-                <Copy size={16} />
+                <Copy size={14} className="sm:w-4 sm:h-4" />
               </button>
               <button
-                onClick={copyLink}
-                className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  copyLink()
+                }}
+                className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 touch-manipulation"
                 title="Copy link"
               >
-                <ExternalLink size={16} />
+                <ExternalLink size={14} className="sm:w-4 sm:h-4" />
               </button>
               {onDelete && (
                 <button
-                  onClick={() => onDelete(id)}
-                  className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(id)
+                  }}
+                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200 touch-manipulation"
                   title="Delete prompt"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={14} className="sm:w-4 sm:h-4" />
                 </button>
               )}
             </div>
@@ -145,9 +154,9 @@ export const PromptCard: React.FC<PromptCardProps> = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col mb-4">
           <div 
-            className="text-zinc-300 text-sm leading-relaxed prose prose-invert max-w-none flex-1"
+            className="text-zinc-300 text-sm sm:text-base leading-relaxed prose prose-invert prose-sm sm:prose-base max-w-none flex-1"
             dangerouslySetInnerHTML={renderContent()}
             style={{
               wordBreak: 'break-word',
@@ -158,17 +167,17 @@ export const PromptCard: React.FC<PromptCardProps> = ({
         </div>
 
         {/* Bottom section with stats and show more button */}
-        <div className="mt-4 flex items-center justify-between gap-4">
-          {/* Stats on the left */}
-          <div className="flex items-center gap-3 text-xs">
+        <div className="mt-auto">
+          {/* Stats */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs mb-3">
             {/* Access indicator */}
             <div className="flex items-center gap-1">
               {access === 'private' ? (
-                <Lock size={12} className="text-amber-400" />
+                <Lock size={10} className="sm:w-3 sm:h-3 text-amber-400" />
               ) : (
-                <Eye size={12} className="text-emerald-400" />
+                <Eye size={10} className="sm:w-3 sm:h-3 text-emerald-400" />
               )}
-              <span className={`${access === 'private' ? 'text-amber-400' : 'text-emerald-400'}`}>
+              <span className={`text-xs ${access === 'private' ? 'text-amber-400' : 'text-emerald-400'}`}>
                 {access}
               </span>
             </div>
@@ -176,10 +185,10 @@ export const PromptCard: React.FC<PromptCardProps> = ({
             {/* Fork indicator */}
             {isForkedPrompt && (
               <>
-                <span className="text-zinc-600">•</span>
+                <span className="text-zinc-600 hidden sm:inline">•</span>
                 <div className="flex items-center gap-1">
-                  <GitFork size={12} className="text-orange-400" />
-                  <span className="text-orange-400">forked</span>
+                  <GitFork size={10} className="sm:w-3 sm:h-3 text-orange-400" />
+                  <span className="text-orange-400 text-xs">forked</span>
                 </div>
               </>
             )}
@@ -187,24 +196,24 @@ export const PromptCard: React.FC<PromptCardProps> = ({
             {/* Public prompt stats */}
             {access === 'public' && (
               <>
-                <span className="text-zinc-600">•</span>
+                <span className="text-zinc-600 hidden sm:inline">•</span>
                 <div className="flex items-center gap-1">
-                  <Eye size={12} className="text-zinc-400" />
-                  <span className="text-zinc-400">{formatViews(views)}</span>
+                  <Eye size={10} className="sm:w-3 sm:h-3 text-zinc-400" />
+                  <span className="text-zinc-400 text-xs">{formatViews(views)}</span>
                 </div>
                 
-                <span className="text-zinc-600">•</span>
+                <span className="text-zinc-600 hidden sm:inline">•</span>
                 <div className="flex items-center gap-1">
-                  <span className="text-zinc-400">{formatViews(likeCount)} likes</span>
+                  <span className="text-zinc-400 text-xs">{formatViews(likeCount)} likes</span>
                 </div>
                 
                 {/* Fork count - only show for original prompts */}
                 {!isForkedPrompt && forkCount > 0 && (
                   <>
-                    <span className="text-zinc-600">•</span>
+                    <span className="text-zinc-600 hidden sm:inline">•</span>
                     <div className="flex items-center gap-1">
-                      <GitFork size={12} className="text-zinc-400" />
-                      <span className="text-zinc-400">{formatViews(forkCount)}</span>
+                      <GitFork size={10} className="sm:w-3 sm:h-3 text-zinc-400" />
+                      <span className="text-zinc-400 text-xs">{formatViews(forkCount)}</span>
                     </div>
                   </>
                 )}
@@ -212,24 +221,26 @@ export const PromptCard: React.FC<PromptCardProps> = ({
             )}
           </div>
 
-          {/* Show more/less button on the right */}
+          {/* Show more/less button */}
           {shouldTruncate && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setIsExpanded(!isExpanded)
-              }}
-              className="text-indigo-400 hover:text-indigo-300 text-xs transition-colors duration-200 flex-shrink-0"
-            >
-              {isExpanded ? 'Show less' : 'Show more'}
-            </button>
+            <div className="flex justify-end">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsExpanded(!isExpanded)
+                }}
+                className="text-indigo-400 hover:text-indigo-300 text-xs sm:text-sm transition-colors duration-200 px-2 py-1 rounded hover:bg-indigo-500/10 touch-manipulation"
+              >
+                {isExpanded ? 'Show less' : 'Show more'}
+              </button>
+            </div>
           )}
         </div>
       </div>
 
       {/* Copy feedback */}
       {copied && (
-        <div className="absolute top-2 right-2 bg-emerald-500 text-white px-2 py-1 rounded text-xs animate-pulse z-50">
+        <div className="absolute top-2 right-2 bg-emerald-500 text-white px-2 py-1 rounded text-xs animate-pulse z-50 pointer-events-none">
           Copied!
         </div>
       )}
