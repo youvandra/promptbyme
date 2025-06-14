@@ -406,7 +406,6 @@ export const SharedPromptPage: React.FC = () => {
                 <Link to="/" className="text-indigo-400 hover:text-indigo-300 transition-colors">
                   promptby.me
                 </Link>
-                {' '}• AI prompt sharing platform
               </p>
             </div>
           </div>
