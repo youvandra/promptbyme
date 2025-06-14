@@ -113,7 +113,6 @@ export const HomePage: React.FC = () => {
                 <div className="text-center mb-12">
                   <h2 
                     className="text-5xl md:text-6xl font-bold mb-6 gradient-text" 
-                    style={{ 'line-height': 1.5 }}
                   >
                     Design before you prompt
                   </h2>
