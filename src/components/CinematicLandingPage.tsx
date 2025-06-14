@@ -394,7 +394,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                 )}
 
                 {/* Step 2: Sharing */}
-                {activeStep === 5 && (
+                {activeStep === 2 && (
                   <motion.div
                     key="sharing"
                     initial={{ opacity: 0, y: 50 }}
@@ -507,7 +507,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                 )}
 
                 {/* Step 3: Flow Structure */}
-                {activeStep === 2 && (
+                {activeStep === 3 && (
                   <motion.div
                     key="flow"
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -595,7 +595,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                 )}
 
                 {/* Step 4: Kanban Board */}
-                {activeStep === 3 && (
+                {activeStep === 4 && (
                   <motion.div
                     key="kanban"
                     initial={{ opacity: 0, x: 100 }}
@@ -684,7 +684,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                 )}
 
                 {/* Step 5: Team Collaboration */}
-                {activeStep === 4 && (
+                {activeStep === 5 && (
                   <motion.div
                     key="team"
                     initial={{ opacity: 0, scale: 0.9 }}
