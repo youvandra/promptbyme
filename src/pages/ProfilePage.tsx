@@ -438,7 +438,7 @@ export const ProfilePage: React.FC = () => {
                             {userProfile?.display_name || 'Anonymous User'}
                           </h2>
                           <p className="text-zinc-400 text-sm">
-                            {userProfile?.role || 'Member'}
+                            {userProfile?.role || 'User'}
                           </p>
                         </div>
                       )}
