@@ -13,16 +13,9 @@ const ROLE_OPTIONS = [
   'Backend Developer',
   'Full Stack Developer',
   'AI Engineer',
-  'Machine Learning Engineer',
-  'Data Scientist',
-  'DevOps Engineer',
   'Product Manager',
   'UI/UX Designer',
   'Mobile Developer',
-  'Software Architect',
-  'Technical Writer',
-  'QA Engineer',
-  'Security Engineer',
   'Other'
 ]
 
