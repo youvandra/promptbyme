@@ -53,7 +53,7 @@ export const TerminalInput: React.FC<TerminalInputProps> = ({ onSubmit, loading 
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Start prompting... Supports **bold**, *italic*, and ```code blocks```"
+            placeholder="Start prompting... (Supports **bold**, *italic*, and ```code blocks```)"
             className="w-full min-h-[120px] bg-zinc-900/50 border border-zinc-800/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
           />
         </div>
