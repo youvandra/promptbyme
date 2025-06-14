@@ -393,282 +393,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                   </motion.div>
                 )}
 
-                {/* Step 2: Flow Structure */}
-                {activeStep === 2 && (
-                  <motion.div
-                    key="flow"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ 
-                      opacity: 1, 
-                      scale: 1,
-                      rotateY: scrollProgress * 5 // Subtle 3D effect
-                    }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="w-full max-w-6xl"
-                  >
-                    <div className="relative perspective-1000">
-                      {/* Animated connection lines */}
-                      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-                        <defs>
-                          <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="rgb(99, 102, 241)" stopOpacity="0.6" />
-                            <stop offset="100%" stopColor="rgb(139, 92, 246)" stopOpacity="0.6" />
-                          </linearGradient>
-                        </defs>
-                        <motion.path
-                          d="M 200 100 Q 300 50 400 100 Q 500 150 600 100"
-                          stroke="url(#flowGradient)"
-                          strokeWidth="2"
-                          fill="none"
-                          initial={{ pathLength: 0 }}
-                          animate={{ pathLength: 1 }}
-                          transition={{ duration: 2, ease: "easeInOut" }}
-                        />
-                      </svg>
-
-                      {/* Flow nodes */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-                        {[
-                          { title: "Landing Page", desc: "Hero, features, pricing", icon: <Zap size={24} />, color: "indigo" },
-                          { title: "Authentication", desc: "Login, signup, verification", icon: <Users size={24} />, color: "purple" },
-                          { title: "Database Schema", desc: "Tables, relations, indexes", icon: <GitBranch size={24} />, color: "pink" }
-                        ].map((node, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 50 }}
-                            animate={{ 
-                              opacity: 1, 
-                              y: 0,
-                              rotateX: scrollProgress * 10 - 5
-                            }}
-                            transition={{ duration: 0.6, delay: index * 0.2, ease: "easeOut" }}
-                            className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-6 hover:border-indigo-500/50 transition-all duration-500 group cursor-pointer preserve-3d"
-                            whileHover={{ 
-                              scale: 1.05,
-                              rotateY: 5,
-                              z: 50
-                            }}
-                          >
-                            <div className={`absolute inset-0 bg-gradient-to-br from-${node.color}-500/5 to-${node.color}-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                            
-                            <div className="relative z-10">
-                              <div className="flex items-center gap-3 mb-4">
-                                <motion.div 
-                                  className={`p-2 bg-${node.color}-500/20 rounded-lg text-${node.color}-400`}
-                                  whileHover={{ rotate: 360 }}
-                                  transition={{ duration: 0.6 }}
-                                >
-                                  {node.icon}
-                                </motion.div>
-                                <h3 className="text-lg font-semibold text-white">{node.title}</h3>
-                              </div>
-                              <p className="text-zinc-400 text-sm">{node.desc}</p>
-                              
-                              <div className="mt-4 flex items-center justify-between">
-                                <span className="text-xs text-zinc-500">3 prompts</span>
-                                <motion.div 
-                                  className="w-2 h-2 bg-emerald-400 rounded-full"
-                                  animate={{ scale: [1, 1.5, 1] }}
-                                  transition={{ duration: 2, repeat: Infinity }}
-                                />
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Step 3: Kanban Board */}
-                {activeStep === 3 && (
-                  <motion.div
-                    key="kanban"
-                    initial={{ opacity: 0, x: 100 }}
-                    animate={{ 
-                      opacity: 1, 
-                      x: 0,
-                      scale: 1 + scrollProgress * 0.02
-                    }}
-                    exit={{ opacity: 0, x: -100 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="w-full max-w-6xl"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {[
-                        { title: "Backlog", items: ["API Design", "Error Handling"], color: "zinc" },
-                        { title: "In Progress", items: ["User Dashboard"], color: "indigo" },
-                        { title: "Done", items: ["Landing Page", "Auth Flow"], color: "emerald" }
-                      ].map((column, columnIndex) => (
-                        <motion.div 
-                          key={columnIndex} 
-                          className="space-y-4"
-                          initial={{ opacity: 0, y: 50 }}
-                          animate={{ 
-                            opacity: 1, 
-                            y: 0,
-                            x: scrollProgress * (columnIndex - 1) * 10
-                          }}
-                          transition={{ duration: 0.6, delay: columnIndex * 0.2, ease: "easeOut" }}
-                        >
-                          <div className="flex items-center gap-2 mb-4">
-                            <h3 className="text-lg font-semibold text-white">{column.title}</h3>
-                            <motion.span 
-                              className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded-full"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ duration: 0.3, delay: columnIndex * 0.2 + 0.3 }}
-                            >
-                              {column.items.length}
-                            </motion.span>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            {column.items.map((item, itemIndex) => (
-                              <motion.div
-                                key={itemIndex}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.4, delay: columnIndex * 0.2 + itemIndex * 0.1, ease: "easeOut" }}
-                                className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-xl p-4 hover:border-indigo-500/50 transition-all duration-300 cursor-pointer group"
-                                whileHover={{ scale: 1.02, y: -2 }}
-                                drag="x"
-                                dragConstraints={{ left: 0, right: 0 }}
-                              >
-                                <div className="relative z-10">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <span className="text-white font-medium">{item}</span>
-                                    {column.title === "In Progress" && (
-                                      <motion.div 
-                                        className="w-2 h-2 bg-indigo-400 rounded-full"
-                                        animate={{ scale: [1, 1.5, 1] }}
-                                        transition={{ duration: 1.5, repeat: Infinity }}
-                                      />
-                                    )}
-                                    {column.title === "Done" && (
-                                      <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ duration: 0.3, delay: 0.5 }}
-                                      >
-                                        <CheckCircle size={16} className="text-emerald-400" />
-                                      </motion.div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2 text-xs text-zinc-500">
-                                    <Clock size={12} />
-                                    <span>2 hours ago</span>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            ))}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Step 4: Team Collaboration */}
-                {activeStep === 4 && (
-                  <motion.div
-                    key="team"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ 
-                      opacity: 1, 
-                      scale: 1,
-                      y: scrollProgress * -20
-                    }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="w-full max-w-4xl"
-                  >
-                    <div className="space-y-8">
-                      {/* Project header */}
-                      <motion.div 
-                        className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-8"
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ duration: 0.6, ease: "easeOut" }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-xl font-semibold text-white mb-2">Project: E-commerce Platform</h3>
-                            <p className="text-zinc-400">Building a complete online store with AI</p>
-                          </div>
-                          <motion.button 
-                            className="glass-button px-6 py-3 bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-indigo-300 hover:bg-indigo-600/30 transition-all duration-200 flex items-center gap-2"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <Plus size={16} />
-                            Invite Team
-                          </motion.button>
-                        </div>
-                      </motion.div>
-
-                      {/* Team avatars and chat */}
-                      <div className="flex items-center justify-center gap-8">
-                        <div className="flex items-center gap-4">
-                          {[1, 2, 3, 4].map((_, index) => (
-                            <motion.div
-                              key={index}
-                              initial={{ scale: 0, rotate: -180 }}
-                              animate={{ 
-                                scale: 1, 
-                                rotate: 0,
-                                y: Math.sin(scrollProgress * Math.PI + index) * 5
-                              }}
-                              transition={{ 
-                                duration: 0.6, 
-                                delay: index * 0.1,
-                                type: "spring",
-                                stiffness: 200
-                              }}
-                              className="relative"
-                            >
-                              <motion.div 
-                                className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-lg glass-panel border border-white/20"
-                                whileHover={{ scale: 1.1, rotate: 5 }}
-                              >
-                                {String.fromCharCode(65 + index)}
-                              </motion.div>
-                              <motion.div 
-                                className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-zinc-900"
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ delay: index * 0.1 + 0.3 }}
-                              />
-                            </motion.div>
-                          ))}
-                        </div>
-                        
-                        {/* Chat bubbles */}
-                        <div className="space-y-2">
-                          <motion.div 
-                            className="glass-panel bg-indigo-600/20 border border-indigo-500/30 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.4, delay: 0.8, ease: "easeOut" }}
-                          >
-                            <p className="text-indigo-200 text-sm">Looking good! 👍</p>
-                          </motion.div>
-                          <motion.div 
-                            className="glass-panel bg-purple-600/20 border border-purple-500/30 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.4, delay: 1.2, ease: "easeOut" }}
-                          >
-                            <p className="text-purple-200 text-sm">Added payment flow</p>
-                          </motion.div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Step 5: Sharing */}
+                {/* Step 2: Sharing */}
                 {activeStep === 5 && (
                   <motion.div
                     key="sharing"
@@ -780,6 +505,282 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     </div>
                   </motion.div>
                 )}
+
+                {/* Step 3: Flow Structure */}
+                {activeStep === 2 && (
+                  <motion.div
+                    key="flow"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ 
+                      opacity: 1, 
+                      scale: 1,
+                      rotateY: scrollProgress * 5 // Subtle 3D effect
+                    }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="w-full max-w-6xl"
+                  >
+                    <div className="relative perspective-1000">
+                      {/* Animated connection lines */}
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+                        <defs>
+                          <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="rgb(99, 102, 241)" stopOpacity="0.6" />
+                            <stop offset="100%" stopColor="rgb(139, 92, 246)" stopOpacity="0.6" />
+                          </linearGradient>
+                        </defs>
+                        <motion.path
+                          d="M 200 100 Q 300 50 400 100 Q 500 150 600 100"
+                          stroke="url(#flowGradient)"
+                          strokeWidth="2"
+                          fill="none"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 2, ease: "easeInOut" }}
+                        />
+                      </svg>
+
+                      {/* Flow nodes */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                        {[
+                          { title: "Landing Page", desc: "Hero, features, pricing", icon: <Zap size={24} />, color: "indigo" },
+                          { title: "Authentication", desc: "Login, signup, verification", icon: <Users size={24} />, color: "purple" },
+                          { title: "Database Schema", desc: "Tables, relations, indexes", icon: <GitBranch size={24} />, color: "pink" }
+                        ].map((node, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 50 }}
+                            animate={{ 
+                              opacity: 1, 
+                              y: 0,
+                              rotateX: scrollProgress * 10 - 5
+                            }}
+                            transition={{ duration: 0.6, delay: index * 0.2, ease: "easeOut" }}
+                            className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-6 hover:border-indigo-500/50 transition-all duration-500 group cursor-pointer preserve-3d"
+                            whileHover={{ 
+                              scale: 1.05,
+                              rotateY: 5,
+                              z: 50
+                            }}
+                          >
+                            <div className={`absolute inset-0 bg-gradient-to-br from-${node.color}-500/5 to-${node.color}-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                            
+                            <div className="relative z-10">
+                              <div className="flex items-center gap-3 mb-4">
+                                <motion.div 
+                                  className={`p-2 bg-${node.color}-500/20 rounded-lg text-${node.color}-400`}
+                                  whileHover={{ rotate: 360 }}
+                                  transition={{ duration: 0.6 }}
+                                >
+                                  {node.icon}
+                                </motion.div>
+                                <h3 className="text-lg font-semibold text-white">{node.title}</h3>
+                              </div>
+                              <p className="text-zinc-400 text-sm">{node.desc}</p>
+                              
+                              <div className="mt-4 flex items-center justify-between">
+                                <span className="text-xs text-zinc-500">3 prompts</span>
+                                <motion.div 
+                                  className="w-2 h-2 bg-emerald-400 rounded-full"
+                                  animate={{ scale: [1, 1.5, 1] }}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 4: Kanban Board */}
+                {activeStep === 3 && (
+                  <motion.div
+                    key="kanban"
+                    initial={{ opacity: 0, x: 100 }}
+                    animate={{ 
+                      opacity: 1, 
+                      x: 0,
+                      scale: 1 + scrollProgress * 0.02
+                    }}
+                    exit={{ opacity: 0, x: -100 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="w-full max-w-6xl"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {[
+                        { title: "Backlog", items: ["API Design", "Error Handling"], color: "zinc" },
+                        { title: "In Progress", items: ["User Dashboard"], color: "indigo" },
+                        { title: "Done", items: ["Landing Page", "Auth Flow"], color: "emerald" }
+                      ].map((column, columnIndex) => (
+                        <motion.div 
+                          key={columnIndex} 
+                          className="space-y-4"
+                          initial={{ opacity: 0, y: 50 }}
+                          animate={{ 
+                            opacity: 1, 
+                            y: 0,
+                            x: scrollProgress * (columnIndex - 1) * 10
+                          }}
+                          transition={{ duration: 0.6, delay: columnIndex * 0.2, ease: "easeOut" }}
+                        >
+                          <div className="flex items-center gap-2 mb-4">
+                            <h3 className="text-lg font-semibold text-white">{column.title}</h3>
+                            <motion.span 
+                              className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded-full"
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ duration: 0.3, delay: columnIndex * 0.2 + 0.3 }}
+                            >
+                              {column.items.length}
+                            </motion.span>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            {column.items.map((item, itemIndex) => (
+                              <motion.div
+                                key={itemIndex}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.4, delay: columnIndex * 0.2 + itemIndex * 0.1, ease: "easeOut" }}
+                                className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-xl p-4 hover:border-indigo-500/50 transition-all duration-300 cursor-pointer group"
+                                whileHover={{ scale: 1.02, y: -2 }}
+                                drag="x"
+                                dragConstraints={{ left: 0, right: 0 }}
+                              >
+                                <div className="relative z-10">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-white font-medium">{item}</span>
+                                    {column.title === "In Progress" && (
+                                      <motion.div 
+                                        className="w-2 h-2 bg-indigo-400 rounded-full"
+                                        animate={{ scale: [1, 1.5, 1] }}
+                                        transition={{ duration: 1.5, repeat: Infinity }}
+                                      />
+                                    )}
+                                    {column.title === "Done" && (
+                                      <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ duration: 0.3, delay: 0.5 }}
+                                      >
+                                        <CheckCircle size={16} className="text-emerald-400" />
+                                      </motion.div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                    <Clock size={12} />
+                                    <span>2 hours ago</span>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 5: Team Collaboration */}
+                {activeStep === 4 && (
+                  <motion.div
+                    key="team"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ 
+                      opacity: 1, 
+                      scale: 1,
+                      y: scrollProgress * -20
+                    }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="w-full max-w-4xl"
+                  >
+                    <div className="space-y-8">
+                      {/* Project header */}
+                      <motion.div 
+                        className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-8"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-2">Project: E-commerce Platform</h3>
+                            <p className="text-zinc-400">Building a complete online store with AI</p>
+                          </div>
+                          <motion.button 
+                            className="glass-button px-6 py-3 bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-indigo-300 hover:bg-indigo-600/30 transition-all duration-200 flex items-center gap-2"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Plus size={16} />
+                            Invite Team
+                          </motion.button>
+                        </div>
+                      </motion.div>
+
+                      {/* Team avatars and chat */}
+                      <div className="flex items-center justify-center gap-8">
+                        <div className="flex items-center gap-4">
+                          {[1, 2, 3, 4].map((_, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ scale: 0, rotate: -180 }}
+                              animate={{ 
+                                scale: 1, 
+                                rotate: 0,
+                                y: Math.sin(scrollProgress * Math.PI + index) * 5
+                              }}
+                              transition={{ 
+                                duration: 0.6, 
+                                delay: index * 0.1,
+                                type: "spring",
+                                stiffness: 200
+                              }}
+                              className="relative"
+                            >
+                              <motion.div 
+                                className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-lg glass-panel border border-white/20"
+                                whileHover={{ scale: 1.1, rotate: 5 }}
+                              >
+                                {String.fromCharCode(65 + index)}
+                              </motion.div>
+                              <motion.div 
+                                className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-zinc-900"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: index * 0.1 + 0.3 }}
+                              />
+                            </motion.div>
+                          ))}
+                        </div>
+                        
+                        {/* Chat bubbles */}
+                        <div className="space-y-2">
+                          <motion.div 
+                            className="glass-panel bg-indigo-600/20 border border-indigo-500/30 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.8, ease: "easeOut" }}
+                          >
+                            <p className="text-indigo-200 text-sm">Looking good! 👍</p>
+                          </motion.div>
+                          <motion.div 
+                            className="glass-panel bg-purple-600/20 border border-purple-500/30 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 1.2, ease: "easeOut" }}
+                          >
+                            <p className="text-purple-200 text-sm">Added payment flow</p>
+                          </motion.div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
 
                 {/* Step 6: Final Map */}
                 {activeStep === 6 && (
