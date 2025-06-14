@@ -138,7 +138,7 @@ export const HomePage: React.FC = () => {
                   Design before you prompt
                 </h2>
                 <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                  Map out your next build with structured, reusable prompts — ready for solo or team workflows.
+                  Map out your next build with structured, reusable prompts. Ready for solo or team workflows.
                 </p>
               </div>
 
