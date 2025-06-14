@@ -62,19 +62,21 @@ export const ProfilePage: React.FC = () => {
     
     setLoading(true)
     try {
+      // Use maybeSingle() instead of single() to handle cases where no profile exists
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
       if (error) {
         console.error('Error loading user profile:', error)
-        // If no profile exists, create one
-        if (error.code === 'PGRST116') {
-          await createUserProfile()
-        }
+        setToast({ message: 'Failed to load profile', type: 'error' })
+      } else if (!data) {
+        // No profile exists, create one
+        await createUserProfile()
       } else {
+        // Profile exists, use it
         setUserProfile(data)
         setFormData({
           email: data.email || '',
@@ -85,6 +87,7 @@ export const ProfilePage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error loading profile:', error)
+      setToast({ message: 'Failed to load profile', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -94,6 +97,19 @@ export const ProfilePage: React.FC = () => {
     if (!user) return
 
     try {
+      // Check if profile already exists before creating
+      const { data: existingProfile } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (existingProfile) {
+        // Profile already exists, just reload
+        await loadUserProfile()
+        return
+      }
+
       const { data, error } = await supabase
         .from('users')
         .insert([{
@@ -106,7 +122,11 @@ export const ProfilePage: React.FC = () => {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error creating user profile:', error)
+        setToast({ message: 'Failed to create profile', type: 'error' })
+        return
+      }
 
       setUserProfile(data)
       setFormData({
@@ -117,6 +137,7 @@ export const ProfilePage: React.FC = () => {
       setProfileImage(data.avatar_url || null)
     } catch (error) {
       console.error('Error creating user profile:', error)
+      setToast({ message: 'Failed to create profile', type: 'error' })
     }
   }
 
@@ -158,14 +179,20 @@ export const ProfilePage: React.FC = () => {
     try {
       const fileExt = file.name.split('.').pop()
       const fileName = `${user?.id}-${Date.now()}.${fileExt}`
-      const filePath = `avatars/${fileName}`
+      const filePath = `${fileName}` // Remove nested avatars folder
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file)
+        .upload(filePath, file, {
+          upsert: true // Allow overwriting existing files
+        })
 
       if (uploadError) {
         console.error('Upload error:', uploadError)
+        // Provide more specific error message
+        if (uploadError.message.includes('row-level security policy')) {
+          throw new Error('Storage permissions not configured. Please contact support.')
+        }
         throw new Error('Failed to upload image')
       }
 
@@ -181,15 +208,25 @@ export const ProfilePage: React.FC = () => {
   }
 
   const handleSaveProfile = async () => {
-    if (!user) return
+    if (!user || !userProfile) return
 
     setSaving(true)
     try {
-      let avatarUrl = userProfile?.avatar_url
+      let avatarUrl = userProfile.avatar_url
 
       // Upload new image if one was selected
       if (imageFile) {
-        avatarUrl = await uploadImageToStorage(imageFile)
+        try {
+          avatarUrl = await uploadImageToStorage(imageFile)
+        } catch (uploadError: any) {
+          // If image upload fails, still try to update other profile data
+          console.error('Image upload failed:', uploadError)
+          setToast({ 
+            message: uploadError.message || 'Failed to upload image, but profile will be updated without new photo', 
+            type: 'error' 
+          })
+          // Don't return here, continue with profile update
+        }
       }
 
       // Update user profile in database
@@ -202,7 +239,10 @@ export const ProfilePage: React.FC = () => {
         })
         .eq('id', user.id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error updating profile:', error)
+        throw new Error('Failed to update profile')
+      }
 
       // Reload profile data
       await loadUserProfile()
