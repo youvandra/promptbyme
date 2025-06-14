@@ -27,70 +27,56 @@ interface CinematicLandingPageProps {
 
 export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSignInClick }) => {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [mounted, setMounted] = useState(false)
-  
-  // Safe scroll hook with fallback
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"]
   })
 
-  // Smooth spring-based scroll progress with safe fallback
-  const smoothProgress = useSpring(scrollYProgress || 0, {
+  // Smooth spring-based scroll progress
+  const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001
   })
 
-  // Safe transform with fallback values
+  // Transform scroll progress into section steps with smooth interpolation
   const currentStep = useTransform(smoothProgress, [0, 1], [0, 6])
   const [activeStep, setActiveStep] = useState(0)
   const [scrollProgress, setScrollProgress] = useState(0)
 
-  // Mount guard
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Safe scroll progress tracking
-  useEffect(() => {
-    if (!mounted) return
-    
-    const unsubscribe = currentStep.on('change', (latest) => {
-      if (typeof latest === 'number' && !isNaN(latest)) {
-        setActiveStep(Math.floor(latest))
-        setScrollProgress(latest % 1)
-      }
+    const unsubscribe = currentStep.onChange((latest) => {
+      setActiveStep(Math.floor(latest))
+      setScrollProgress(latest % 1) // Get fractional part for smooth transitions
     })
     return unsubscribe
-  }, [currentStep, mounted])
+  }, [currentStep])
 
   // Typewriter effect state
   const [typedText, setTypedText] = useState('')
   const fullPromptText = "Create a landing page for a SaaS product with modern design, responsive layout, and conversion-focused sections including hero, features, pricing, testimonials, and CTA..."
 
-  // Safe typewriter effect
+  // Typewriter effect for step 1
   useEffect(() => {
-    if (!mounted || activeStep < 1) {
+    if (activeStep >= 1) {
+      let index = 0
+      const timer = setInterval(() => {
+        if (index <= fullPromptText.length) {
+          setTypedText(fullPromptText.slice(0, index))
+          index++
+        } else {
+          clearInterval(timer)
+        }
+      }, 25)
+      return () => clearInterval(timer)
+    } else {
       setTypedText('')
-      return
     }
+  }, [activeStep])
 
-    let index = 0
-    const timer = setInterval(() => {
-      if (index <= fullPromptText.length) {
-        setTypedText(fullPromptText.slice(0, index))
-        index++
-      } else {
-        clearInterval(timer)
-      }
-    }, 25)
-    return () => clearInterval(timer)
-  }, [activeStep, mounted])
-
-  // Safe scroll to next section
+  // Smooth scroll to next section
   const scrollToNext = () => {
-    if (containerRef.current && mounted) {
+    if (containerRef.current) {
       const nextPosition = window.innerHeight * (activeStep + 1)
       window.scrollTo({
         top: nextPosition,
@@ -99,8 +85,8 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
     }
   }
 
-  // Safe header opacity with fallback
-  const headerOpacity = mounted ? useTransform(smoothProgress, [0, 0.15], [1, 0]) : 1
+  // Header opacity based on scroll
+  const headerOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0])
 
   // Step content configurations
   const stepConfigs = [
@@ -142,15 +128,6 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
   ]
 
   const currentConfig = stepConfigs[activeStep] || stepConfigs[0]
-
-  // Don't render until mounted to avoid hydration issues
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="text-zinc-400">Loading...</div>
-      </div>
-    )
-  }
 
   return (
     <div ref={containerRef} className="relative" style={{ height: '700vh' }}>
@@ -334,7 +311,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                               <ChevronDown size={16} className="group-hover:text-indigo-400 transition-colors duration-300" />
                             </motion.div>
                           </motion.button>
-                        </div>
+                        </motion.div>
                       </div>
                     </div>
                   </motion.div>
@@ -348,7 +325,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     animate={{ 
                       opacity: 1, 
                       y: 0,
-                      scale: 1 + scrollProgress * 0.05
+                      scale: 1 + scrollProgress * 0.05 // Smooth scaling based on scroll
                     }}
                     exit={{ opacity: 0, y: -50 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
@@ -424,7 +401,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     animate={{ 
                       opacity: 1, 
                       scale: 1,
-                      rotateY: scrollProgress * 5
+                      rotateY: scrollProgress * 5 // Subtle 3D effect
                     }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
