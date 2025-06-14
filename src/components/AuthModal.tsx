@@ -30,7 +30,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       } else {
         await signUp(email, password)
         setSuccess('Account created successfully!')
-        // Don't close modal immediately for signup to show success message
         setTimeout(() => {
           onClose()
         }, 3000)
@@ -54,40 +53,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="relative bg-black/90 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8 w-full max-w-md">
+      <div className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-8 w-full max-w-md">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-cyan-400 hover:text-cyan-300 transition-colors"
+          className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors p-1"
         >
           <X size={20} />
         </button>
 
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-cyan-100 font-mono mb-2">
-            {isLogin ? 'Access Terminal' : 'Create Account'}
+          <h2 className="text-2xl font-semibold text-white mb-2">
+            {isLogin ? 'Welcome back' : 'Create account'}
           </h2>
-          <p className="text-cyan-500/70 font-mono text-sm">
-            {isLogin ? 'Enter your credentials' : 'Join the prompt collective'}
+          <p className="text-zinc-400 text-sm">
+            {isLogin ? 'Sign in to your account' : 'Join the prompt community'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-500/50" size={18} />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email address"
               required
-              className="w-full bg-black/40 border border-cyan-500/30 rounded-lg pl-10 pr-4 py-3 text-cyan-100 placeholder-cyan-500/50 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 font-mono"
+              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
             />
           </div>
 
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-500/50" size={18} />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
             <input
               type="password"
               value={password}
@@ -95,19 +94,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               placeholder="Password"
               required
               minLength={6}
-              className="w-full bg-black/40 border border-cyan-500/30 rounded-lg pl-10 pr-4 py-3 text-cyan-100 placeholder-cyan-500/50 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 font-mono"
+              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
             />
           </div>
 
           {error && (
-            <div className="flex items-start gap-3 text-red-400 text-sm font-mono bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+            <div className="flex items-start gap-3 text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-xl p-3">
               <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="flex items-start gap-3 text-green-400 text-sm font-mono bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+            <div className="flex items-start gap-3 text-emerald-400 text-sm bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3">
               <CheckCircle size={16} className="flex-shrink-0 mt-0.5" />
               <span>{success}</span>
             </div>
@@ -116,15 +115,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold py-3 rounded-lg hover:from-cyan-400 hover:to-purple-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 active:scale-95"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium py-3 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:transform-none disabled:cursor-not-allowed btn-hover"
           >
             {loading ? (
               <div className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                <span>{isLogin ? 'Accessing...' : 'Creating...'}</span>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>{isLogin ? 'Signing in...' : 'Creating account...'}</span>
               </div>
             ) : (
-              <span>{isLogin ? 'Access Terminal' : 'Create Account'}</span>
+              <span>{isLogin ? 'Sign in' : 'Create account'}</span>
             )}
           </button>
         </form>
@@ -132,14 +131,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         <div className="mt-6 text-center">
           <button
             onClick={handleModeSwitch}
-            className="text-cyan-400 hover:text-cyan-300 font-mono text-sm transition-colors"
+            className="text-indigo-400 hover:text-indigo-300 text-sm transition-colors"
           >
             {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
           </button>
         </div>
 
         {!isLogin && (
-          <div className="mt-4 text-xs text-cyan-500/60 font-mono text-center">
+          <div className="mt-4 text-xs text-zinc-500 text-center">
             <p>Having trouble? Try using a different email address.</p>
           </div>
         )}

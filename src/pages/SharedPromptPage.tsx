@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Terminal, Copy, Eye, Lock, Heart, GitFork } from 'lucide-react'
+import { ArrowLeft, Copy, Eye, Lock, Heart, GitFork, Zap } from 'lucide-react'
 import { marked } from 'marked'
-import { AnimatedBackground } from '../components/AnimatedBackground'
-import { GlitchText } from '../components/GlitchText'
 import { Toast } from '../components/Toast'
 import { BoltBadge } from '../components/BoltBadge'
 import { AuthModal } from '../components/AuthModal'
@@ -84,7 +82,7 @@ export const SharedPromptPage: React.FC = () => {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
-      setToast({ message: '> Content copied to clipboard', type: 'success' })
+      setToast({ message: 'Content copied to clipboard', type: 'success' })
     } catch (err) {
       setToast({ message: 'Failed to copy content', type: 'error' })
     }
@@ -113,7 +111,7 @@ export const SharedPromptPage: React.FC = () => {
       } : null)
       
       setToast({ 
-        message: newLikeStatus ? '> Prompt liked' : '> Prompt unliked', 
+        message: newLikeStatus ? 'Prompt liked' : 'Prompt unliked', 
         type: 'success' 
       })
     } catch (error) {
@@ -152,7 +150,7 @@ export const SharedPromptPage: React.FC = () => {
         fork_count: (prev.fork_count || 0) + 1
       } : null)
       
-      setToast({ message: '> Prompt forked to your gallery', type: 'success' })
+      setToast({ message: 'Prompt forked to your gallery', type: 'success' })
     } catch (error: any) {
       console.error('Failed to fork prompt:', error)
       setToast({ message: error.message || 'Failed to fork prompt', type: 'error' })
@@ -200,12 +198,11 @@ export const SharedPromptPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <AnimatedBackground />
-        <div className="relative z-10 text-cyan-400 font-mono">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="relative z-10 text-zinc-400">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
-            <span>Decrypting prompt...</span>
+            <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+            <span>Loading prompt...</span>
           </div>
         </div>
       </div>
@@ -214,27 +211,25 @@ export const SharedPromptPage: React.FC = () => {
 
   if (error || !prompt) {
     return (
-      <div className="min-h-screen bg-black text-cyan-100 relative overflow-hidden">
-        <AnimatedBackground />
-        
+      <div className="min-h-screen bg-zinc-950 text-white relative">
         <div className="relative z-10 container mx-auto px-4 py-12">
           <div className="text-center">
             <div className="mb-8">
               <Lock className="mx-auto text-red-400 mb-4" size={64} />
-              <h1 className="text-4xl font-bold font-mono text-red-400 mb-4">
-                <GlitchText text="Access Denied" />
+              <h1 className="text-4xl font-bold text-red-400 mb-4">
+                Access Denied
               </h1>
-              <p className="text-xl text-red-300/80 font-mono">
+              <p className="text-xl text-red-300">
                 {error}
               </p>
             </div>
             
             <Link
               to="/"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
             >
               <ArrowLeft size={16} />
-              <span>Return to Terminal</span>
+              <span>Go Home</span>
             </Link>
           </div>
         </div>
@@ -245,25 +240,25 @@ export const SharedPromptPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-cyan-100 relative overflow-hidden">
-      <AnimatedBackground />
-      
+    <div className="min-h-screen bg-zinc-950 text-white relative">
       {/* Header */}
-      <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
+      <header className="relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <Link
               to="/"
-              className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors font-mono"
+              className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
             >
               <ArrowLeft size={20} />
-              <span>Back to Terminal</span>
+              <span>Back</span>
             </Link>
             
             <div className="flex items-center gap-3">
-              <Terminal className="text-cyan-400" size={24} />
-              <h1 className="text-xl font-bold font-mono">
-                <GlitchText text="promptby.me" />
+              <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <Zap className="text-white" size={12} />
+              </div>
+              <h1 className="text-lg font-semibold">
+                promptby.me
               </h1>
             </div>
           </div>
@@ -274,56 +269,56 @@ export const SharedPromptPage: React.FC = () => {
       <main className="relative z-10 container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           {/* Prompt Card */}
-          <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-8">
+          <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
             {/* Header */}
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-6">
               <div className="flex-1 min-w-0">
                 {prompt.title && (
-                  <h2 className="text-2xl md:text-3xl font-bold text-cyan-100 mb-4 font-mono break-words">
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 break-words">
                     {prompt.title}
                   </h2>
                 )}
-                <div className="flex items-center gap-3 text-sm text-cyan-500/70 flex-wrap">
+                <div className="flex items-center gap-3 text-sm text-zinc-400 flex-wrap">
                   <div className="flex items-center gap-2">
                     <Eye size={14} />
-                    <span className="font-mono">Public</span>
+                    <span>Public</span>
                   </div>
                   
                   {/* Fork indicator */}
                   {isForkedPrompt && (
-                    <span>•</span>
-                  )}
-                  {isForkedPrompt && (
-                    <div className="flex items-center gap-1">
-                      <GitFork size={14} className="text-orange-400" />
-                      <span className="font-mono text-orange-400">forked prompt</span>
-                    </div>
+                    <>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <GitFork size={14} className="text-orange-400" />
+                        <span className="text-orange-400">forked prompt</span>
+                      </div>
+                    </>
                   )}
                   
                   <span>•</span>
                   <div className="flex items-center gap-1">
                     <Eye size={14} className="text-purple-400" />
-                    <span className="font-mono text-purple-400">{formatViews(prompt.views || 0)} views</span>
+                    <span className="text-purple-400">{formatViews(prompt.views || 0)} views</span>
                   </div>
                   <span>•</span>
                   <div className="flex items-center gap-1">
-                    <Heart size={14} className="text-red-400" />
-                    <span className="font-mono text-red-400">{formatViews(prompt.like_count || 0)} likes</span>
+                    <Heart size={14} className="text-pink-400" />
+                    <span className="text-pink-400">{formatViews(prompt.like_count || 0)} likes</span>
                   </div>
                   
                   {/* Fork count - only show for original prompts */}
                   {canFork && (prompt.fork_count || 0) > 0 && (
-                    <span>•</span>
-                  )}
-                  {canFork && (prompt.fork_count || 0) > 0 && (
-                    <div className="flex items-center gap-1">
-                      <GitFork size={14} className="text-green-400" />
-                      <span className="font-mono text-green-400">{formatViews(prompt.fork_count || 0)} forks</span>
-                    </div>
+                    <>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <GitFork size={14} className="text-emerald-400" />
+                        <span className="text-emerald-400">{formatViews(prompt.fork_count || 0)} forks</span>
+                      </div>
+                    </>
                   )}
                   
                   <span>•</span>
-                  <span className="font-mono">{formatDate(prompt.created_at || '')}</span>
+                  <span>{formatDate(prompt.created_at || '')}</span>
                 </div>
               </div>
               
@@ -334,10 +329,10 @@ export const SharedPromptPage: React.FC = () => {
                   <button
                     onClick={handleFork}
                     disabled={isForking}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 font-mono text-sm transform hover:scale-105 ${
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-200 text-sm font-medium transform hover:scale-105 ${
                       isForking 
-                        ? 'opacity-50 cursor-not-allowed bg-green-500/10 border-green-500/30 text-green-400/50'
-                        : 'bg-green-500/10 border-green-500/30 text-green-400 hover:text-green-300 hover:bg-green-500/20 hover:border-green-500/50 hover:shadow-lg hover:shadow-green-500/20'
+                        ? 'opacity-50 cursor-not-allowed bg-emerald-500/10 border-emerald-500/30 text-emerald-400/50'
+                        : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 btn-hover'
                     }`}
                     title={user ? 'Fork this prompt to your gallery' : 'Sign in to fork this prompt'}
                   >
@@ -355,11 +350,11 @@ export const SharedPromptPage: React.FC = () => {
                 <button
                   onClick={handleLike}
                   disabled={isLiking}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all duration-300 font-mono text-sm group transform hover:scale-105 ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-200 text-sm font-medium group transform hover:scale-105 ${
                     userHasLiked
-                      ? 'bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30 hover:shadow-lg hover:shadow-red-500/20'
-                      : 'bg-red-500/10 border-red-500/30 text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/20'
-                  } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      ? 'bg-pink-500/20 border-pink-500/50 text-pink-300'
+                      : 'bg-pink-500/10 border-pink-500/30 text-pink-400 hover:bg-pink-500/20'
+                  } ${isLiking ? 'opacity-50 cursor-not-allowed' : 'btn-hover'}`}
                   title={user ? (userHasLiked ? 'Unlike this prompt' : 'Like this prompt') : 'Sign in to like this prompt'}
                 >
                   <Heart 
@@ -383,7 +378,7 @@ export const SharedPromptPage: React.FC = () => {
                 {/* Copy button */}
                 <button
                   onClick={() => copyToClipboard(prompt.content)}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 text-cyan-300 hover:text-cyan-100 hover:border-cyan-400/50 rounded-lg transition-all duration-300 font-mono text-sm transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/20"
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 rounded-xl transition-all duration-200 text-sm font-medium transform hover:scale-105 btn-hover"
                 >
                   <Copy size={16} />
                   <span>Copy</span>
@@ -392,9 +387,9 @@ export const SharedPromptPage: React.FC = () => {
             </div>
 
             {/* Content */}
-            <div className="bg-black/20 border border-cyan-500/20 rounded-lg p-6">
+            <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-6">
               <div 
-                className="text-cyan-100/90 font-mono leading-relaxed prose prose-invert prose-cyan max-w-none"
+                className="text-zinc-200 leading-relaxed prose prose-invert max-w-none"
                 dangerouslySetInnerHTML={renderContent()}
                 style={{
                   wordBreak: 'break-word',
@@ -405,10 +400,10 @@ export const SharedPromptPage: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <div className="mt-6 pt-6 border-t border-cyan-500/20">
-              <p className="text-center text-cyan-500/70 font-mono text-sm">
+            <div className="mt-6 pt-6 border-t border-zinc-800/50">
+              <p className="text-center text-zinc-500 text-sm">
                 Created with{' '}
-                <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                <Link to="/" className="text-indigo-400 hover:text-indigo-300 transition-colors">
                   promptby.me
                 </Link>
                 {' '}• AI prompt sharing platform
@@ -419,16 +414,16 @@ export const SharedPromptPage: React.FC = () => {
           {/* Call to action for non-authenticated users */}
           {!user && (
             <div className="mt-8 text-center">
-              <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-6">
-                <h3 className="text-xl font-bold text-cyan-100 mb-2 font-mono">
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-6">
+                <h3 className="text-xl font-semibold text-white mb-2">
                   Join the Community
                 </h3>
-                <p className="text-cyan-300/80 font-mono mb-4">
+                <p className="text-zinc-400 mb-4">
                   Sign up to like prompts, fork them to your gallery, and share your own AI prompts with the world.
                 </p>
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
+                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
                 >
                   Get Started
                 </button>

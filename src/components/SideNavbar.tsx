@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { 
-  Terminal, 
+  Home,
   User, 
   FolderOpen, 
   LogOut, 
   X,
-  Home
+  Menu,
+  Zap
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
-import { GlitchText } from './GlitchText'
 
 interface SideNavbarProps {
   isOpen: boolean
@@ -37,7 +37,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
     {
       path: '/',
       icon: Home,
-      label: 'Command Center',
+      label: 'Home',
       description: 'Create and manage prompts'
     },
     {
@@ -70,7 +70,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       {/* Mobile Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
           onClick={onToggle}
         />
       )}
@@ -79,31 +79,33 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       <div 
         id="sidebar"
         className={`
-          fixed top-0 left-0 h-screen w-80 bg-black/95 backdrop-blur-md border-r border-cyan-500/30 z-50
-          transform transition-transform duration-300 ease-in-out flex flex-col
+          fixed top-0 left-0 h-screen w-64 bg-zinc-950/95 backdrop-blur-xl border-r border-zinc-800/50 z-50
+          transform transition-transform duration-300 ease-out flex flex-col
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0 lg:relative lg:z-auto
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-cyan-500/30 flex-shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-zinc-800/50 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <Terminal className="text-cyan-400" size={24} />
-            <h1 className="text-lg font-bold font-mono">
-              <GlitchText text="promptby.me" />
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Zap className="text-white" size={16} />
+            </div>
+            <h1 className="text-lg font-semibold text-white">
+              promptby.me
             </h1>
           </div>
           <button
             onClick={onToggle}
-            className="lg:hidden text-cyan-400 hover:text-cyan-300 transition-colors"
+            className="lg:hidden text-zinc-400 hover:text-white transition-colors p-1"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-6 overflow-y-auto">
-          <div className="space-y-3">
+        <nav className="flex-1 p-4 overflow-y-auto">
+          <div className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon
               const active = isActive(item.path)
@@ -114,56 +116,50 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                   to={item.path}
                   onClick={onToggle}
                   className={`
-                    group flex items-center gap-3 p-4 rounded-lg transition-all duration-300
+                    group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150
                     ${active 
-                      ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/50 text-cyan-100' 
-                      : 'text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10'
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' 
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
                     }
                   `}
                 >
-                  <Icon size={20} className={active ? 'text-cyan-300' : ''} />
+                  <Icon size={18} className={active ? 'text-white' : ''} />
                   <div className="flex-1">
-                    <p className="font-mono font-medium">{item.label}</p>
-                    <p className="text-xs text-cyan-500/70 font-mono">{item.description}</p>
+                    <p className="font-medium text-sm">{item.label}</p>
+                    <p className="text-xs opacity-70">{item.description}</p>
                   </div>
-                  {active && (
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-                  )}
                 </Link>
               )
             })}
           </div>
         </nav>
 
-        {/* Bottom Section - User Info and Exit with proper spacing */}
+        {/* Bottom Section - User Info and Exit */}
         {user && (
-          <div className="mt-auto border-t border-cyan-500/20 flex-shrink-0">
+          <div className="mt-auto border-t border-zinc-800/50 flex-shrink-0">
             {/* User Profile Link */}
             <Link
               to="/profile"
               onClick={onToggle}
               className={`
-                group flex items-center gap-3 p-4 transition-all duration-300 border-b border-cyan-500/10
+                group flex items-center gap-3 p-4 transition-all duration-150 border-b border-zinc-800/30
                 ${location.pathname === '/profile'
-                  ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border-cyan-500/50 text-cyan-100' 
-                  : 'text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10'
+                  ? 'bg-indigo-600 text-white' 
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
                 }
               `}
             >
-              <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                <User size={16} className="text-black" />
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <User size={14} className="text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-mono font-medium truncate">
+                <p className="text-sm font-medium truncate">
                   {user.email}
                 </p>
-                <p className="text-xs text-cyan-500/70 font-mono">
+                <p className="text-xs opacity-70">
                   View Profile
                 </p>
               </div>
-              {location.pathname === '/profile' && (
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-              )}
             </Link>
 
             {/* Sign Out Button */}
@@ -171,10 +167,10 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
               <button
                 onClick={handleSignOut}
                 disabled={isSigningOut}
-                className="w-full flex items-center gap-3 p-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-300 font-mono disabled:opacity-50"
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-150 disabled:opacity-50 text-sm"
               >
-                <LogOut size={20} />
-                <span>{isSigningOut ? 'Terminating...' : 'Exit Terminal'}</span>
+                <LogOut size={16} />
+                <span>{isSigningOut ? 'Signing out...' : 'Sign out'}</span>
               </button>
             </div>
           </div>

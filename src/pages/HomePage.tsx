@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Terminal, Menu } from 'lucide-react'
-import { AnimatedBackground } from '../components/AnimatedBackground'
-import { GlitchText } from '../components/GlitchText'
+import { Menu, Zap } from 'lucide-react'
 import { TerminalInput } from '../components/TerminalInput'
 import { AuthModal } from '../components/AuthModal'
 import { Toast } from '../components/Toast'
@@ -51,7 +49,7 @@ export const HomePage: React.FC = () => {
         tags: [],
         original_prompt_id: null,
       })
-      setToast({ message: '> Prompt saved. ::Sync complete', type: 'success' })
+      setToast({ message: 'Prompt saved successfully', type: 'success' })
     } catch (error) {
       setToast({ message: 'Failed to save prompt', type: 'error' })
     }
@@ -59,11 +57,11 @@ export const HomePage: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-cyan-400 font-mono">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-zinc-400">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
-            <span>Initializing terminal...</span>
+            <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+            <span>Loading...</span>
           </div>
         </div>
       </div>
@@ -71,33 +69,33 @@ export const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-cyan-100 relative overflow-hidden">
-      <AnimatedBackground />
-      
+    <div className="min-h-screen bg-zinc-950 text-white relative">
       {/* Layout Container */}
       <div className="flex min-h-screen">
         {/* Side Navbar - Only shows when user is logged in */}
         {user && <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />}
         
         {/* Main Content Area */}
-        <div className={`flex-1 flex flex-col min-h-screen ${user ? 'ml-10 lg:ml-10' : ''}`}>
+        <div className={`flex-1 flex flex-col min-h-screen ${user ? '' : ''}`}>
           {/* Header - Only show for non-logged users */}
           {!user && (
-            <header className="relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
+            <header className="relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
               <div className="max-w-7xl mx-auto px-4 py-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Terminal className="text-cyan-400" size={32} />
-                    <h1 className="text-2xl md:text-3xl font-bold font-mono">
-                      <GlitchText text="promptby.me" />
+                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                      <Zap className="text-white" size={16} />
+                    </div>
+                    <h1 className="text-xl font-semibold">
+                      promptby.me
                     </h1>
                   </div>
                   
                   <button
                     onClick={() => setShowAuthModal(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 btn-hover"
                   >
-                    Access Terminal
+                    Sign in
                   </button>
                 </div>
               </div>
@@ -106,20 +104,22 @@ export const HomePage: React.FC = () => {
 
           {/* Mobile Header for logged users */}
           {user && (
-            <header className="lg:hidden relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
+            <header className="lg:hidden relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
               <div className="px-4 py-4">
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                    className="text-zinc-400 hover:text-white transition-colors p-1"
                   >
-                    <Menu size={24} />
+                    <Menu size={20} />
                   </button>
                   
                   <div className="flex items-center gap-2">
-                    <Terminal className="text-cyan-400" size={20} />
-                    <h1 className="text-lg font-bold font-mono">
-                      <GlitchText text="promptby.me" />
+                    <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                      <Zap className="text-white" size={12} />
+                    </div>
+                    <h1 className="text-lg font-semibold">
+                      promptby.me
                     </h1>
                   </div>
                   
@@ -131,14 +131,14 @@ export const HomePage: React.FC = () => {
 
           {/* Main Content */}
           <main className="relative z-10 flex-1">
-            <div className={`w-full ${user ? 'max-w-6xl pr-10' : 'max-w-6xl px-4'} mx-auto py-8`}>
+            <div className={`w-full ${user ? 'max-w-6xl pr-6' : 'max-w-6xl px-4'} mx-auto py-12`}>
               {/* Hero Section */}
               <div className="text-center mb-12">
-                <h2 className="text-4xl md:text-6xl font-bold font-mono mb-6 bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                  Command Center
+                <h2 className="text-5xl md:text-6xl font-bold mb-6 gradient-text">
+                  AI Prompt Hub
                 </h2>
-                <p className="text-xl text-cyan-300/80 font-mono max-w-2xl mx-auto leading-relaxed">
-                  Share your AI prompts with the collective. Save, organize, and distribute your most powerful commands.
+                <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                  Create, share, and discover powerful AI prompts. Build your collection and connect with the community.
                 </p>
               </div>
 
@@ -152,46 +152,46 @@ export const HomePage: React.FC = () => {
 
               {/* Getting Started Guide for new users */}
               {!user && (
-                <div className="max-w-5xl mx-auto">
-                  <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-8">
-                    <h3 className="text-2xl font-bold text-cyan-100 mb-4 font-mono text-center">
-                      Welcome to the Terminal
+                <div className="max-w-4xl mx-auto">
+                  <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
+                    <h3 className="text-2xl font-semibold text-white mb-6 text-center">
+                      Get Started
                     </h3>
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-3 gap-8">
                       <div className="text-center">
-                        <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                          <Terminal className="text-cyan-400" size={24} />
+                        <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                          <Zap className="text-indigo-400" size={24} />
                         </div>
-                        <h4 className="font-mono font-bold text-cyan-100 mb-2">Create</h4>
-                        <p className="text-cyan-300/80 font-mono text-sm">
+                        <h4 className="font-semibold text-white mb-2">Create</h4>
+                        <p className="text-zinc-400 text-sm">
                           Write and save your AI prompts with markdown support
                         </p>
                       </div>
                       <div className="text-center">
-                        <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                          <Terminal className="text-purple-400" size={24} />
+                        <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                          <Zap className="text-purple-400" size={24} />
                         </div>
-                        <h4 className="font-mono font-bold text-cyan-100 mb-2">Share</h4>
-                        <p className="text-cyan-300/80 font-mono text-sm">
+                        <h4 className="font-semibold text-white mb-2">Share</h4>
+                        <p className="text-zinc-400 text-sm">
                           Make prompts public and share them with the community
                         </p>
                       </div>
                       <div className="text-center">
-                        <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mx-auto mb-3">
-                          <Terminal className="text-green-400" size={24} />
+                        <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                          <Zap className="text-emerald-400" size={24} />
                         </div>
-                        <h4 className="font-mono font-bold text-cyan-100 mb-2">Organize</h4>
-                        <p className="text-cyan-300/80 font-mono text-sm">
+                        <h4 className="font-semibold text-white mb-2">Organize</h4>
+                        <p className="text-zinc-400 text-sm">
                           Keep your prompts organized in your personal gallery
                         </p>
                       </div>
                     </div>
-                    <div className="text-center mt-6">
+                    <div className="text-center mt-8">
                       <button
                         onClick={() => setShowAuthModal(true)}
-                        className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
+                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
                       >
-                        Join the Collective
+                        Get Started
                       </button>
                     </div>
                   </div>

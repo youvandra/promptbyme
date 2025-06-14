@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { AnimatedBackground } from '../components/AnimatedBackground'
 import { Toast } from '../components/Toast'
 import { BoltBadge } from '../components/BoltBadge'
 import { SideNavbar } from '../components/SideNavbar'
@@ -38,8 +37,7 @@ export const ProfilePage: React.FC = () => {
 
   const handleSaveProfile = async () => {
     try {
-      // In a real app, you would update the user profile here
-      setToast({ message: '> Profile updated successfully', type: 'success' })
+      setToast({ message: 'Profile updated successfully', type: 'success' })
       setIsEditing(false)
     } catch (error) {
       setToast({ message: 'Failed to update profile', type: 'error' })
@@ -54,23 +52,12 @@ export const ProfilePage: React.FC = () => {
     })
   }
 
-  // Calculate user stats
-  const stats = {
-    totalPrompts: prompts.length,
-    publicPrompts: prompts.filter(p => p.access === 'public').length,
-    privatePrompts: prompts.filter(p => p.access === 'private').length,
-    totalViews: prompts.reduce((sum, p) => sum + (p.views || 0), 0),
-    totalLikes: prompts.reduce((sum, p) => sum + (p.like_count || 0), 0),
-    totalForks: prompts.reduce((sum, p) => sum + (p.fork_count || 0), 0),
-    forkedPrompts: prompts.filter(p => p.original_prompt_id !== null).length
-  }
-
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-cyan-400 font-mono">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-zinc-400">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
             <span>Loading profile...</span>
           </div>
         </div>
@@ -80,23 +67,21 @@ export const ProfilePage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black text-cyan-100 relative overflow-hidden">
-        <AnimatedBackground />
-        
+      <div className="min-h-screen bg-zinc-950 text-white relative">
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <User className="mx-auto text-cyan-400 mb-4" size={64} />
-            <h1 className="text-4xl font-bold font-mono text-cyan-100 mb-4">
+            <User className="mx-auto text-zinc-400 mb-4" size={64} />
+            <h1 className="text-4xl font-bold text-white mb-4">
               Access Required
             </h1>
-            <p className="text-xl text-cyan-300/80 font-mono mb-8">
+            <p className="text-xl text-zinc-400 mb-8">
               Please sign in to access your profile
             </p>
             <Link
               to="/"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
             >
-              <span>Go to Terminal</span>
+              <span>Go Home</span>
             </Link>
           </div>
         </div>
@@ -107,28 +92,26 @@ export const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-cyan-100 relative overflow-hidden">
-      <AnimatedBackground />
-      
+    <div className="min-h-screen bg-zinc-950 text-white relative">
       {/* Layout Container */}
       <div className="flex min-h-screen">
         {/* Side Navbar */}
         <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-h-screen ml-10 lg:ml-10">
+        <div className="flex-1 flex flex-col min-h-screen">
           {/* Mobile Header */}
-          <header className="lg:hidden relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
+          <header className="lg:hidden relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
             <div className="px-4 py-4">
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                  className="text-zinc-400 hover:text-white transition-colors p-1"
                 >
-                  <Menu size={24} />
+                  <Menu size={20} />
                 </button>
                 
-                <h1 className="text-lg font-bold font-mono text-cyan-300">
+                <h1 className="text-lg font-semibold text-white">
                   Profile
                 </h1>
                 
@@ -139,21 +122,21 @@ export const ProfilePage: React.FC = () => {
 
           {/* Profile Content */}
           <div className="relative z-10 flex-1">
-            <div className="w-full max-w-6xl pr-10 mx-auto py-8">
+            <div className="w-full max-w-6xl pr-6 mx-auto py-8">
               {/* Page Header */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
                 <div>
-                  <h1 className="text-3xl font-bold font-mono text-cyan-300">
-                    User Profile
+                  <h1 className="text-3xl font-bold text-white">
+                    Profile Settings
                   </h1>
-                  <p className="text-cyan-500/70 font-mono text-sm">
-                    Manage your account settings and preferences
+                  <p className="text-zinc-400">
+                    Manage your account and preferences
                   </p>
                 </div>
                 
                 <button
                   onClick={() => setIsEditing(!isEditing)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105 self-start lg:self-auto"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto btn-hover"
                 >
                   <Settings size={16} />
                   <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
@@ -162,19 +145,19 @@ export const ProfilePage: React.FC = () => {
 
               <div className="space-y-8">
                 {/* Profile Card */}
-                <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6">
+                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
                   <div className="flex flex-col lg:flex-row gap-6">
                     {/* Avatar Section */}
                     <div className="flex flex-col items-center lg:items-start">
-                      <div className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center mb-3">
-                        <User size={32} className="text-black" />
+                      <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-3">
+                        <User size={32} className="text-white" />
                       </div>
                       <div className="text-center lg:text-left">
-                        <h2 className="text-lg font-bold text-cyan-100 font-mono mb-1">
+                        <h2 className="text-lg font-semibold text-white mb-1">
                           {formData.displayName || 'Anonymous User'}
                         </h2>
-                        <p className="text-cyan-500/70 font-mono text-sm">
-                          Terminal Operator
+                        <p className="text-zinc-400 text-sm">
+                          Member
                         </p>
                       </div>
                     </div>
@@ -184,7 +167,7 @@ export const ProfilePage: React.FC = () => {
                       {isEditing ? (
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-sm font-mono text-cyan-300 mb-2">
+                            <label className="block text-sm text-zinc-300 mb-2">
                               Display Name
                             </label>
                             <input
@@ -192,11 +175,11 @@ export const ProfilePage: React.FC = () => {
                               value={formData.displayName}
                               onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                               placeholder="Enter display name"
-                              className="w-full bg-black/40 border border-cyan-500/30 rounded-lg px-4 py-3 text-cyan-100 placeholder-cyan-500/50 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 font-mono"
+                              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-mono text-cyan-300 mb-2">
+                            <label className="block text-sm text-zinc-300 mb-2">
                               Bio
                             </label>
                             <textarea
@@ -204,12 +187,12 @@ export const ProfilePage: React.FC = () => {
                               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                               placeholder="Tell us about yourself..."
                               rows={3}
-                              className="w-full bg-black/40 border border-cyan-500/30 rounded-lg px-4 py-3 text-cyan-100 placeholder-cyan-500/50 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 font-mono resize-none"
+                              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
                             />
                           </div>
                           <button
                             onClick={handleSaveProfile}
-                            className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/50 text-green-300 hover:bg-green-500/30 rounded-lg transition-all duration-300 font-mono"
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all duration-200 btn-hover"
                           >
                             <Save size={16} />
                             <span>Save Changes</span>
@@ -218,24 +201,24 @@ export const ProfilePage: React.FC = () => {
                       ) : (
                         <div className="space-y-3">
                           <div className="flex items-center gap-3">
-                            <Mail className="text-cyan-400" size={16} />
-                            <span className="font-mono text-cyan-100 text-sm">{user.email}</span>
+                            <Mail className="text-indigo-400" size={16} />
+                            <span className="text-white text-sm">{user.email}</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <Calendar className="text-cyan-400" size={16} />
-                            <span className="font-mono text-cyan-100 text-sm">
+                            <Calendar className="text-indigo-400" size={16} />
+                            <span className="text-white text-sm">
                               Joined {formatDate(user.created_at)}
                             </span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <Shield className="text-cyan-400" size={16} />
-                            <span className="font-mono text-cyan-100 text-sm">
+                            <Shield className="text-indigo-400" size={16} />
+                            <span className="text-white text-sm">
                               Email {user.email_confirmed_at ? 'Verified' : 'Pending'}
                             </span>
                           </div>
                           {formData.bio && (
                             <div className="mt-3">
-                              <p className="text-cyan-300/80 font-mono text-sm leading-relaxed">
+                              <p className="text-zinc-300 text-sm leading-relaxed">
                                 {formData.bio}
                               </p>
                             </div>
@@ -247,40 +230,40 @@ export const ProfilePage: React.FC = () => {
                 </div>
 
                 {/* Account Settings */}
-                <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6">
-                  <h3 className="text-lg font-bold text-cyan-100 font-mono mb-4">
+                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">
                     Account Settings
                   </h3>
                   
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg border border-cyan-500/20">
+                    <div className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl border border-zinc-700/30">
                       <div>
-                        <h4 className="font-mono font-bold text-cyan-100 text-sm">Email Notifications</h4>
-                        <p className="text-xs text-cyan-500/70 font-mono">Receive updates about your prompts</p>
+                        <h4 className="font-medium text-white text-sm">Email Notifications</h4>
+                        <p className="text-xs text-zinc-400">Receive updates about your prompts</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" className="sr-only peer" defaultChecked />
-                        <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                        <div className="w-9 h-5 bg-zinc-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                       </label>
                     </div>
 
-                    <div className="flex items-center justify-between p-3 bg-black/20 rounded-lg border border-cyan-500/20">
+                    <div className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl border border-zinc-700/30">
                       <div>
-                        <h4 className="font-mono font-bold text-cyan-100 text-sm">Public Profile</h4>
-                        <p className="text-xs text-cyan-500/70 font-mono">Allow others to see your public prompts</p>
+                        <h4 className="font-medium text-white text-sm">Public Profile</h4>
+                        <p className="text-xs text-zinc-400">Allow others to see your public prompts</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" className="sr-only peer" defaultChecked />
-                        <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                        <div className="w-9 h-5 bg-zinc-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
                       </label>
                     </div>
 
-                    <div className="border-t border-cyan-500/20 pt-4">
-                      <button className="flex items-center gap-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all duration-300 font-mono text-sm">
+                    <div className="border-t border-zinc-700/50 pt-4">
+                      <button className="flex items-center gap-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-200 text-sm">
                         <Trash2 size={14} />
                         <span>Delete Account</span>
                       </button>
-                      <p className="text-xs text-cyan-500/50 font-mono mt-2">
+                      <p className="text-xs text-zinc-500 mt-2">
                         This action cannot be undone. All your prompts will be permanently deleted.
                       </p>
                     </div>

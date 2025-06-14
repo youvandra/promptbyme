@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft, Menu, Eye, Lock, Heart, GitFork, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { AnimatedBackground } from '../components/AnimatedBackground'
 import { PromptCard } from '../components/PromptCard'
 import { Toast } from '../components/Toast'
 import { BoltBadge } from '../components/BoltBadge'
@@ -43,7 +42,7 @@ export const GalleryPage: React.FC = () => {
   const handleDeletePrompt = async (id: string) => {
     try {
       await deletePrompt(id)
-      setToast({ message: '> Prompt deleted. ::Archive updated', type: 'success' })
+      setToast({ message: 'Prompt deleted successfully', type: 'success' })
     } catch (error) {
       setToast({ message: 'Failed to delete prompt', type: 'error' })
     }
@@ -79,10 +78,10 @@ export const GalleryPage: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-cyan-400 font-mono">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="text-zinc-400">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
             <span>Loading gallery...</span>
           </div>
         </div>
@@ -92,24 +91,22 @@ export const GalleryPage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black text-cyan-100 relative overflow-hidden">
-        <AnimatedBackground />
-        
+      <div className="min-h-screen bg-zinc-950 text-white relative">
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <FolderOpen className="mx-auto text-cyan-400 mb-4" size={64} />
-            <h1 className="text-4xl font-bold font-mono text-cyan-100 mb-4">
+            <FolderOpen className="mx-auto text-zinc-400 mb-4" size={64} />
+            <h1 className="text-4xl font-bold text-white mb-4">
               Access Required
             </h1>
-            <p className="text-xl text-cyan-300/80 font-mono mb-8">
+            <p className="text-xl text-zinc-400 mb-8">
               Please sign in to access your gallery
             </p>
             <Link
               to="/"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
             >
               <ArrowLeft size={16} />
-              <span>Go to Terminal</span>
+              <span>Go Home</span>
             </Link>
           </div>
         </div>
@@ -120,28 +117,26 @@ export const GalleryPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-cyan-100 relative overflow-hidden">
-      <AnimatedBackground />
-      
+    <div className="min-h-screen bg-zinc-950 text-white relative">
       {/* Layout Container */}
       <div className="flex min-h-screen">
         {/* Side Navbar */}
         <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-h-screen ml-10 lg:ml-10">
+        <div className="flex-1 flex flex-col min-h-screen">
           {/* Mobile Header */}
-          <header className="lg:hidden relative z-10 border-b border-cyan-500/30 backdrop-blur-md">
+          <header className="lg:hidden relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
             <div className="px-4 py-4">
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                  className="text-zinc-400 hover:text-white transition-colors p-1"
                 >
-                  <Menu size={24} />
+                  <Menu size={20} />
                 </button>
                 
-                <h1 className="text-lg font-bold font-mono text-cyan-300">
+                <h1 className="text-lg font-semibold text-white">
                   Gallery
                 </h1>
                 
@@ -152,77 +147,70 @@ export const GalleryPage: React.FC = () => {
 
           {/* Content */}
           <div className="relative z-10 flex-1">
-            <div className="w-full max-w-6xl pr-10 mx-auto py-8">
+            <div className="w-full max-w-6xl pr-6 mx-auto py-8">
               {/* Page Header */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
                 <div>
-                  <h1 className="text-3xl font-bold font-mono text-cyan-300">
-                    Prompt Gallery
+                  <h1 className="text-3xl font-bold text-white">
+                    Your Gallery
                   </h1>
-                  <p className="text-cyan-500/70 font-mono text-sm">
-                    Your personal collection of AI prompts
+                  <p className="text-zinc-400">
+                    Manage your AI prompt collection
                   </p>
                 </div>
                 
                 <Link
                   to="/"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105 self-start lg:self-auto"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto btn-hover"
                 >
                   <Plus size={16} />
-                  <span>Create Prompt</span>
+                  <span>New Prompt</span>
                 </Link>
               </div>
 
-              {/* Single Line Stats */}
-              <div className="bg-black/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-6 mb-8">
+              {/* Stats */}
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
                 <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
                   {/* Total */}
                   <div className="flex items-center gap-2">
-                    <FolderOpen className="text-cyan-400" size={18} />
-                    <span className="text-2xl font-bold text-cyan-100 font-mono">{stats.total}</span>
-                    <span className="text-sm text-cyan-500/70 font-mono">Total</span>
+                    <FolderOpen className="text-indigo-400" size={18} />
+                    <span className="text-2xl font-bold text-white">{stats.total}</span>
+                    <span className="text-sm text-zinc-400">Total</span>
                   </div>
                   
                   {/* Public */}
                   <div className="flex items-center gap-2">
-                    <Eye className="text-green-400" size={18} />
-                    <span className="text-2xl font-bold text-green-100 font-mono">{stats.public}</span>
-                    <span className="text-sm text-green-500/70 font-mono">Public</span>
+                    <Eye className="text-emerald-400" size={18} />
+                    <span className="text-2xl font-bold text-white">{stats.public}</span>
+                    <span className="text-sm text-zinc-400">Public</span>
                   </div>
                   
                   {/* Private */}
                   <div className="flex items-center gap-2">
-                    <Lock className="text-red-400" size={18} />
-                    <span className="text-2xl font-bold text-red-100 font-mono">{stats.private}</span>
-                    <span className="text-sm text-red-500/70 font-mono">Private</span>
+                    <Lock className="text-amber-400" size={18} />
+                    <span className="text-2xl font-bold text-white">{stats.private}</span>
+                    <span className="text-sm text-zinc-400">Private</span>
                   </div>
                   
                   {/* Views */}
                   <div className="flex items-center gap-2">
                     <Users className="text-purple-400" size={18} />
-                    <span className="text-2xl font-bold text-purple-100 font-mono">{formatNumber(stats.totalViews)}</span>
-                    <span className="text-sm text-purple-500/70 font-mono">Views</span>
+                    <span className="text-2xl font-bold text-white">{formatNumber(stats.totalViews)}</span>
+                    <span className="text-sm text-zinc-400">Views</span>
                   </div>
                   
                   {/* Likes */}
                   <div className="flex items-center gap-2">
                     <Heart className="text-pink-400" size={18} />
-                    <span className="text-2xl font-bold text-pink-100 font-mono">{formatNumber(stats.totalLikes)}</span>
-                    <span className="text-sm text-pink-500/70 font-mono">Likes</span>
+                    <span className="text-2xl font-bold text-white">{formatNumber(stats.totalLikes)}</span>
+                    <span className="text-sm text-zinc-400">Likes</span>
                   </div>
                   
                   {/* Forks Created */}
                   <div className="flex items-center gap-2">
                     <GitFork className="text-orange-400" size={18} />
-                    <span className="text-2xl font-bold text-orange-100 font-mono">{formatNumber(stats.totalForks)}</span>
-                    <span className="text-sm text-orange-500/70 font-mono">Forks</span>
-                  </div>
-                  
-                  {/* Forked Prompts */}
-                  <div className="flex items-center gap-2">
-                    <GitFork className="text-yellow-400 scale-x-[-1]" size={18} />
-                    <span className="text-2xl font-bold text-yellow-100 font-mono">{stats.forkedPrompts}</span>
-                    <span className="text-sm text-yellow-500/70 font-mono">Forked</span>
+                    <span className="text-2xl font-bold text-white">{formatNumber(stats.totalForks)}</span>
+                    <span className="text-sm text-zinc-400">Forks</span>
                   </div>
                 </div>
               </div>
@@ -231,23 +219,23 @@ export const GalleryPage: React.FC = () => {
               <div className="flex flex-col lg:flex-row gap-4 mb-8">
                 {/* Search */}
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyan-500/50" size={18} />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search prompts..."
-                    className="w-full bg-black/40 border border-cyan-500/30 rounded-lg pl-10 pr-4 py-3 text-cyan-100 placeholder-cyan-500/50 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 font-mono"
+                    className="w-full bg-zinc-900/50 border border-zinc-800/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                   />
                 </div>
 
                 {/* Filter */}
                 <div className="flex items-center gap-3">
-                  <Filter className="text-cyan-500/50" size={18} />
+                  <Filter className="text-zinc-500" size={18} />
                   <select
                     value={filterAccess}
                     onChange={(e) => setFilterAccess(e.target.value as 'all' | 'public' | 'private')}
-                    className="bg-black/40 border border-cyan-500/30 rounded-lg px-4 py-3 text-cyan-100 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all duration-300 font-mono"
+                    className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                   >
                     <option value="all">All Prompts</option>
                     <option value="public">Public Only</option>
@@ -256,23 +244,23 @@ export const GalleryPage: React.FC = () => {
                 </div>
 
                 {/* View Mode */}
-                <div className="flex items-center gap-2 bg-black/40 border border-cyan-500/30 rounded-lg p-1">
+                <div className="flex items-center gap-2 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-1">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded transition-all duration-200 ${
+                    className={`p-2 rounded-lg transition-all duration-200 ${
                       viewMode === 'grid' 
-                        ? 'bg-cyan-500/20 text-cyan-300' 
-                        : 'text-cyan-500/70 hover:text-cyan-400'
+                        ? 'bg-indigo-600 text-white' 
+                        : 'text-zinc-400 hover:text-white'
                     }`}
                   >
                     <Grid size={18} />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 rounded transition-all duration-200 ${
+                    className={`p-2 rounded-lg transition-all duration-200 ${
                       viewMode === 'list' 
-                        ? 'bg-cyan-500/20 text-cyan-300' 
-                        : 'text-cyan-500/70 hover:text-cyan-400'
+                        ? 'bg-indigo-600 text-white' 
+                        : 'text-zinc-400 hover:text-white'
                     }`}
                   >
                     <List size={18} />
@@ -283,8 +271,8 @@ export const GalleryPage: React.FC = () => {
               {/* Prompts Grid/List */}
               {promptLoading ? (
                 <div className="text-center py-12">
-                  <div className="flex items-center justify-center gap-2 text-cyan-400 font-mono">
-                    <div className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+                  <div className="flex items-center justify-center gap-2 text-zinc-400">
+                    <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
                     <span>Loading prompts...</span>
                   </div>
                 </div>
@@ -312,11 +300,11 @@ export const GalleryPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <FolderOpen className="mx-auto text-cyan-500/50 mb-4" size={64} />
-                  <h3 className="text-xl font-bold text-cyan-300 font-mono mb-2">
+                  <FolderOpen className="mx-auto text-zinc-500 mb-4" size={64} />
+                  <h3 className="text-xl font-semibold text-white mb-2">
                     {searchQuery || filterAccess !== 'all' ? 'No matching prompts' : 'No prompts yet'}
                   </h3>
-                  <p className="text-cyan-500/70 font-mono mb-6">
+                  <p className="text-zinc-400 mb-6">
                     {searchQuery || filterAccess !== 'all' 
                       ? 'Try adjusting your search or filter criteria'
                       : 'Create your first prompt to get started'
@@ -324,7 +312,7 @@ export const GalleryPage: React.FC = () => {
                   </p>
                   <Link
                     to="/"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-mono font-bold rounded-lg hover:from-cyan-400 hover:to-purple-400 transition-all duration-300 transform hover:scale-105"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
                   >
                     <Plus size={16} />
                     <span>Create First Prompt</span>

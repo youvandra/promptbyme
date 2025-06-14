@@ -24,10 +24,10 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
     <div className={`fixed bottom-4 left-4 z-50 transform transition-all duration-300 ${
       isVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
     }`}>
-      <div className={`flex items-center gap-3 px-4 py-3 rounded-lg backdrop-blur-md font-mono text-sm ${
+      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl backdrop-blur-xl text-sm font-medium ${
         type === 'success' 
-          ? 'bg-green-500/20 border border-green-500/50 text-green-300'
-          : 'bg-red-500/20 border border-red-500/50 text-red-300'
+          ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+          : 'bg-red-500/20 border border-red-500/30 text-red-400'
       }`}>
         {type === 'success' ? <Check size={16} /> : <X size={16} />}
         <span>{message}</span>
