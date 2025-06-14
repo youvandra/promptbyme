@@ -101,6 +101,11 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
       content: "typing"
     },
     {
+      title: "Share your work",
+      subtitle: "Make your prompts discoverable by the community",
+      content: "sharing"
+    },
+    {
       title: "Build structured flows",
       subtitle: "Connect prompts into powerful workflows",
       content: "flow"
@@ -114,11 +119,6 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
       title: "Collaborate with your team",
       subtitle: "Invite teammates and build together",
       content: "team"
-    },
-    {
-      title: "Share your work",
-      subtitle: "Make your prompts discoverable by the community",
-      content: "sharing"
     },
     {
       title: "See the bigger picture",
