@@ -108,7 +108,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   }
 
   const getUserRole = () => {
-    return userProfile?.role || user?.user_metadata?.role || 'Member'
+    return userProfile?.role || user?.user_metadata?.role || 'User'
   }
 
   const getProfileImage = () => {
