@@ -135,7 +135,7 @@ export const HomePage: React.FC = () => {
               {/* Hero Section */}
               <div className="text-center mb-12">
                 <h2 className="text-5xl md:text-6xl font-bold mb-6 gradient-text">
-                  Structure your prompt
+                  Design before you prompt
                 </h2>
                 <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
                   Map out your next build with structured, reusable prompts.
