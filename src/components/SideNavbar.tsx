@@ -10,6 +10,7 @@ import {
   Zap
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
+import { supabase } from '../lib/supabase'
 
 interface SideNavbarProps {
   isOpen: boolean
@@ -20,6 +21,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation()
   const { user, signOut } = useAuthStore()
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const [userProfile, setUserProfile] = useState<any>(null)
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
@@ -32,6 +34,29 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       setIsSigningOut(false)
     }
   }
+
+  // Load user profile data
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (!user) return
+
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        if (!error && data) {
+          setUserProfile(data)
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error)
+      }
+    }
+
+    loadUserProfile()
+  }, [user])
 
   const navItems = [
     {
@@ -75,18 +100,19 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   }
 
   const getUserDisplayName = () => {
-    return user?.user_metadata?.display_name || 
+    return userProfile?.display_name || 
+           user?.user_metadata?.display_name || 
            user?.user_metadata?.full_name || 
            user?.email?.split('@')[0] || 
            'User'
   }
 
   const getUserRole = () => {
-    return user?.user_metadata?.role || 'Member'
+    return userProfile?.role || user?.user_metadata?.role || 'Member'
   }
 
   const getProfileImage = () => {
-    return user?.user_metadata?.avatar_url
+    return userProfile?.avatar_url || user?.user_metadata?.avatar_url
   }
 
   return (

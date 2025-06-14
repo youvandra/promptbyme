@@ -31,8 +31,10 @@ export const ProfilePage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [profileImage, setProfileImage] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [formData, setFormData] = useState({
@@ -51,14 +53,72 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     if (user) {
       fetchUserPrompts(user.id)
-      setFormData({
-        email: user.email || '',
-        displayName: user.user_metadata?.display_name || user.user_metadata?.full_name || '',
-        role: user.user_metadata?.role || ''
-      })
-      setProfileImage(user.user_metadata?.avatar_url || null)
+      loadUserProfile()
     }
   }, [user, fetchUserPrompts])
+
+  const loadUserProfile = async () => {
+    if (!user) return
+    
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (error) {
+        console.error('Error loading user profile:', error)
+        // If no profile exists, create one
+        if (error.code === 'PGRST116') {
+          await createUserProfile()
+        }
+      } else {
+        setUserProfile(data)
+        setFormData({
+          email: data.email || '',
+          displayName: data.display_name || '',
+          role: data.role || ''
+        })
+        setProfileImage(data.avatar_url || null)
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const createUserProfile = async () => {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .insert([{
+          id: user.id,
+          email: user.email || '',
+          display_name: user.user_metadata?.display_name || user.user_metadata?.full_name || user.email?.split('@')[0] || '',
+          role: user.user_metadata?.role || '',
+          avatar_url: user.user_metadata?.avatar_url || null
+        }])
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setUserProfile(data)
+      setFormData({
+        email: data.email || '',
+        displayName: data.display_name || '',
+        role: data.role || ''
+      })
+      setProfileImage(data.avatar_url || null)
+    } catch (error) {
+      console.error('Error creating user profile:', error)
+    }
+  }
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -106,7 +166,7 @@ export const ProfilePage: React.FC = () => {
 
       if (uploadError) {
         console.error('Upload error:', uploadError)
-        return null
+        throw new Error('Failed to upload image')
       }
 
       const { data } = supabase.storage
@@ -116,7 +176,7 @@ export const ProfilePage: React.FC = () => {
       return data.publicUrl
     } catch (error) {
       console.error('Error uploading image:', error)
-      return null
+      throw error
     }
   }
 
@@ -125,28 +185,27 @@ export const ProfilePage: React.FC = () => {
 
     setSaving(true)
     try {
-      let avatarUrl = profileImage
+      let avatarUrl = userProfile?.avatar_url
 
       // Upload new image if one was selected
       if (imageFile) {
-        const uploadedUrl = await uploadImageToStorage(imageFile)
-        if (uploadedUrl) {
-          avatarUrl = uploadedUrl
-        } else {
-          throw new Error('Failed to upload image')
-        }
+        avatarUrl = await uploadImageToStorage(imageFile)
       }
 
-      // Update user metadata
-      const { error } = await supabase.auth.updateUser({
-        data: {
+      // Update user profile in database
+      const { error } = await supabase
+        .from('users')
+        .update({
           display_name: formData.displayName,
           role: formData.role,
           avatar_url: avatarUrl
-        }
-      })
+        })
+        .eq('id', user.id)
 
       if (error) throw error
+
+      // Reload profile data
+      await loadUserProfile()
 
       setToast({ message: 'Profile updated successfully', type: 'success' })
       setIsEditing(false)
@@ -176,7 +235,7 @@ export const ProfilePage: React.FC = () => {
       .slice(0, 2)
   }
 
-  if (authLoading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="text-zinc-400">
@@ -336,10 +395,10 @@ export const ProfilePage: React.FC = () => {
                       {!isEditing && (
                         <div className="text-center lg:text-left mt-3">
                           <h2 className="text-lg font-semibold text-white mb-1">
-                            {formData.displayName || 'Anonymous User'}
+                            {userProfile?.display_name || 'Anonymous User'}
                           </h2>
                           <p className="text-zinc-400 text-sm">
-                            {formData.role || 'Member'}
+                            {userProfile?.role || 'Member'}
                           </p>
                         </div>
                       )}
@@ -440,10 +499,10 @@ export const ProfilePage: React.FC = () => {
                             </div>
                             
                             <div className="space-y-3">
-                              {formData.role && (
+                              {userProfile?.role && (
                                 <div>
                                   <p className="text-xs text-zinc-500">Role</p>
-                                  <p className="text-white text-sm">{formData.role}</p>
+                                  <p className="text-white text-sm">{userProfile.role}</p>
                                 </div>
                               )}
                             </div>
