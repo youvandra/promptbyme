@@ -135,10 +135,10 @@ export const HomePage: React.FC = () => {
               {/* Hero Section */}
               <div className="text-center mb-12">
                 <h2 className="text-5xl md:text-6xl font-bold mb-6 gradient-text">
-                  AI Prompt Hub
+                  Structure your prompt
                 </h2>
                 <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                  Create, share, and discover powerful AI prompts. Build your collection and connect with the community.
+                  Map out your next build with structured, reusable prompts.
                 </p>
               </div>
 
