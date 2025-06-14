@@ -150,53 +150,8 @@ export const HomePage: React.FC = () => {
                 />
               </div>
 
-              {/* Getting Started Guide for new users */}
-              {!user && (
-                <div className="max-w-4xl mx-auto">
-                  <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
-                    <h3 className="text-2xl font-semibold text-white mb-6 text-center">
-                      Get Started
-                    </h3>
-                    <div className="grid md:grid-cols-3 gap-8">
-                      <div className="text-center">
-                        <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                          <Zap className="text-indigo-400" size={24} />
-                        </div>
-                        <h4 className="font-semibold text-white mb-2">Create</h4>
-                        <p className="text-zinc-400 text-sm">
-                          Write and save your AI prompts with markdown support
-                        </p>
-                      </div>
-                      <div className="text-center">
-                        <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                          <Zap className="text-purple-400" size={24} />
-                        </div>
-                        <h4 className="font-semibold text-white mb-2">Share</h4>
-                        <p className="text-zinc-400 text-sm">
-                          Make prompts public and share them with the community
-                        </p>
-                      </div>
-                      <div className="text-center">
-                        <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                          <Zap className="text-emerald-400" size={24} />
-                        </div>
-                        <h4 className="font-semibold text-white mb-2">Organize</h4>
-                        <p className="text-zinc-400 text-sm">
-                          Keep your prompts organized in your personal gallery
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-center mt-8">
-                      <button
-                        onClick={() => setShowAuthModal(true)}
-                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
-                      >
-                        Get Started
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* ID LP-SCROLL : START FROM HERE */}
+              
             </div>
           </main>
         </div>
