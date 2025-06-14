@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { 
   Play, 
   Users, 
@@ -13,38 +14,37 @@ import {
   CheckCircle,
   Clock,
   Plus,
-  MousePointer2
+  MousePointer2,
+  Layers,
+  Target,
+  Sparkles
 } from 'lucide-react'
 
 export const CinematicLandingPage: React.FC = () => {
-  const [scrollY, setScrollY] = useState(0)
-  const [typedText, setTypedText] = useState('')
-  const [currentSection, setCurrentSection] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
-  
-  const fullPromptText = "Create a landing page for a SaaS product with modern design, responsive layout, and conversion-focused sections..."
-  
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY)
-      
-      // Determine current section based on scroll position
-      const sections = document.querySelectorAll('[data-section]')
-      sections.forEach((section, index) => {
-        const rect = section.getBoundingClientRect()
-        if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
-          setCurrentSection(index)
-        }
-      })
-    }
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  })
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  // Transform scroll progress into section steps
+  const currentStep = useTransform(scrollYProgress, [0, 1], [0, 6])
+  const [activeStep, setActiveStep] = useState(0)
 
-  // Typewriter effect for prompt typing section
   useEffect(() => {
-    if (currentSection >= 1) {
+    const unsubscribe = currentStep.onChange((latest) => {
+      setActiveStep(Math.floor(latest))
+    })
+    return unsubscribe
+  }, [currentStep])
+
+  // Typewriter effect state
+  const [typedText, setTypedText] = useState('')
+  const fullPromptText = "Create a landing page for a SaaS product with modern design, responsive layout, and conversion-focused sections including hero, features, pricing, testimonials, and CTA..."
+
+  // Typewriter effect for step 1
+  useEffect(() => {
+    if (activeStep >= 1) {
       let index = 0
       const timer = setInterval(() => {
         if (index <= fullPromptText.length) {
@@ -53,494 +53,726 @@ export const CinematicLandingPage: React.FC = () => {
         } else {
           clearInterval(timer)
         }
-      }, 30)
+      }, 25)
       return () => clearInterval(timer)
+    } else {
+      setTypedText('')
     }
-  }, [currentSection])
+  }, [activeStep])
 
-  const getParallaxOffset = (speed: number) => scrollY * speed
+  // Step content configurations
+  const stepConfigs = [
+    {
+      title: "Design before you prompt",
+      subtitle: "Map your next build with structured, reusable prompts.",
+      cta: "Enter Playground"
+    },
+    {
+      title: "Start with a single prompt",
+      subtitle: "Watch your ideas take shape as you type",
+      content: "typing"
+    },
+    {
+      title: "Build structured flows",
+      subtitle: "Connect prompts into powerful workflows",
+      content: "flow"
+    },
+    {
+      title: "Track your progress",
+      subtitle: "Move prompts through your workflow",
+      content: "kanban"
+    },
+    {
+      title: "Collaborate with your team",
+      subtitle: "Invite teammates and build together",
+      content: "team"
+    },
+    {
+      title: "Share your work",
+      subtitle: "Make your prompts discoverable by the community",
+      content: "sharing"
+    },
+    {
+      title: "See the bigger picture",
+      subtitle: "Your complete project mapped out and ready to build",
+      content: "final"
+    }
+  ]
+
+  const currentConfig = stepConfigs[activeStep] || stepConfigs[0]
 
   return (
-    <div ref={containerRef} className="relative">
-      {/* Hero Section */}
-      <section 
-        data-section="0"
-        className="min-h-screen flex items-center justify-center relative overflow-hidden"
-        style={{
-          transform: `translateY(${getParallaxOffset(0.1)}px)`,
-        }}
-      >
+    <div ref={containerRef} className="relative" style={{ height: '700vh' }}>
+      {/* Pinned container */}
+      <div className="sticky top-0 h-screen overflow-hidden">
         {/* Animated background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.1),transparent_50%)]" />
-          <div 
-            className="absolute inset-0 opacity-30"
-            style={{
-              background: `radial-gradient(circle at ${50 + Math.sin(scrollY * 0.001) * 10}% ${50 + Math.cos(scrollY * 0.001) * 10}%, rgba(139,92,246,0.1), transparent 70%)`,
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950"
+          animate={{
+            background: activeStep >= 3 ? 
+              "radial-gradient(circle at 30% 70%, rgba(139,92,246,0.15), transparent 50%)" :
+              "radial-gradient(circle at 70% 30%, rgba(99,102,241,0.15), transparent 50%)"
+          }}
+          transition={{ duration: 2 }}
+        >
+          <motion.div 
+            className="absolute inset-0"
+            animate={{
+              background: `radial-gradient(circle at ${50 + Math.sin(activeStep) * 20}% ${50 + Math.cos(activeStep) * 20}%, rgba(139,92,246,0.1), transparent 70%)`
             }}
+            transition={{ duration: 1.5 }}
           />
-        </div>
+        </motion.div>
 
-        {/* Hero content with glass effect */}
-        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
-          <div className="glass-panel bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12 shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl" />
-            <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/20" />
+        {/* Main content area */}
+        <div className="relative z-10 h-full flex items-center justify-center px-6">
+          <div className="max-w-6xl mx-auto w-full">
             
-            <div className="relative z-10">
-              <h1 className="text-6xl md:text-7xl font-bold text-white mb-6 leading-tight">
-                Design before
-                <span className="block bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  you prompt
-                </span>
-              </h1>
-              
-              <p className="text-xl md:text-2xl text-zinc-300 mb-8 leading-relaxed">
-                Map your next build with structured, reusable prompts.
-              </p>
-              
-              <button className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/25">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-                <span className="relative flex items-center gap-2">
-                  Enter Playground
-                  <Play size={20} className="group-hover:translate-x-1 transition-transform duration-300" />
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Floating elements */}
-        <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-xl animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-24 h-24 bg-gradient-to-br from-pink-500/20 to-orange-500/20 rounded-full blur-xl animate-pulse delay-1000" />
-      </section>
-
-      {/* Prompt Typing Section */}
-      <section 
-        data-section="1"
-        className="min-h-screen flex items-center justify-center py-20 relative"
-        style={{
-          transform: `translateY(${getParallaxOffset(0.05)}px)`,
-        }}
-      >
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Start with a single prompt
-            </h2>
-            <p className="text-xl text-zinc-400">
-              Watch your ideas take shape as you type
-            </p>
-          </div>
-
-          {/* Floating prompt card with glass effect */}
-          <div className="relative">
-            <div 
-              className="glass-panel bg-zinc-900/40 backdrop-blur-2xl border border-zinc-700/50 rounded-2xl p-8 shadow-2xl transform hover:scale-[1.02] transition-all duration-500"
-              style={{
-                transform: `translateY(${Math.sin(scrollY * 0.002) * 10}px)`,
-              }}
+            {/* Header section - always visible */}
+            <motion.div 
+              className="text-center mb-16"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl" />
-              <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
+              <motion.h1 
+                className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight"
+                key={currentConfig.title}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                {activeStep === 0 ? (
+                  <>
+                    Design before
+                    <span className="block bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                      you prompt
+                    </span>
+                  </>
+                ) : (
+                  currentConfig.title
+                )}
+              </motion.h1>
               
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-3 h-3 bg-red-500 rounded-full" />
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                  <div className="w-3 h-3 bg-green-500 rounded-full" />
-                  <span className="text-zinc-500 text-sm ml-4">New Prompt</span>
-                </div>
+              <motion.p 
+                className="text-xl md:text-2xl text-zinc-300 leading-relaxed"
+                key={currentConfig.subtitle}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                {currentConfig.subtitle}
+              </motion.p>
+            </motion.div>
+
+            {/* Dynamic content area */}
+            <div className="relative min-h-[400px] flex items-center justify-center">
+              <AnimatePresence mode="wait">
                 
-                <div className="bg-zinc-800/50 rounded-xl p-6 min-h-[200px] relative">
-                  <div className="text-zinc-300 text-lg leading-relaxed">
-                    {typedText}
-                    <span className="animate-pulse">|</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between mt-6">
-                  <div className="flex items-center gap-3">
-                    <button className="glass-button px-4 py-2 bg-indigo-600/20 border border-indigo-500/30 rounded-lg text-indigo-300 hover:bg-indigo-600/30 transition-all duration-200">
-                      Save Prompt
-                    </button>
-                    <button className="glass-button px-4 py-2 bg-emerald-600/20 border border-emerald-500/30 rounded-lg text-emerald-300 hover:bg-emerald-600/30 transition-all duration-200">
-                      Make Public
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2 text-zinc-500">
-                    <EyeOff size={16} />
-                    <span className="text-sm">Private</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Prompt Flow Structure */}
-      <section 
-        data-section="2"
-        className="min-h-screen flex items-center justify-center py-20 relative"
-      >
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Build structured flows
-            </h2>
-            <p className="text-xl text-zinc-400">
-              Connect prompts into powerful workflows
-            </p>
-          </div>
-
-          {/* Flow visualization */}
-          <div className="relative">
-            {/* Connection lines */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-              <defs>
-                <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="rgb(99, 102, 241)" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="rgb(139, 92, 246)" stopOpacity="0.6" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M 200 100 Q 300 50 400 100 Q 500 150 600 100"
-                stroke="url(#flowGradient)"
-                strokeWidth="2"
-                fill="none"
-                className="animate-pulse"
-              />
-            </svg>
-
-            {/* Flow nodes */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-              {[
-                { title: "Landing Page", desc: "Hero, features, pricing", icon: <Zap size={24} />, delay: 0 },
-                { title: "Authentication", desc: "Login, signup, verification", icon: <Users size={24} />, delay: 200 },
-                { title: "Database Schema", desc: "Tables, relations, indexes", icon: <GitBranch size={24} />, delay: 400 }
-              ].map((node, index) => (
-                <div
-                  key={index}
-                  className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-6 hover:border-indigo-500/50 transition-all duration-500 group cursor-pointer"
-                  style={{
-                    animationDelay: `${node.delay}ms`,
-                    transform: `translateY(${Math.sin((scrollY + index * 100) * 0.001) * 5}px)`,
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10 group-hover:ring-indigo-500/30 transition-all duration-300" />
-                  
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 group-hover:scale-110 transition-transform duration-300">
-                        {node.icon}
-                      </div>
-                      <h3 className="text-lg font-semibold text-white">{node.title}</h3>
-                    </div>
-                    <p className="text-zinc-400 text-sm">{node.desc}</p>
-                    
-                    <div className="mt-4 flex items-center justify-between">
-                      <span className="text-xs text-zinc-500">3 prompts</span>
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Kanban Flow */}
-      <section 
-        data-section="3"
-        className="min-h-screen flex items-center justify-center py-20 relative"
-      >
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Track your progress
-            </h2>
-            <p className="text-xl text-zinc-400">
-              Move prompts through your workflow
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { title: "Backlog", items: ["API Design", "Error Handling"], color: "zinc" },
-              { title: "In Progress", items: ["User Dashboard"], color: "indigo" },
-              { title: "Done", items: ["Landing Page", "Auth Flow"], color: "emerald" }
-            ].map((column, columnIndex) => (
-              <div key={columnIndex} className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-lg font-semibold text-white">{column.title}</h3>
-                  <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded-full">
-                    {column.items.length}
-                  </span>
-                </div>
-                
-                <div className="space-y-3">
-                  {column.items.map((item, itemIndex) => (
-                    <div
-                      key={itemIndex}
-                      className={`glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-xl p-4 hover:border-${column.color}-500/50 transition-all duration-300 cursor-pointer group`}
-                      style={{
-                        transform: `translateY(${Math.sin((scrollY + itemIndex * 50) * 0.002) * 3}px)`,
-                      }}
-                    >
-                      <div className={`absolute inset-0 bg-gradient-to-br from-${column.color}-500/5 to-${column.color}-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                {/* Step 0: Hero CTA */}
+                {activeStep === 0 && (
+                  <motion.div
+                    key="hero"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.8 }}
+                    className="text-center"
+                  >
+                    <div className="glass-panel bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-12 shadow-2xl max-w-2xl mx-auto">
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-3xl" />
+                      <div className="absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/20" />
                       
                       <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-white font-medium">{item}</span>
-                          {column.title === "In Progress" && (
-                            <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
-                          )}
-                          {column.title === "Done" && (
-                            <CheckCircle size={16} className="text-emerald-400" />
-                          )}
+                        <motion.button 
+                          className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/25"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                          <span className="relative flex items-center gap-2">
+                            Enter Playground
+                            <Play size={20} className="group-hover:translate-x-1 transition-transform duration-300" />
+                          </span>
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 1: Prompt Typing */}
+                {activeStep === 1 && (
+                  <motion.div
+                    key="typing"
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -50 }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full max-w-4xl"
+                  >
+                    <motion.div 
+                      className="glass-panel bg-zinc-900/40 backdrop-blur-2xl border border-zinc-700/50 rounded-2xl p-8 shadow-2xl"
+                      animate={{ 
+                        y: [0, -10, 0],
+                        rotateX: [0, 2, 0]
+                      }}
+                      transition={{ 
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl" />
+                      
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-3 h-3 bg-red-500 rounded-full" />
+                          <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                          <div className="w-3 h-3 bg-green-500 rounded-full" />
+                          <span className="text-zinc-500 text-sm ml-4">New Prompt</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-zinc-500">
-                          <Clock size={12} />
-                          <span>2 hours ago</span>
+                        
+                        <div className="bg-zinc-800/50 rounded-xl p-6 min-h-[200px] relative">
+                          <div className="text-zinc-300 text-lg leading-relaxed">
+                            {typedText}
+                            <motion.span
+                              animate={{ opacity: [1, 0, 1] }}
+                              transition={{ duration: 1, repeat: Infinity }}
+                              className="text-indigo-400"
+                            >
+                              |
+                            </motion.span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between mt-6">
+                          <div className="flex items-center gap-3">
+                            <motion.button 
+                              className="glass-button px-4 py-2 bg-indigo-600/20 border border-indigo-500/30 rounded-lg text-indigo-300 hover:bg-indigo-600/30 transition-all duration-200"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              Save Prompt
+                            </motion.button>
+                            <motion.button 
+                              className="glass-button px-4 py-2 bg-emerald-600/20 border border-emerald-500/30 rounded-lg text-emerald-300 hover:bg-emerald-600/30 transition-all duration-200"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              Make Public
+                            </motion.button>
+                          </div>
+                          <div className="flex items-center gap-2 text-zinc-500">
+                            <EyeOff size={16} />
+                            <span className="text-sm">Private</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+
+                {/* Step 2: Flow Structure */}
+                {activeStep === 2 && (
+                  <motion.div
+                    key="flow"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full max-w-6xl"
+                  >
+                    <div className="relative">
+                      {/* Animated connection lines */}
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+                        <defs>
+                          <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="rgb(99, 102, 241)" stopOpacity="0.6" />
+                            <stop offset="100%" stopColor="rgb(139, 92, 246)" stopOpacity="0.6" />
+                          </linearGradient>
+                        </defs>
+                        <motion.path
+                          d="M 200 100 Q 300 50 400 100 Q 500 150 600 100"
+                          stroke="url(#flowGradient)"
+                          strokeWidth="2"
+                          fill="none"
+                          initial={{ pathLength: 0 }}
+                          animate={{ pathLength: 1 }}
+                          transition={{ duration: 2, ease: "easeInOut" }}
+                        />
+                      </svg>
+
+                      {/* Flow nodes */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                        {[
+                          { title: "Landing Page", desc: "Hero, features, pricing", icon: <Zap size={24} />, color: "indigo" },
+                          { title: "Authentication", desc: "Login, signup, verification", icon: <Users size={24} />, color: "purple" },
+                          { title: "Database Schema", desc: "Tables, relations, indexes", icon: <GitBranch size={24} />, color: "pink" }
+                        ].map((node, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: index * 0.2 }}
+                            className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-6 hover:border-indigo-500/50 transition-all duration-500 group cursor-pointer"
+                            whileHover={{ 
+                              scale: 1.05,
+                              rotateY: 5,
+                              z: 50
+                            }}
+                          >
+                            <div className={`absolute inset-0 bg-gradient-to-br from-${node.color}-500/5 to-${node.color}-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                            
+                            <div className="relative z-10">
+                              <div className="flex items-center gap-3 mb-4">
+                                <motion.div 
+                                  className={`p-2 bg-${node.color}-500/20 rounded-lg text-${node.color}-400`}
+                                  whileHover={{ rotate: 360 }}
+                                  transition={{ duration: 0.6 }}
+                                >
+                                  {node.icon}
+                                </motion.div>
+                                <h3 className="text-lg font-semibold text-white">{node.title}</h3>
+                              </div>
+                              <p className="text-zinc-400 text-sm">{node.desc}</p>
+                              
+                              <div className="mt-4 flex items-center justify-between">
+                                <span className="text-xs text-zinc-500">3 prompts</span>
+                                <motion.div 
+                                  className="w-2 h-2 bg-emerald-400 rounded-full"
+                                  animate={{ scale: [1, 1.5, 1] }}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 3: Kanban Board */}
+                {activeStep === 3 && (
+                  <motion.div
+                    key="kanban"
+                    initial={{ opacity: 0, x: 100 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -100 }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full max-w-6xl"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {[
+                        { title: "Backlog", items: ["API Design", "Error Handling"], color: "zinc" },
+                        { title: "In Progress", items: ["User Dashboard"], color: "indigo" },
+                        { title: "Done", items: ["Landing Page", "Auth Flow"], color: "emerald" }
+                      ].map((column, columnIndex) => (
+                        <motion.div 
+                          key={columnIndex} 
+                          className="space-y-4"
+                          initial={{ opacity: 0, y: 50 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.6, delay: columnIndex * 0.2 }}
+                        >
+                          <div className="flex items-center gap-2 mb-4">
+                            <h3 className="text-lg font-semibold text-white">{column.title}</h3>
+                            <motion.span 
+                              className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded-full"
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ duration: 0.3, delay: columnIndex * 0.2 + 0.3 }}
+                            >
+                              {column.items.length}
+                            </motion.span>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            {column.items.map((item, itemIndex) => (
+                              <motion.div
+                                key={itemIndex}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.4, delay: columnIndex * 0.2 + itemIndex * 0.1 }}
+                                className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-xl p-4 hover:border-indigo-500/50 transition-all duration-300 cursor-pointer group"
+                                whileHover={{ scale: 1.02, y: -2 }}
+                                drag="x"
+                                dragConstraints={{ left: 0, right: 0 }}
+                              >
+                                <div className="relative z-10">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-white font-medium">{item}</span>
+                                    {column.title === "In Progress" && (
+                                      <motion.div 
+                                        className="w-2 h-2 bg-indigo-400 rounded-full"
+                                        animate={{ scale: [1, 1.5, 1] }}
+                                        transition={{ duration: 1.5, repeat: Infinity }}
+                                      />
+                                    )}
+                                    {column.title === "Done" && (
+                                      <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ duration: 0.3, delay: 0.5 }}
+                                      >
+                                        <CheckCircle size={16} className="text-emerald-400" />
+                                      </motion.div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                    <Clock size={12} />
+                                    <span>2 hours ago</span>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 4: Team Collaboration */}
+                {activeStep === 4 && (
+                  <motion.div
+                    key="team"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full max-w-4xl"
+                  >
+                    <div className="space-y-8">
+                      {/* Project header */}
+                      <motion.div 
+                        className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-8"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.6 }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-xl font-semibold text-white mb-2">Project: E-commerce Platform</h3>
+                            <p className="text-zinc-400">Building a complete online store with AI</p>
+                          </div>
+                          <motion.button 
+                            className="glass-button px-6 py-3 bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-indigo-300 hover:bg-indigo-600/30 transition-all duration-200 flex items-center gap-2"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <Plus size={16} />
+                            Invite Team
+                          </motion.button>
+                        </div>
+                      </motion.div>
+
+                      {/* Team avatars and chat */}
+                      <div className="flex items-center justify-center gap-8">
+                        <div className="flex items-center gap-4">
+                          {[1, 2, 3, 4].map((_, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ scale: 0, rotate: -180 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              transition={{ 
+                                duration: 0.6, 
+                                delay: index * 0.1,
+                                type: "spring",
+                                stiffness: 200
+                              }}
+                              className="relative"
+                            >
+                              <motion.div 
+                                className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-lg glass-panel border border-white/20"
+                                whileHover={{ scale: 1.1, rotate: 5 }}
+                              >
+                                {String.fromCharCode(65 + index)}
+                              </motion.div>
+                              <motion.div 
+                                className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-zinc-900"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: index * 0.1 + 0.3 }}
+                              />
+                            </motion.div>
+                          ))}
+                        </div>
+                        
+                        {/* Chat bubbles */}
+                        <div className="space-y-2">
+                          <motion.div 
+                            className="glass-panel bg-indigo-600/20 border border-indigo-500/30 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.8 }}
+                          >
+                            <p className="text-indigo-200 text-sm">Looking good! 👍</p>
+                          </motion.div>
+                          <motion.div 
+                            className="glass-panel bg-purple-600/20 border border-purple-500/30 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 1.2 }}
+                          >
+                            <p className="text-purple-200 text-sm">Added payment flow</p>
+                          </motion.div>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+                  </motion.div>
+                )}
 
-      {/* Team Collaboration */}
-      <section 
-        data-section="4"
-        className="min-h-screen flex items-center justify-center py-20 relative"
-      >
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Collaborate with your team
-            </h2>
-            <p className="text-xl text-zinc-400">
-              Invite teammates and build together
-            </p>
-          </div>
-
-          <div className="relative">
-            {/* Invite button simulation */}
-            <div className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-8 mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold text-white mb-2">Project: E-commerce Platform</h3>
-                  <p className="text-zinc-400">Building a complete online store with AI</p>
-                </div>
-                <button className="glass-button px-6 py-3 bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-indigo-300 hover:bg-indigo-600/30 transition-all duration-200 flex items-center gap-2">
-                  <Plus size={16} />
-                  Invite Team
-                </button>
-              </div>
-            </div>
-
-            {/* Team avatars with glass effect */}
-            <div className="flex items-center justify-center gap-4">
-              {[1, 2, 3, 4].map((_, index) => (
-                <div
-                  key={index}
-                  className="relative"
-                  style={{
-                    animationDelay: `${index * 200}ms`,
-                    transform: `translateY(${Math.sin((scrollY + index * 100) * 0.003) * 5}px)`,
-                  }}
-                >
-                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-lg glass-panel border border-white/20">
-                    {String.fromCharCode(65 + index)}
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-zinc-900" />
-                </div>
-              ))}
-              
-              {/* Chat bubbles */}
-              <div className="ml-8 space-y-2">
-                <div className="glass-panel bg-indigo-600/20 border border-indigo-500/30 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs">
-                  <p className="text-indigo-200 text-sm">Looking good! 👍</p>
-                </div>
-                <div className="glass-panel bg-purple-600/20 border border-purple-500/30 rounded-2xl rounded-bl-sm px-4 py-2 max-w-xs">
-                  <p className="text-purple-200 text-sm">Added payment flow</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Sharing Section */}
-      <section 
-        data-section="5"
-        className="min-h-screen flex items-center justify-center py-20 relative"
-      >
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Share your work
-            </h2>
-            <p className="text-xl text-zinc-400">
-              Make your prompts discoverable by the community
-            </p>
-          </div>
-
-          <div className="space-y-8">
-            {/* Visibility toggle */}
-            <div className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Visibility Settings</h3>
-                <div className="flex items-center gap-4">
-                  {[
-                    { label: "Private", icon: <EyeOff size={16} />, active: false },
-                    { label: "Link-only", icon: <Link size={16} />, active: true },
-                    { label: "Public", icon: <Globe size={16} />, active: false }
-                  ].map((option, index) => (
-                    <button
-                      key={index}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                        option.active 
-                          ? 'bg-indigo-600/30 border border-indigo-500/50 text-indigo-300' 
-                          : 'bg-zinc-800/50 border border-zinc-700/50 text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      {option.icon}
-                      <span className="text-sm">{option.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Public preview */}
-            <div className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-6 hover:border-indigo-500/50 transition-all duration-300 group cursor-pointer">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                      A
-                    </div>
-                    <div>
-                      <h4 className="text-white font-medium">Alex Chen</h4>
-                      <p className="text-zinc-500 text-sm">2 hours ago</p>
-                    </div>
-                  </div>
-                  <Share2 size={20} className="text-zinc-400 group-hover:text-indigo-400 transition-colors duration-300" />
-                </div>
-                
-                <h3 className="text-lg font-semibold text-white mb-2">Complete SaaS Landing Page Flow</h3>
-                <p className="text-zinc-400 text-sm mb-4">A comprehensive prompt flow for building modern SaaS landing pages with conversion optimization...</p>
-                
-                <div className="flex items-center gap-4 text-xs text-zinc-500">
-                  <div className="flex items-center gap-1">
-                    <Eye size={12} />
-                    <span>1.2k views</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span>❤️ 89 likes</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <GitBranch size={12} />
-                    <span>23 forks</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final Map Snapshot */}
-      <section 
-        data-section="6"
-        className="min-h-screen flex items-center justify-center py-20 relative"
-      >
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              See the bigger picture
-            </h2>
-            <p className="text-xl text-zinc-400">
-              Your complete project mapped out and ready to build
-            </p>
-          </div>
-
-          {/* Zoomed out project view */}
-          <div className="relative">
-            <div className="glass-panel bg-zinc-900/20 backdrop-blur-3xl border border-zinc-700/30 rounded-3xl p-8 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl" />
-              
-              {/* Layered glass panels for depth */}
-              <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4 opacity-80">
-                {Array.from({ length: 12 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="glass-panel bg-zinc-800/30 backdrop-blur-xl border border-zinc-600/30 rounded-xl p-3 h-20"
-                    style={{
-                      transform: `translateY(${Math.sin((scrollY + index * 50) * 0.001) * 2}px) scale(${0.8 + Math.sin(index) * 0.1})`,
-                      opacity: 0.6 + Math.sin(index) * 0.2,
-                    }}
+                {/* Step 5: Sharing */}
+                {activeStep === 5 && (
+                  <motion.div
+                    key="sharing"
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -50 }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full max-w-4xl"
                   >
-                    <div className="w-full h-2 bg-gradient-to-r from-indigo-500/50 to-purple-500/50 rounded-full mb-2" />
-                    <div className="w-3/4 h-1 bg-zinc-600/50 rounded-full mb-1" />
-                    <div className="w-1/2 h-1 bg-zinc-600/50 rounded-full" />
-                  </div>
+                    <div className="space-y-8">
+                      {/* Visibility toggle */}
+                      <motion.div 
+                        className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-6"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.6 }}
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-white">Visibility Settings</h3>
+                          <div className="flex items-center gap-4">
+                            {[
+                              { label: "Private", icon: <EyeOff size={16} />, active: false },
+                              { label: "Link-only", icon: <Link size={16} />, active: true },
+                              { label: "Public", icon: <Globe size={16} />, active: false }
+                            ].map((option, index) => (
+                              <motion.button
+                                key={index}
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ duration: 0.3, delay: index * 0.1 }}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                                  option.active 
+                                    ? 'bg-indigo-600/30 border border-indigo-500/50 text-indigo-300' 
+                                    : 'bg-zinc-800/50 border border-zinc-700/50 text-zinc-400 hover:text-white'
+                                }`}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                {option.icon}
+                                <span className="text-sm">{option.label}</span>
+                              </motion.button>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* Public preview */}
+                      <motion.div 
+                        className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-2xl p-6 hover:border-indigo-500/50 transition-all duration-300 group cursor-pointer"
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                        whileHover={{ scale: 1.02, y: -5 }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <motion.div 
+                                className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold"
+                                whileHover={{ rotate: 360 }}
+                                transition={{ duration: 0.6 }}
+                              >
+                                A
+                              </motion.div>
+                              <div>
+                                <h4 className="text-white font-medium">Alex Chen</h4>
+                                <p className="text-zinc-500 text-sm">2 hours ago</p>
+                              </div>
+                            </div>
+                            <motion.div
+                              whileHover={{ rotate: 15, scale: 1.1 }}
+                            >
+                              <Share2 size={20} className="text-zinc-400 group-hover:text-indigo-400 transition-colors duration-300" />
+                            </motion.div>
+                          </div>
+                          
+                          <h3 className="text-lg font-semibold text-white mb-2">Complete SaaS Landing Page Flow</h3>
+                          <p className="text-zinc-400 text-sm mb-4">A comprehensive prompt flow for building modern SaaS landing pages with conversion optimization...</p>
+                          
+                          <div className="flex items-center gap-4 text-xs text-zinc-500">
+                            <motion.div 
+                              className="flex items-center gap-1"
+                              whileHover={{ scale: 1.1 }}
+                            >
+                              <Eye size={12} />
+                              <span>1.2k views</span>
+                            </motion.div>
+                            <motion.div 
+                              className="flex items-center gap-1"
+                              whileHover={{ scale: 1.1 }}
+                            >
+                              <span>❤️ 89 likes</span>
+                            </motion.div>
+                            <motion.div 
+                              className="flex items-center gap-1"
+                              whileHover={{ scale: 1.1 }}
+                            >
+                              <GitBranch size={12} />
+                              <span>23 forks</span>
+                            </motion.div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 6: Final Map */}
+                {activeStep === 6 && (
+                  <motion.div
+                    key="final"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full max-w-6xl"
+                  >
+                    <div className="space-y-16">
+                      {/* Project overview */}
+                      <motion.div 
+                        className="glass-panel bg-zinc-900/20 backdrop-blur-3xl border border-zinc-700/30 rounded-3xl p-8 overflow-hidden"
+                        initial={{ y: 50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.8 }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-pink-500/5 rounded-3xl" />
+                        
+                        {/* Layered glass panels for depth */}
+                        <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4 opacity-80">
+                          {Array.from({ length: 12 }).map((_, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
+                              animate={{ opacity: 0.6 + Math.sin(index) * 0.2, scale: 0.8 + Math.sin(index) * 0.1, rotate: 0 }}
+                              transition={{ duration: 0.6, delay: index * 0.05 }}
+                              className="glass-panel bg-zinc-800/30 backdrop-blur-xl border border-zinc-600/30 rounded-xl p-3 h-20"
+                              whileHover={{ scale: 1.05, opacity: 1 }}
+                            >
+                              <motion.div 
+                                className="w-full h-2 bg-gradient-to-r from-indigo-500/50 to-purple-500/50 rounded-full mb-2"
+                                initial={{ width: 0 }}
+                                animate={{ width: "100%" }}
+                                transition={{ duration: 1, delay: index * 0.1 }}
+                              />
+                              <div className="w-3/4 h-1 bg-zinc-600/50 rounded-full mb-1" />
+                              <div className="w-1/2 h-1 bg-zinc-600/50 rounded-full" />
+                            </motion.div>
+                          ))}
+                        </div>
+                        
+                        {/* Connection lines overlay */}
+                        <div className="absolute inset-0 opacity-30">
+                          <svg className="w-full h-full">
+                            <defs>
+                              <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="rgb(99, 102, 241)" stopOpacity="0.3" />
+                                <stop offset="100%" stopColor="rgb(139, 92, 246)" stopOpacity="0.3" />
+                              </linearGradient>
+                            </defs>
+                            {Array.from({ length: 8 }).map((_, index) => (
+                              <motion.line
+                                key={index}
+                                x1={`${20 + index * 10}%`}
+                                y1={`${30 + index * 5}%`}
+                                x2={`${40 + index * 8}%`}
+                                y2={`${60 + index * 3}%`}
+                                stroke="url(#connectionGradient)"
+                                strokeWidth="1"
+                                initial={{ pathLength: 0 }}
+                                animate={{ pathLength: 1 }}
+                                transition={{ duration: 2, delay: index * 0.2 }}
+                              />
+                            ))}
+                          </svg>
+                        </div>
+                      </motion.div>
+
+                      {/* Final CTA */}
+                      <motion.div 
+                        className="text-center"
+                        initial={{ y: 50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.8, delay: 0.5 }}
+                      >
+                        <motion.button 
+                          className="group relative px-12 py-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl text-white font-bold text-xl transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/25"
+                          whileHover={{ 
+                            scale: 1.05,
+                            boxShadow: "0 20px 40px rgba(139, 92, 246, 0.4)"
+                          }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
+                          <span className="relative flex items-center gap-3">
+                            Start Building Smarter
+                            <motion.div
+                              animate={{ x: [0, 5, 0] }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                            >
+                              <ArrowRight size={24} />
+                            </motion.div>
+                          </span>
+                        </motion.button>
+                        
+                        <motion.p 
+                          className="text-zinc-500 text-sm mt-4"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.6, delay: 0.8 }}
+                        >
+                          Join thousands of builders already using structured prompts
+                        </motion.p>
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                )}
+
+              </AnimatePresence>
+            </div>
+
+            {/* Progress indicator */}
+            <motion.div 
+              className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1 }}
+            >
+              <div className="flex items-center gap-2 glass-panel bg-zinc-900/50 backdrop-blur-xl border border-zinc-700/50 rounded-full px-4 py-2">
+                {Array.from({ length: 7 }).map((_, index) => (
+                  <motion.div
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      index === activeStep ? 'bg-indigo-400' : 'bg-zinc-600'
+                    }`}
+                    animate={{
+                      scale: index === activeStep ? 1.5 : 1,
+                      opacity: index === activeStep ? 1 : 0.5
+                    }}
+                    transition={{ duration: 0.3 }}
+                  />
                 ))}
               </div>
-              
-              {/* Connection lines overlay */}
-              <div className="absolute inset-0 opacity-30">
-                <svg className="w-full h-full">
-                  <defs>
-                    <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="rgb(99, 102, 241)" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="rgb(139, 92, 246)" stopOpacity="0.3" />
-                    </linearGradient>
-                  </defs>
-                  {Array.from({ length: 8 }).map((_, index) => (
-                    <line
-                      key={index}
-                      x1={`${20 + index * 10}%`}
-                      y1={`${30 + index * 5}%`}
-                      x2={`${40 + index * 8}%`}
-                      y2={`${60 + index * 3}%`}
-                      stroke="url(#connectionGradient)"
-                      strokeWidth="1"
-                      className="animate-pulse"
-                      style={{ animationDelay: `${index * 200}ms` }}
-                    />
-                  ))}
-                </svg>
-              </div>
-            </div>
+            </motion.div>
 
-            {/* Final CTA */}
-            <div className="text-center mt-16">
-              <button className="group relative px-12 py-6 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl text-white font-bold text-xl transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25">
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 rounded-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500" />
-                <span className="relative flex items-center gap-3">
-                  Start Building Smarter
-                  <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform duration-300" />
-                </span>
-              </button>
-              
-              <p className="text-zinc-500 text-sm mt-4">
-                Join thousands of builders already using structured prompts
-              </p>
-            </div>
           </div>
         </div>
-      </section>
+      </div>
     </div>
   )
 }
