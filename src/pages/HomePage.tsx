@@ -134,7 +134,7 @@ export const HomePage: React.FC = () => {
             <div className={`w-full ${user ? 'max-w-6xl pl-6 pr-6' : 'max-w-6xl px-4'} mx-auto py-12`}>
               {/* Hero Section */}
               <div className="text-center mb-12">
-                <h2 className="text-6xl md:text-6xl font-bold mb-6 gradient-text leading-relaxed">
+                <h2 className="text-5xl md:text-6xl font-bold mb-6 gradient-text leading-relaxed">
                   Design before you prompt
                 </h2>
                 <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
