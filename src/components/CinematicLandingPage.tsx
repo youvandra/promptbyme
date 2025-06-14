@@ -106,6 +106,19 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
         {/* Enhanced animated background for ultrawide support */}
         <motion.div 
           className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950"
+          style={{
+            background: useTransform(smoothProgress, 
+              [0, 0.2, 0.4, 0.6, 0.8, 1],
+              [
+                "radial-gradient(ellipse at 70% 30%, rgba(99,102,241,0.15), transparent 70%)",
+                "radial-gradient(ellipse at 30% 70%, rgba(139,92,246,0.15), transparent 70%)",
+                "radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.15), transparent 70%)",
+                "radial-gradient(ellipse at 20% 80%, rgba(236,72,153,0.15), transparent 70%)",
+                "radial-gradient(ellipse at 60% 40%, rgba(99,102,241,0.15), transparent 70%)",
+                "radial-gradient(ellipse at 40% 60%, rgba(139,92,246,0.15), transparent 70%)"
+              ]
+            )
+          }}
         >
           {/* Ultrawide background elements with smooth motion */}
           <div className="absolute inset-0 overflow-hidden">
