@@ -695,8 +695,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                           <div className="flex items-center gap-4">
                             {[
                               { label: "Private", icon: <EyeOff size={16} />, active: false },
-                              { label: "Link-only", icon: <Link size={16} />, active: true },
-                              { label: "Public", icon: <Globe size={16} />, active: false }
+                              { label: "Public", icon: <Globe size={16} />, active: true }
                             ].map((option, index) => (
                               <motion.button
                                 key={index}
