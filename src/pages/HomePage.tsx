@@ -131,7 +131,7 @@ export const HomePage: React.FC = () => {
 
           {/* Main Content */}
           <main className="relative z-10 flex-1">
-            <div className={`w-full ${user ? 'max-w-6xl pr-6' : 'max-w-6xl px-4'} mx-auto py-12`}>
+            <div className={`w-full ${user ? 'max-w-6xl pl-6 pr-6' : 'max-w-6xl px-4'} mx-auto py-12`}>
               {/* Hero Section */}
               <div className="text-center mb-12">
                 <h2 className="text-5xl md:text-6xl font-bold mb-6 gradient-text">
