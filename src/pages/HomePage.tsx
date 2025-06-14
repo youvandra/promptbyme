@@ -78,31 +78,6 @@ export const HomePage: React.FC = () => {
         
         {/* Main Content Area */}
         <div className={`flex-1 flex flex-col min-h-screen ${user ? '' : ''}`}>
-          {/* Header - Only show for non-logged users */}
-          {!user && (
-            <header className="relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
-              <div className="max-w-7xl mx-auto px-4 py-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                      <Zap className="text-white" size={16} />
-                    </div>
-                    <h1 className="text-xl font-semibold">
-                      promptby.me
-                    </h1>
-                  </div>
-                  
-                  <button
-                    onClick={() => setShowAuthModal(true)}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 btn-hover"
-                  >
-                    Sign in
-                  </button>
-                </div>
-              </div>
-            </header>
-          )}
-
           {/* Mobile Header for logged users */}
           {user && (
             <header className="lg:hidden relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
@@ -132,12 +107,30 @@ export const HomePage: React.FC = () => {
 
           {/* Main Content */}
           <main className="relative z-10 flex-1">
-            <div className={`w-full ${user ? 'max-w-6xl pl-6 pr-6' : 'max-w-6xl px-4'} mx-auto py-12`}>
+            {user ? (
+              <div className="w-full max-w-6xl pl-6 pr-6 mx-auto py-12">
+                {/* Hero Section */}
+                <div className="text-center mb-12">
+                  <h2 className="text-5xl md:text-6xl font-bold mb-6 gradient-text">
+                    AI Prompt Hub
+                  </h2>
+                  <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                    Create, share, and discover powerful AI prompts. Build your collection and connect with the community.
+                  </p>
+                </div>
 
-              {/* ID LP-SCROLL : START FROM HERE */}
-              <CinematicLandingPage />
-              
-            </div>
+                {/* Terminal Input */}
+                <div className="mb-12">
+                  <TerminalInput 
+                    onSubmit={handleCreatePrompt}
+                    loading={promptLoading}
+                  />
+                </div>
+              </div>
+            ) : (
+              /* ID LP-SCROLL : START FROM HERE */
+              <CinematicLandingPage onSignInClick={() => setShowAuthModal(true)} />
+            )}
           </main>
         </div>
       </div>
