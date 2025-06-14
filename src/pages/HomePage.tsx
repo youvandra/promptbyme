@@ -5,6 +5,7 @@ import { AuthModal } from '../components/AuthModal'
 import { Toast } from '../components/Toast'
 import { BoltBadge } from '../components/BoltBadge'
 import { SideNavbar } from '../components/SideNavbar'
+import { CinematicLandingPage } from '../components/CinematicLandingPage'
 import { useAuthStore } from '../store/authStore'
 import { usePromptStore } from '../store/promptStore'
 import { useLikeStore } from '../store/likeStore'
@@ -151,6 +152,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               {/* ID LP-SCROLL : START FROM HERE */}
+              <CinematicLandingPage />
               
             </div>
           </main>
