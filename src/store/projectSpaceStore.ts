@@ -37,6 +37,7 @@ export interface FlowProject {
   updated_at: string
   nodes?: FlowNode[]
   connections?: FlowConnection[]
+  member_count?: number
 }
 
 export interface ProjectMember {
