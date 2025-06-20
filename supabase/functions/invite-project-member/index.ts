@@ -154,14 +154,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Find the user to invite by email
-    const { data: invitedUser, error: userError } = await supabaseClient
-      .from('users')
-      .select('id')
-      .eq('email', invited_user_email)
-      .single()
+    // Find the user to invite by email using admin API
+    const { data: authUser, error: authUserError } = await supabaseClient.auth.admin.getUserByEmail(invited_user_email)
 
-    if (userError || !invitedUser) {
+    if (authUserError || !authUser.user) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -174,12 +170,62 @@ Deno.serve(async (req) => {
       )
     }
 
+    const invitedUserId = authUser.user.id
+
+    // Check if user has a profile in public.users, create one if not
+    const { data: existingProfile, error: profileError } = await supabaseClient
+      .from('users')
+      .select('id')
+      .eq('id', invitedUserId)
+      .maybeSingle()
+
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('Error checking user profile:', profileError)
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Error checking user profile'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
+    }
+
+    // Create profile if it doesn't exist
+    if (!existingProfile) {
+      const { error: createProfileError } = await supabaseClient
+        .from('users')
+        .insert([{
+          id: invitedUserId,
+          email: invited_user_email,
+          display_name: authUser.user.user_metadata?.display_name || null,
+          avatar_url: authUser.user.user_metadata?.avatar_url || null,
+          is_public_profile: true
+        }])
+
+      if (createProfileError) {
+        console.error('Error creating user profile:', createProfileError)
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Failed to create user profile'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 500,
+          }
+        )
+      }
+    }
+
     // Check if user is already a member or has a pending invitation
     const { data: existingMember, error: existingError } = await supabaseClient
       .from('project_members')
       .select('id, status')
       .eq('project_id', project_id)
-      .eq('user_id', invitedUser.id)
+      .eq('user_id', invitedUserId)
       .maybeSingle()
 
     if (!existingError && existingMember) {
@@ -213,7 +259,7 @@ Deno.serve(async (req) => {
       .from('project_members')
       .insert([{
         project_id,
-        user_id: invitedUser.id,
+        user_id: invitedUserId,
         role,
         status: 'pending',
         invited_by_user_id: user.id
