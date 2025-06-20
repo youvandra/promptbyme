@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Menu, Plus, Layers, Upload, Edit3, GitBranch, Target, ZoomIn, ZoomOut, Maximize2, Eye, Copy, Trash2, X, Link2, UserPlus, Keyboard } from 'lucide-react'
+import { Menu, Plus, Layers, Upload, Edit3, GitBranch, Target, ZoomIn, ZoomOut, Maximize2, Eye, Copy, Trash2, X, Link2, UserPlus, Keyboard, MoreVertical, Clock, Users } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
@@ -715,14 +715,32 @@ export const ProjectSpacePage: React.FC = () => {
                       {projects.map((project) => (
                         <motion.div
                           key={project.id}
-                          className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer group"
-                          onClick={() => handleSelectProject(project)}
+                          className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group"
                           whileHover={{ scale: 1.02, y: -2 }}
                           whileTap={{ scale: 0.98 }}
                         >
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-indigo-500/20 rounded-lg">
-                              <Layers size={20} className="text-indigo-400" />
+                          {/* Options Menu */}
+                          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="relative">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Toggle options menu logic would go here
+                                }}
+                                className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                              >
+                                <MoreVertical size={16} />
+                              </button>
+                              {/* Options menu would be implemented here */}
+                            </div>
+                          </div>
+                          
+                          <div 
+                            className="flex items-center gap-3 mb-4 cursor-pointer"
+                            onClick={() => handleSelectProject(project)}
+                          >
+                            <div className="p-2.5 bg-indigo-500/20 rounded-lg">
+                              <Layers size={18} className="text-indigo-400" />
                             </div>
                             <h3 className="text-lg font-semibold text-white group-hover:text-indigo-300 transition-colors">
                               {project.name}
@@ -736,12 +754,13 @@ export const ProjectSpacePage: React.FC = () => {
                           )}
                           
                           <div className="flex items-center justify-between text-xs text-zinc-500">
-                            <span>
+                            <span className="flex items-center gap-1">
+                              <Clock size={12} className="text-zinc-500" />
                               Updated {new Date(project.updated_at).toLocaleDateString()}
                             </span>
                             <div className="flex items-center gap-1">
-                              <div className="w-2 h-2 bg-emerald-400 rounded-full" />
-                              <span>{project.nodes?.length || 0} nodes</span>
+                              <Users size={12} className="text-zinc-500" />
+                              <span>{project.member_count || 1} members</span>
                             </div>
                           </div>
                         </motion.div>
