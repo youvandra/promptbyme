@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Menu, Plus, Layers, Upload, Edit3, GitBranch, Target, ZoomIn, ZoomOut, Maximize2, Eye, Copy, Trash2, X, Link2, UserPlus, Keyboard, MoreVertical, Clock, Users } from 'lucide-react'
+import { Menu, Plus, Layers, Upload, Edit3, GitBranch, Target, ZoomIn, ZoomOut, Maximize2, Eye, Copy, Trash2, X, Link2, UserPlus, Keyboard, MoreVertical, Clock, Users, Edit, Settings } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
@@ -82,6 +82,17 @@ export const ProjectSpacePage: React.FC = () => {
   const [hoveredConnection, setHoveredConnection] = useState<string | null>(null)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [currentZoomDisplay, setCurrentZoomDisplay] = useState<number | null>(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [projectToEdit, setProjectToEdit] = useState<any>(null)
+  const [projectToDelete, setProjectToDelete] = useState<any>(null)
+  const [projectToInvite, setProjectToInvite] = useState<any>(null)
+  const [newProjectDesc, setNewProjectDesc] = useState('')
+  const [newProjectVisibility, setNewProjectVisibility] = useState<'private' | 'team' | 'public'>('private')
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const canvasRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
@@ -103,7 +114,10 @@ export const ProjectSpacePage: React.FC = () => {
     duplicateNode,
     createConnection,
     deleteConnection,
-    subscribeToProject
+    subscribeToProject,
+    updateProject,
+    deleteProject,
+    inviteProjectMember
   } = useProjectSpaceStore()
 
   useEffect(() => {
@@ -259,20 +273,78 @@ export const ProjectSpacePage: React.FC = () => {
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) return
-
-    setCreatingProject(true)
+    
+    setIsSubmitting(true)
     try {
-      const project = await createProject(newProjectName.trim(), newProjectDescription.trim() || undefined)
-      await selectProject(project)
-      setShowProjectModal(false)
-      setNewProjectName('')
-      setNewProjectDescription('')
+      await createProject(
+        newProjectName.trim(),
+        newProjectDesc.trim() || undefined,
+        newProjectVisibility
+      )
       setToast({ message: 'Project created successfully', type: 'success' })
+      setShowCreateModal(false)
+      setNewProjectName('')
+      setNewProjectDesc('')
+      setNewProjectVisibility('private')
     } catch (error) {
       console.error('Failed to create project:', error)
       setToast({ message: 'Failed to create project', type: 'error' })
     } finally {
-      setCreatingProject(false)
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleUpdateProject = async () => {
+    if (!projectToEdit || !newProjectName.trim()) return
+    
+    setIsSubmitting(true)
+    try {
+      await updateProject(projectToEdit.id, {
+        name: newProjectName.trim(),
+        description: newProjectDesc.trim() || null,
+        visibility: newProjectVisibility
+      })
+      setToast({ message: 'Project updated successfully', type: 'success' })
+      setShowEditModal(false)
+    } catch (error) {
+      console.error('Failed to update project:', error)
+      setToast({ message: 'Failed to update project', type: 'error' })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteProject = async () => {
+    if (!projectToDelete) return
+    
+    setIsSubmitting(true)
+    try {
+      await deleteProject(projectToDelete.id)
+      setToast({ message: 'Project deleted successfully', type: 'success' })
+      setShowDeleteConfirm(false)
+    } catch (error) {
+      console.error('Failed to delete project:', error)
+      setToast({ message: 'Failed to delete project', type: 'error' })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleInviteMember = async () => {
+    if (!projectToInvite || !inviteEmail.trim()) return
+    
+    setIsSubmitting(true)
+    try {
+      await inviteProjectMember(projectToInvite.id, inviteEmail.trim(), inviteRole)
+      setToast({ message: 'Invitation sent successfully', type: 'success' })
+      setShowInviteModal(false)
+      setInviteEmail('')
+      setInviteRole('viewer')
+    } catch (error: any) {
+      console.error('Failed to invite member:', error)
+      setToast({ message: error.message || 'Failed to invite member', type: 'error' })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -283,6 +355,32 @@ export const ProjectSpacePage: React.FC = () => {
       console.error('Failed to select project:', error)
       setToast({ message: 'Failed to load project', type: 'error' })
     }
+  }
+
+  const openEditModal = (project: any, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setProjectToEdit(project)
+    setNewProjectName(project.name)
+    setNewProjectDesc(project.description || '')
+    setNewProjectVisibility(project.visibility || 'private')
+    setShowEditModal(true)
+  }
+
+  const openDeleteConfirm = (project: any, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setProjectToDelete(project)
+    setShowDeleteConfirm(true)
+  }
+
+  const openInviteModal = (project: any, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setProjectToInvite(project)
+    setShowInviteModal(true)
+  }
+
+  const canManageProject = (project: any) => {
+    return project.user_id === user?.id || 
+           project.current_user_role === 'admin'
   }
 
   const handleAddNode = async (type: FlowNode['type']) => {
@@ -693,13 +791,15 @@ export const ProjectSpacePage: React.FC = () => {
                       </p>
                     </div>
                     
-                    <button
-                      onClick={() => setShowProjectModal(true)}
-                      className="flex items-center gap-2 px-6 py-3 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto"
-                    >
-                      <Plus size={20} />
-                      <span>New Project</span>
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setShowCreateModal(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                      >
+                        <Plus size={16} />
+                        <span>New Project</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Projects Grid */}
@@ -722,16 +822,37 @@ export const ProjectSpacePage: React.FC = () => {
                           {/* Options Menu */}
                           <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="relative">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // Toggle options menu logic would go here
-                                }}
-                                className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
-                              >
-                                <MoreVertical size={16} />
-                              </button>
-                              {/* Options menu would be implemented here */}
+                              <div className="flex items-center gap-1">
+                                {canManageProject(project) && (
+                                  <>
+                                    <button
+                                      onClick={(e) => openEditModal(project, e)}
+                                      className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                                      title="Edit project"
+                                    >
+                                      <Edit size={16} />
+                                    </button>
+                                    <button
+                                      onClick={(e) => openDeleteConfirm(project, e)}
+                                      className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                                      title="Delete project"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </>
+                                )}
+                                {(project.user_id === user?.id || 
+                                  project.current_user_role === 'admin' || 
+                                  project.current_user_role === 'editor') && (
+                                  <button
+                                    onClick={(e) => openInviteModal(project, e)}
+                                    className="p-2 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all duration-200"
+                                    title="Invite members"
+                                  >
+                                    <UserPlus size={16} />
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                           
@@ -760,7 +881,7 @@ export const ProjectSpacePage: React.FC = () => {
                             </span>
                             <div className="flex items-center gap-1">
                               <Users size={12} className="text-zinc-500" />
-                              <span>{project.member_count || 1} members</span>
+                              <span>{project.member_count || 1} {project.member_count === 1 ? 'member' : 'members'}</span>
                             </div>
                           </div>
                         </motion.div>
@@ -777,7 +898,7 @@ export const ProjectSpacePage: React.FC = () => {
                           Create your first project to start building prompt flows
                         </p>
                         <button
-                          onClick={() => setShowProjectModal(true)}
+                          onClick={() => setShowCreateModal(true)}
                           className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105"
                         >
                           <Plus size={16} />
@@ -1124,6 +1245,360 @@ export const ProjectSpacePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Create Project Modal */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
+            
+            <motion.div 
+              className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-md"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <h2 className="text-xl font-semibold text-white">Create New Project</h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Project Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                    placeholder="Enter project name"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                    autoFocus
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={newProjectDesc}
+                    onChange={(e) => setNewProjectDesc(e.target.value)}
+                    placeholder="Optional description"
+                    rows={3}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Visibility
+                  </label>
+                  <select
+                    value={newProjectVisibility}
+                    onChange={(e) => setNewProjectVisibility(e.target.value as any)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                  >
+                    <option value="private">Private - Only you and invited members</option>
+                    <option value="team">Team - All members can access</option>
+                    <option value="public">Public - Anyone can view</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-white/10">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateProject}
+                  disabled={!newProjectName.trim() || isSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 disabled:bg-zinc-700/50 disabled:border-zinc-700/50 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      <span>Create Project</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Project Modal */}
+      <AnimatePresence>
+        {showEditModal && projectToEdit && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowEditModal(false)} />
+            
+            <motion.div 
+              className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-md"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <h2 className="text-xl font-semibold text-white">Edit Project</h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Project Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                    placeholder="Enter project name"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                    autoFocus
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={newProjectDesc}
+                    onChange={(e) => setNewProjectDesc(e.target.value)}
+                    placeholder="Optional description"
+                    rows={3}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Visibility
+                  </label>
+                  <select
+                    value={newProjectVisibility}
+                    onChange={(e) => setNewProjectVisibility(e.target.value as any)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                  >
+                    <option value="private">Private - Only you and invited members</option>
+                    <option value="team">Team - All members can access</option>
+                    <option value="public">Public - Anyone can view</option>
+                  </select>
+                </div>
+
+                {/* Team Members Section */}
+                <div className="pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium text-zinc-300">Team Members</h3>
+                    <TeamMembersDisplay 
+                      projectId={projectToEdit.id}
+                      currentUserRole={projectToEdit.current_user_role || null}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-white/10">
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdateProject}
+                  disabled={!newProjectName.trim() || isSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 disabled:bg-zinc-700/50 disabled:border-zinc-700/50 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Settings size={16} />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && projectToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+            
+            <motion.div 
+              className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-md"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
+                    <Trash2 size={24} className="text-red-400" />
+                  </div>
+                </div>
+                
+                <h2 className="text-xl font-semibold text-white text-center mb-2">Delete Project</h2>
+                <p className="text-zinc-400 text-center mb-6">
+                  Are you sure you want to delete <span className="text-white font-medium">{projectToDelete.name}</span>? This action cannot be undone.
+                </p>
+                
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteProject}
+                    disabled={isSubmitting}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Deleting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 size={16} />
+                        <span>Delete Project</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Invite Member Modal */}
+      <AnimatePresence>
+        {showInviteModal && projectToInvite && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowInviteModal(false)} />
+            
+            <motion.div 
+              className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-md"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
+                <h2 className="text-xl font-semibold text-white">Invite Team Member</h2>
+                <button
+                  onClick={() => setShowInviteModal(false)}
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="colleague@example.com"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                    autoFocus
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Role
+                  </label>
+                  <select
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as any)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                  >
+                    <option value="viewer">Viewer - Can view but not edit</option>
+                    <option value="editor">Editor - Can edit but not manage team</option>
+                    <option value="admin">Admin - Full access including team management</option>
+                  </select>
+                </div>
+                
+                <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4">
+                  <h4 className="text-sm font-medium text-indigo-300 mb-2">Role Permissions</h4>
+                  <ul className="text-xs text-indigo-200 space-y-1">
+                    <li>• <strong>Viewer:</strong> Can view the project but cannot make changes</li>
+                    <li>• <strong>Editor:</strong> Can edit nodes and connections but cannot manage team</li>
+                    <li>• <strong>Admin:</strong> Full access including team management</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-white/10">
+                <button
+                  onClick={() => setShowInviteModal(false)}
+                  className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleInviteMember}
+                  disabled={!inviteEmail.trim() || isSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 disabled:bg-zinc-700/50 disabled:border-zinc-700/50 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={16} />
+                      <span>Send Invitation</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Project Creation Modal */}
       <AnimatePresence>
