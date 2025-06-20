@@ -18,7 +18,6 @@ function App() {
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/playground" element={<PlaygroundPage />} />
         <Route path="/project-space" element={<ProjectSpacePage />} />
-        <Route path="/project-space/:projectId" element={<ProjectSpacePage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/:username" element={<PublicProfilePage />} />
         <Route path="/:username/:id" element={<SharedPromptPage />} />
