@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft, Menu, Eye, Lock, GitFork, Users, ChevronDown, FolderPlus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PromptCard } from '../../components/prompts/PromptCard'
