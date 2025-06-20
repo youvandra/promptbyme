@@ -1172,7 +1172,7 @@ export const ProjectSpacePage: React.FC = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 20, scale: 0.9 }}
                       className="absolute bottom-6 transform z-50"
-                      style={{ left: '40%', transform: 'translateX(-40%)' }}
+                      style={{ left: '45%', transform: 'translateX(-45%)' }}
                     >
                       <div className="flex items-center gap-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-2 shadow-xl">
                         <motion.button
