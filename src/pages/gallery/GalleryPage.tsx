@@ -478,37 +478,30 @@ export const GalleryPage: React.FC = () => {
                     ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
                     : 'space-y-4'
                 }>
-                  {filteredPrompts.map((prompt, index) => (
-                    <motion.div
+                  {filteredPrompts.map((prompt) => (
+                    <MemoizedPromptCard
                       key={prompt.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="card-hover"
-                    >
-                      <MemoizedPromptCard
-                        id={prompt.id}
-                        title={prompt.title}
-                        content={prompt.content}
-                        access={prompt.access}
-                        createdAt={prompt.created_at}
-                        views={prompt.views}
-                        forkCount={prompt.fork_count}
-                        originalPromptId={prompt.original_prompt_id}
-                        currentVersion={prompt.current_version}
-                        totalVersions={prompt.total_versions}
-                        tags={prompt.tags}
-                        folders={folders}
-                        enableContextMenu={true}
-                        onEdit={handleEditPrompt}
-                        onDelete={handleDeletePrompt}
-                        onView={handleViewPrompt}
-                        onViewHistory={handleViewHistory}
-                        onMoveToFolder={handleMoveToFolder}
-                        onShare={handleSharePrompt}
-                        showUseButton={true}
-                      />
-                    </motion.div>
+                      id={prompt.id}
+                      title={prompt.title}
+                      content={prompt.content}
+                      access={prompt.access}
+                      createdAt={prompt.created_at}
+                      views={prompt.views}
+                      forkCount={prompt.fork_count}
+                      originalPromptId={prompt.original_prompt_id}
+                      currentVersion={prompt.current_version}
+                      totalVersions={prompt.total_versions}
+                      tags={prompt.tags}
+                      folders={folders}
+                      enableContextMenu={true}
+                      onEdit={handleEditPrompt}
+                      onDelete={handleDeletePrompt}
+                      onView={handleViewPrompt}
+                      onViewHistory={handleViewHistory}
+                      onMoveToFolder={handleMoveToFolder}
+                      onShare={handleSharePrompt}
+                      showUseButton={true}
+                    />
                   ))}
                 </div>
               ) : (

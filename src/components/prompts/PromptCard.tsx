@@ -410,13 +410,11 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   return (
     <>
       <CardWrapper 
-        className="group relative bg-zinc-900/30 backdrop-blur-md border border-zinc-800/30 rounded-xl p-4 sm:p-6 hover:border-indigo-500/30 transition-all duration-300 transform hover:scale-[1.03] hover:shadow-xl hover:shadow-indigo-500/10 flex flex-col h-full cursor-pointer select-none glass-panel"
+        className="group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 sm:p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full cursor-pointer select-none"
         onClick={handleCardClick}
         onContextMenu={handleContextMenu}
         {...cardProps}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/10 group-hover:ring-white/20 transition-all duration-300"></div>
         <div className="relative z-10 flex flex-col h-full">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
@@ -453,14 +451,14 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                     e.stopPropagation()
                     if (onView) onView(id)
                   }}
-                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-white/10 backdrop-blur-sm rounded-lg transition-all duration-200 touch-manipulation"
+                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 touch-manipulation"
                   title="View full prompt"
                 >
                   <Maximize2 size={14} className="sm:w-4 sm:h-4" />
                 </button>
                 <button
                   onClick={handleCopyClick}
-                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-white/10 backdrop-blur-sm rounded-lg transition-all duration-200 touch-manipulation"
+                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 touch-manipulation"
                   title="Copy content"
                 >
                   <Copy size={14} className="sm:w-4 sm:h-4" />
@@ -470,7 +468,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                     e.stopPropagation()
                     copyLink()
                   }}
-                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-white/10 backdrop-blur-sm rounded-lg transition-all duration-200 touch-manipulation"
+                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 touch-manipulation"
                   title="Copy link"
                 >
                   <ExternalLink size={14} className="sm:w-4 sm:h-4" />
@@ -481,7 +479,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                       e.stopPropagation()
                       onDelete(id)
                     }}
-                    className="p-1.5 sm:p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 backdrop-blur-sm rounded-lg transition-all duration-200 touch-manipulation"
+                    className="p-1.5 sm:p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200 touch-manipulation"
                     title="Delete prompt"
                   >
                     <Trash2 size={14} className="sm:w-4 sm:h-4" />
@@ -498,7 +496,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                     e.stopPropagation()
                     if (onView) onView(id)
                   }}
-                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-white/10 backdrop-blur-sm rounded-lg transition-all duration-200"
+                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
                   title="View full prompt"
                 >
                   <Maximize2 size={14} className="sm:w-4 sm:h-4" />
@@ -508,7 +506,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                     e.stopPropagation()
                     handleCopyContent()
                   }}
-                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-white/10 backdrop-blur-sm rounded-lg transition-all duration-200"
+                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
                   title="Copy content"
                 >
                   <Copy size={14} className="sm:w-4 sm:h-4" />
@@ -530,7 +528,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                   return (
                     <div
                       key={tagId}
-                      className="flex items-center gap-1 px-2 py-1 bg-zinc-800/20 backdrop-blur-sm border border-zinc-700/20 rounded text-xs transform transition-all duration-200 hover:scale-105"
+                      className="flex items-center gap-1 px-2 py-1 bg-zinc-800/30 border border-zinc-700/30 rounded text-xs"
                       title={tag.name}
                     >
                       <Icon 
@@ -542,7 +540,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                   )
                 })}
                 {tags.length > 3 && (
-                  <div className="px-2 py-1 bg-zinc-800/20 backdrop-blur-sm border border-zinc-700/20 rounded text-xs text-zinc-400 transform transition-all duration-200 hover:scale-105">
+                  <div className="px-2 py-1 bg-zinc-800/30 border border-zinc-700/30 rounded text-xs text-zinc-400">
                     +{tags.length - 3} more
                   </div>
                 )}
@@ -550,7 +548,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
             )}
             
             <div 
-              className="text-zinc-200 text-sm sm:text-base leading-relaxed prose prose-invert prose-sm sm:prose-base max-w-none flex-1"
+              className="text-zinc-300 text-sm sm:text-base leading-relaxed prose prose-invert prose-sm sm:prose-base max-w-none flex-1"
               dangerouslySetInnerHTML={renderedContent}
               style={{
                 wordBreak: 'break-word',
@@ -559,7 +557,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               }}
             />
             {shouldTruncate && (
-              <div className="mt-2 text-xs text-indigo-400 group-hover:text-indigo-300 transition-colors duration-300">
+              <div className="mt-2 text-xs text-zinc-500">
                 Click to view full content...
               </div>
             )}
@@ -570,7 +568,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
             {/* Version info */}
             {hasMultipleVersions && (
               <div className="flex items-center gap-2 mb-3 text-xs">
-                <div className="flex items-center gap-1 px-2 py-1 bg-indigo-500/10 backdrop-blur-sm border border-indigo-500/30 text-indigo-400 rounded transform transition-all duration-200 hover:scale-105 hover:bg-indigo-500/20">
+                <div className="flex items-center gap-1 px-2 py-1 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 rounded">
                   <History size={10} />
                   <span>v{currentVersion}</span>
                 </div>
@@ -636,7 +634,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute top-2 right-2 bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs z-50 pointer-events-none shadow-lg shadow-emerald-500/20"
+            className="absolute top-2 right-2 bg-emerald-500 text-white px-2 py-1 rounded text-xs z-50 pointer-events-none"
           >
             Copied!
           </motion.div>
@@ -644,7 +642,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
 
         {/* Right-click indicator */}
         {enableContextMenu && (
-          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-70 transition-opacity duration-300 text-xs text-indigo-400 pointer-events-none">
+          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-50 transition-opacity duration-300 text-xs text-zinc-500 pointer-events-none">
             Right-click for options
           </div>
         )}

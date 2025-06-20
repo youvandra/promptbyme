@@ -102,8 +102,8 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         onClick={() => handleItemClick(item)}
         className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 text-sm transition-all duration-200 ${
           item.variant === 'danger'
-            ? 'text-red-400 hover:bg-red-500/20 hover:text-red-300'
-            : 'text-zinc-300 hover:bg-white/5 hover:text-white'
+            ? 'text-red-400 hover:bg-red-500/10 hover:text-red-300'
+            : 'text-zinc-300 hover:bg-zinc-800/50 hover:text-white'
         } ${isSubmenu ? 'pl-4' : ''}`}
       >
         <div className="flex items-center gap-3">
@@ -125,7 +125,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: -10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-full top-0 ml-1 bg-zinc-900/80 backdrop-blur-xl border border-zinc-700/30 rounded-lg shadow-xl py-2 min-w-[160px] z-50 glass-panel"
+            className="absolute left-full top-0 ml-1 bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/50 rounded-lg shadow-xl py-2 min-w-[160px] z-50"
           >
             {item.submenu.map(subItem => renderMenuItem(subItem, true))}
           </motion.div>
@@ -144,7 +144,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: -10 }}
         transition={{ duration: 0.15, ease: "easeOut" }}
-        className="fixed z-[9999] bg-zinc-900/80 backdrop-blur-xl border border-zinc-700/30 rounded-lg shadow-xl py-2 min-w-[180px] glass-panel"
+        className="fixed z-[9999] bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/50 rounded-lg shadow-xl py-2 min-w-[180px]"
         style={{
           left: position.x,
           top: position.y,
