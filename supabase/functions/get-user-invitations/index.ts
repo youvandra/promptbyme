@@ -13,10 +13,31 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Check if required environment variables are available
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing environment variables:', {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!supabaseServiceKey
+      })
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Server configuration error: Missing required environment variables'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
+    }
+
     // Create Supabase client
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      supabaseUrl,
+      supabaseServiceKey,
       {
         auth: {
           autoRefreshToken: false,
@@ -24,6 +45,21 @@ Deno.serve(async (req) => {
         }
       }
     )
+
+    // Verify the client was created successfully
+    if (!supabaseClient) {
+      console.error('Failed to create Supabase client')
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Server configuration error: Failed to initialize database client'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
+    }
 
     // Get the authorization header
     const authHeader = req.headers.get('Authorization')
