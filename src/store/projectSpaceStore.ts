@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import { supabase } from '../lib/supabase'
-import { toast } from '../utils/toast'
 
 export interface FlowNode {
   id: string
@@ -120,12 +119,44 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     fetchProjects: async () => {
       set({ loading: true })
       try {
-        // Use RPC function to get projects with counts
-        const { data, error } = await supabase.rpc('get_user_accessible_projects_with_counts')
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('User not authenticated')
+
+        // Get projects where user is owner OR a member
+        const { data: ownedProjects, error: ownedError } = await supabase
+          .from('flow_projects')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+
+        if (ownedError) throw ownedError
+
+        // Get projects where user is a member
+        const { data: memberProjects, error: memberError } = await supabase
+          .from('project_members')
+          .select(`
+            flow_projects (*)
+          `)
+          .eq('user_id', user.id)
+          .eq('status', 'accepted')
+
+        if (memberError) throw memberError
+
+        // Combine and deduplicate projects
+        const allProjects = [...(ownedProjects || [])]
         
-        if (error) throw error
-        
-        set({ projects: data || [] })
+        if (memberProjects) {
+          memberProjects.forEach(mp => {
+            if (mp.flow_projects && !allProjects.find(p => p.id === mp.flow_projects.id)) {
+              allProjects.push(mp.flow_projects)
+            }
+          })
+        }
+
+        // Sort by updated_at
+        allProjects.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+
+        set({ projects: allProjects })
       } catch (error) {
         console.error('Error fetching projects:', error)
         throw error
@@ -137,10 +168,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     createProject: async (name: string, description?: string, visibility: FlowProject['visibility'] = 'private') => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
-          toast.error('You must be signed in to create a project')
-          throw new Error('User not authenticated')
-        }
+        if (!user) throw new Error('User not authenticated')
 
         const { data: project, error } = await supabase
           .from('flow_projects')
@@ -156,7 +184,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (error) throw error
 
         const { projects } = get()
-        // Add the new project to the state
         set({ projects: [project, ...projects] })
         
         return project
@@ -167,7 +194,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     },
 
     updateProject: async (id: string, updates: Partial<FlowProject>) => {
-      set({ loading: true })
       try {
         const { data: project, error } = await supabase
           .from('flow_projects')
@@ -175,8 +201,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           .eq('id', id)
           .select()
           .single()
-
-        if (!project) throw new Error('Project not found')
 
         if (error) throw error
 
@@ -193,15 +217,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           } : selectedProject
         })
       } catch (error) {
-        toast.error('Failed to update project')
-        set({ loading: false })
         console.error('Error updating project:', error)
         throw error
       }
     },
 
     deleteProject: async (id: string) => {
-      set({ loading: true })
       try {
         const { error } = await supabase
           .from('flow_projects')
@@ -218,15 +239,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           selectedProject: selectedProject?.id === id ? null : selectedProject
         })
       } catch (error) {
-        toast.error('Failed to delete project')
-        set({ loading: false })
         console.error('Error deleting project:', error)
         throw error
       }
     },
 
     selectProject: async (project: FlowProject) => {
-      set({ loading: true })
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('User not authenticated')
@@ -263,11 +281,10 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           .maybeSingle() // Use maybeSingle() instead of single() to handle no results
 
         let userRole = null
-        if (project.user_id === user.id) {
-          userRole = 'admin' // Project owner is always admin
-        } else if (!memberError && memberData) {
-          // Get the user's role in this project
+        if (!memberError && memberData) {
           userRole = memberData.role
+        } else if (project.user_id === user.id) {
+          userRole = 'admin' // Project owner is always admin
         }
 
         const projectWithData = {
@@ -281,15 +298,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           currentUserRole: userRole
         })
       } catch (error) {
-        toast.error('Failed to load project')
-        set({ loading: false })
         console.error('Error selecting project:', error)
         throw error
       }
     },
 
     createNode: async (projectId: string, type: FlowNode['type'], position: { x: number; y: number }, promptId?: string) => {
-      set({ loading: true })
       try {
         let nodeTitle = `New ${type.charAt(0).toUpperCase() + type.slice(1)}`
         let defaultContent = ''
@@ -366,15 +380,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
         return transformedNode
       } catch (error) {
-        toast.error('Failed to create node')
-        set({ loading: false })
         console.error('Error creating node:', error)
         throw error
       }
     },
 
     duplicateNode: async (nodeId: string, offset: { x: number, y: number } = { x: 50, y: 50 }) => {
-      set({ loading: true })
       try {
         // Get the original node
         const { data: originalNode, error: fetchError } = await supabase
@@ -426,15 +437,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
         return transformedNode
       } catch (error) {
-        toast.error('Failed to duplicate node')
-        set({ loading: false })
         console.error('Error duplicating node:', error)
         throw error
       }
     },
 
     updateNode: async (nodeId: string, updates: Partial<FlowNode>) => {
-      set({ loading: true })
       try {
         // Prepare database updates
         const dbUpdates: any = { ...updates }
@@ -474,15 +482,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           })
         }
       } catch (error) {
-        toast.error('Failed to update node')
-        set({ loading: false })
         console.error('Error updating node:', error)
         throw error
       }
     },
 
     deleteNode: async (nodeId: string) => {
-      set({ loading: true })
       try {
         const { error } = await supabase
           .from('flow_nodes')
@@ -508,15 +513,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           })
         }
       } catch (error) {
-        toast.error('Failed to delete node')
-        set({ loading: false })
         console.error('Error deleting node:', error)
         throw error
       }
     },
 
     moveNode: async (nodeId: string, position: { x: number; y: number }) => {
-      set({ loading: true })
       try {
         const { error } = await supabase
           .from('flow_nodes')
@@ -543,15 +545,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           })
         }
       } catch (error) {
-        toast.error('Failed to move node')
-        set({ loading: false })
         console.error('Error moving node:', error)
         throw error
       }
     },
 
     createConnection: async (projectId: string, sourceNodeId: string, targetNodeId: string) => {
-      set({ loading: true })
       try {
         const { data: connection, error } = await supabase
           .from('flow_connections')
@@ -578,15 +577,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         
         return connection
       } catch (error) {
-        toast.error('Failed to create connection')
-        set({ loading: false })
         console.error('Error creating connection:', error)
         throw error
       }
     },
 
     deleteConnection: async (connectionId: string) => {
-      set({ loading: true })
       try {
         const { error } = await supabase
           .from('flow_connections')
@@ -608,8 +604,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           })
         }
       } catch (error) {
-        toast.error('Failed to delete connection')
-        set({ loading: false })
         console.error('Error deleting connection:', error)
         throw error
       }
@@ -637,8 +631,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           currentUserRole: data.user_role || null
         })
       } catch (error) {
-        toast.error('Failed to fetch project members')
-        set({ membersLoading: false })
         console.error('Error fetching project members:', error)
         throw error
       } finally {
@@ -647,7 +639,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     },
     
     inviteProjectMember: async (projectId: string, email: string, role: ProjectMember['role']) => {
-      set({ loading: true })
       try {
         const { data, error } = await supabase.functions.invoke('invite-project-member', {
           body: {
@@ -664,18 +655,14 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
 
         // Refresh project members
-        toast.success(`Invitation sent to ${email}`)
         await get().fetchProjectMembers(projectId)
       } catch (error) {
-        toast.error('Failed to send invitation')
-        set({ loading: false })
         console.error('Error inviting project member:', error)
         throw error
       }
     },
     
     updateMemberRole: async (projectId: string, memberUserId: string, newRole: ProjectMember['role']) => {
-      set({ loading: true })
       try {
         const { data, error } = await supabase.functions.invoke('update-member-role', {
           body: {
@@ -692,18 +679,14 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
 
         // Refresh project members
-        toast.success('Member role updated')
         await get().fetchProjectMembers(projectId)
       } catch (error) {
-        toast.error('Failed to update member role')
-        set({ loading: false })
         console.error('Error updating member role:', error)
         throw error
       }
     },
     
     removeProjectMember: async (projectId: string, memberUserId: string) => {
-      set({ loading: true })
       try {
         const { data, error } = await supabase.functions.invoke('remove-project-member', {
           body: {
@@ -719,11 +702,8 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
 
         // Refresh project members
-        toast.success('Member removed')
         await get().fetchProjectMembers(projectId)
       } catch (error) {
-        toast.error('Failed to remove member')
-        set({ loading: false })
         console.error('Error removing project member:', error)
         throw error
       }
@@ -742,7 +722,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
         set({ userInvitations: data.invitations || [] })
       } catch (error) {
-        toast.error('Failed to fetch invitations')
         console.error('Error fetching user invitations:', error)
         throw error
       } finally {
@@ -751,7 +730,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     },
     
     manageInvitation: async (projectId: string, action: 'accept' | 'decline') => {
-      set({ loading: true })
       try {
         const { data, error } = await supabase.functions.invoke('manage-project-invitation', {
           body: {
@@ -767,14 +745,11 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
 
         // Refresh invitations
-        toast.success(`Invitation ${action}ed`)
         await get().fetchUserInvitations()
         
         // If accepted, refresh projects list
         if (action === 'accept') {
-          toast.success('You are now a member of this project')
           await get().fetchProjects()
-          set({ loading: false })
         }
       } catch (error) {
         console.error(`Error ${action}ing invitation:`, error)
@@ -782,7 +757,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
       }
     },
     
-    // Subscribe to real-time updates for a project
     subscribeToProject: (projectId: string) => {
       const nodesSubscription = supabase
         .channel(`project-nodes-${projectId}`)
