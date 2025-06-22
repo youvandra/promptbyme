@@ -45,7 +45,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showProjectMenu, setShowProjectMenu] = useState<string | null>(null)
   
   const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null)
-  const { user, loading: authLoading } = useAuthStore() 
+  const { user, loading: authLoading } = useAuthStore()
   const navigate = useNavigate()
   const params = useParams<{ projectId?: string }>()
   const [searchParams] = useSearchParams()
@@ -55,12 +55,11 @@ export const ProjectSpacePage: React.FC = () => {
     loading: projectsLoading, 
     fetchProjects,
     createProject,
-    updateProject, 
-    deleteProject, 
+    updateProject,
+    deleteProject,
     selectedProject: currentProject,
     currentUserRole,
-    inviteProjectMember,
-    loadingProjectId: storeLoadingProjectId
+    inviteProjectMember
   } = useProjectSpaceStore((state) => state)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -72,7 +71,7 @@ export const ProjectSpacePage: React.FC = () => {
     const loadProject = async () => {
       if (projectId && user && !authLoading) {
         setIsLoading(true)
-        setLoadingProjectId(projectId) 
+        setLoadingProjectId(projectId)
         try {
           // First fetch projects if we don't have them yet
           if (projects.length === 0 && !projectsLoading) {
@@ -81,11 +80,7 @@ export const ProjectSpacePage: React.FC = () => {
           
           const project = projects.find(p => p.id === projectId)
           if (project) {
-            await useProjectSpaceStore.getState().selectProject(project) 
-            // If we're on the project-space page but have a project ID, redirect to the project page
-            if (location.pathname === '/project-space' && projectId) {
-              navigate(`/project/${projectId}`, { replace: true })
-            }
+            await useProjectSpaceStore.getState().selectProject(project)
           }
         } catch (error) {
           console.error('Failed to load project:', error)
@@ -98,13 +93,6 @@ export const ProjectSpacePage: React.FC = () => {
     }
     loadProject()
   }, [params.projectId, searchParams, user, authLoading, projectsLoading, projects])
-  
-  // Sync loading state from store
-  useEffect(() => {
-    if (storeLoadingProjectId) {
-      setLoadingProjectId(storeLoadingProjectId)
-    }
-  }, [storeLoadingProjectId])
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -180,18 +168,13 @@ export const ProjectSpacePage: React.FC = () => {
   const handleDeleteProject = async () => {
     if (!selectedProject) return
     
-    setIsLoading(true) 
+    setIsLoading(true)
     try {
       await deleteProject(selectedProject.id)
       
       setToast({ message: 'Project deleted successfully', type: 'success' })
       setShowDeleteModal(false)
       setSelectedProject(null)
-      
-      // Navigate back to project space if we're on a project page
-      if (location.pathname.includes('/project/')) {
-        navigate('/project-space', { replace: true })
-      }
     } catch (error) {
       console.error('Failed to delete project:', error)
       setToast({ message: 'Failed to delete project', type: 'error' })
@@ -232,7 +215,7 @@ export const ProjectSpacePage: React.FC = () => {
   const openProjectEditor = (project: FlowProject) => {
     // Navigate to the project page with the project ID in the URL
     setIsLoading(true)
-    setLoadingProjectId(project.id) 
+    setLoadingProjectId(project.id)
     useProjectSpaceStore.getState().selectProject(project)
       .then(() => {
         navigate(`/project/${project.id}`, { replace: true })
@@ -416,7 +399,7 @@ export const ProjectSpacePage: React.FC = () => {
                       key={project.id}
                       className="group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full"
                       onClick={() => openProjectEditor(project)}
-                      style={{ cursor: loadingProjectId === project.id || storeLoadingProjectId === project.id ? 'wait' : 'pointer' }}
+                      style={{ cursor: loadingProjectId === project.id ? 'wait' : 'pointer' }}
                     >
                       {/* Project Menu */}
                       <div className="absolute top-4 right-4">
@@ -441,12 +424,12 @@ export const ProjectSpacePage: React.FC = () => {
                                 e.stopPropagation()
                                 setShowProjectMenu(null)
                                 if (loadingProjectId !== project.id) {
-                                  openProjectEditor(project) 
+                                  openProjectEditor(project)
                                 }
                               }}
-                              className={`w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm ${loadingProjectId === project.id || storeLoadingProjectId === project.id ? 'cursor-wait opacity-50' : 'cursor-pointer'}`}
+                              className={`w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm ${loadingProjectId === project.id ? 'cursor-wait opacity-50' : 'cursor-pointer'}`}
                             >
-                              {loadingProjectId === project.id || storeLoadingProjectId === project.id ? (
+                              {loadingProjectId === project.id ? (
                                 <>
                                   <div className="w-3 h-3 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
                                   <span>Opening...</span>
@@ -480,7 +463,6 @@ export const ProjectSpacePage: React.FC = () => {
                                 <button
                                   onClick={() => openDeleteModal(project)}
                                   className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left text-sm"
-                                  disabled={loadingProjectId === project.id || storeLoadingProjectId === project.id}
                                 >
                                   <Trash2 size={14} />
                                   <span>Delete Project</span>
@@ -919,7 +901,7 @@ export const ProjectSpacePage: React.FC = () => {
                 <button
                   id="delete-button"
                   onClick={handleDeleteProject}
-                  disabled={true} // Always disabled until user types "delete"
+                  disabled={isLoading} // Only disabled when loading
                   className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
