@@ -477,230 +477,234 @@ export const ProjectSpacePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white relative">
-      {/* Layout Container */}
-      <div className="flex min-h-screen lg:pl-64">
-        {/* Side Navbar */}
-        <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-        
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-h-screen">
-          {/* Mobile Header */}
-          <header className="lg:hidden relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
-            <div className="px-4 py-4">
-              <div className="flex items-center justify-between">
-                <button
-                  data-menu-button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="text-zinc-400 hover:text-white transition-colors p-1"
-                >
-                  <Menu size={20} />
-                </button>
-                
-                <h1 className="text-lg font-semibold text-white">
-                  Project Space
-                </h1>
-                
-                <div className="w-6" />
-              </div>
-            </div>
-          </header>
-
-          {/* Content */}
-          <div className="relative z-10 flex-1">
-            <div className="w-full max-w-7xl px-6 mx-auto py-8">
-              {/* Page Header */}
-              {!isViewingProject ? (
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-                  <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">
-                      Project Space
-                    </h1>
-                    <p className="text-zinc-400">
-                      Create and manage your prompt flow projects
-                    </p>
-                  </div>
-                  
+    <>
+      <div className="min-h-screen bg-zinc-950 text-white relative">
+        {/* Layout Container */}
+        <div className="flex min-h-screen lg:pl-64">
+          {/* Side Navbar */}
+          <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+          
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col min-h-screen">
+            {/* Mobile Header */}
+            <header className="lg:hidden relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
+              <div className="px-4 py-4">
+                <div className="flex items-center justify-between">
                   <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover self-start"
+                    data-menu-button
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="text-zinc-400 hover:text-white transition-colors p-1"
                   >
-                    <Plus size={16} />
-                    <span>New Project</span>
+                    <Menu size={20} />
                   </button>
+                  
+                  <h1 className="text-lg font-semibold text-white">
+                    Project Space
+                  </h1>
+                  
+                  <div className="w-6" />
                 </div>
-              ) : null}
+              </div>
+            </header>
 
-              {/* Main Content */}
-              {isViewingProject ? (
-                // Project Space View
-                renderProjectSpace()
-              ) : (
-                // Projects List View
-                <>
-                  {/* Search Bar */}
-                  <div className="mb-8">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
-                      <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search projects..."
-                        className="w-full bg-zinc-900/50 border border-zinc-800/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                      />
+            {/* Content */}
+            <div className="relative z-10 flex-1">
+              <div className="w-full max-w-7xl px-6 mx-auto py-8">
+                {/* Page Header */}
+                {!isViewingProject ? (
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+                    <div>
+                      <h1 className="text-3xl font-bold text-white mb-2">
+                        Project Space
+                      </h1>
+                      <p className="text-zinc-400">
+                        Create and manage your prompt flow projects
+                      </p>
                     </div>
+                    
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover self-start"
+                    >
+                      <Plus size={16} />
+                      <span>New Project</span>
+                    </button>
                   </div>
+                ) : null}
 
-                  {/* Projects Grid */}
-                  {projectsLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="flex items-center gap-2 text-zinc-400">
-                        <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-                        <span>Loading projects...</span>
+                {/* Main Content */}
+                {isViewingProject ? (
+                  // Project Space View
+                  renderProjectSpace()
+                ) : (
+                  // Projects List View
+                  <>
+                    {/* Search Bar */}
+                    <div className="mb-8">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search projects..."
+                          className="w-full bg-zinc-900/50 border border-zinc-800/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                        />
                       </div>
                     </div>
-                  ) : filteredProjects.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {filteredProjects.map((project) => (
-                        <div
-                          key={project.id}
-                          className="group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full"
-                        >
-                          {/* Project Menu */}
-                          <div className="absolute top-4 right-4">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setShowProjectMenu(showProjectMenu === project.id ? null : project.id)
-                              }}
-                              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                            >
-                              <MoreHorizontal size={16} />
-                            </button>
-                            
-                            {showProjectMenu === project.id && (
-                              <div 
-                                ref={menuRef}
-                                className="absolute top-full right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-48 py-1"
-                              >
-                                <a
-                                  href={`/project/${project.id}`}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    openProjectEditor(project);
-                                  }}
-                                  className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm cursor-pointer"
-                                >
-                                  <Layers size={14} />
-                                  <span>Open Project Space</span>
-                                </a>
-                                
-                                {(project.user_id === user.id || currentUserRole === 'admin') && (
-                                  <>
-                                    <button
-                                      onClick={() => openEditModal(project)}
-                                      className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
-                                    >
-                                      <Edit3 size={14} />
-                                      <span>Edit Project</span>
-                                    </button>
-                                    
-                                    <button
-                                      onClick={() => openInviteModal(project)}
-                                      className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
-                                    >
-                                      <UserPlus size={14} />
-                                      <span>Invite Member</span>
-                                    </button>
-                                    
-                                    <button
-                                      onClick={() => openDeleteModal(project)}
-                                      className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left text-sm"
-                                    >
-                                      <Trash2 size={14} />
-                                      <span>Delete Project</span>
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Project Content */}
-                          <div 
-                            className="flex-1 cursor-pointer"
-                            onClick={() => openProjectEditor(project)}
+
+                    {/* Projects Grid */}
+                    {projectsLoading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="flex items-center gap-2 text-zinc-400">
+                          <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+                          <span>Loading projects...</span>
+                        </div>
+                      </div>
+                    ) : filteredProjects.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredProjects.map((project) => (
+                          <div
+                            key={project.id}
+                            className="group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full"
                           >
-                            <div className="flex items-center gap-2 mb-4">
-                              <div className="p-2 bg-indigo-600/20 rounded-lg text-indigo-400">
-                                <Layers size={18} />
-                              </div>
-                              <h3 className="text-lg font-semibold text-white truncate">
-                                {project.name}
-                              </h3>
+                            {/* Project Menu */}
+                            <div className="absolute top-4 right-4">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setShowProjectMenu(showProjectMenu === project.id ? null : project.id)
+                                }}
+                                className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                              >
+                                <MoreHorizontal size={16} />
+                              </button>
+                              
+                              {showProjectMenu === project.id && (
+                                <div 
+                                  ref={menuRef}
+                                  className="absolute top-full right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-48 py-1"
+                                >
+                                  <a
+                                    href={`/project/${project.id}`}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      openProjectEditor(project);
+                                    }}
+                                    className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm cursor-pointer"
+                                  >
+                                    <Layers size={14} />
+                                    <span>Open Project Space</span>
+                                  </a>
+                                  
+                                  {(project.user_id === user.id || currentUserRole === 'admin') && (
+                                    <>
+                                      <button
+                                        onClick={() => openEditModal(project)}
+                                        className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
+                                      >
+                                        <Edit3 size={14} />
+                                        <span>Edit Project</span>
+                                      </button>
+                                      
+                                      <button
+                                        onClick={() => openInviteModal(project)}
+                                        className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
+                                      >
+                                        <UserPlus size={14} />
+                                        <span>Invite Member</span>
+                                      </button>
+                                      
+                                      <button
+                                        onClick={() => openDeleteModal(project)}
+                                        className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left text-sm"
+                                      >
+                                        <Trash2 size={14} />
+                                        <span>Delete Project</span>
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             
-                            {project.description && (
-                              <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
-                                {project.description}
-                              </p>
-                            )}
-                            
-                            <div className="flex items-center justify-between mt-auto pt-4">
-                              <div className="flex items-center gap-3">
-                                <div className={`flex items-center gap-1 text-xs ${getVisibilityColor(project.visibility)}`}>
-                                  {getVisibilityIcon(project.visibility)}
-                                  <span>{getVisibilityText(project.visibility)}</span>
+                            {/* Project Content */}
+                            <div 
+                              className="flex-1 cursor-pointer"
+                              onClick={() => openProjectEditor(project)}
+                            >
+                              <div className="flex items-center gap-2 mb-4">
+                                <div className="p-2 bg-indigo-600/20 rounded-lg text-indigo-400">
+                                  <Layers size={18} />
                                 </div>
-                                
-                                <div className="flex items-center gap-1 text-xs text-zinc-500">
-                                  <Users size={12} />
-                                  <span>{project.member_count || 1}</span>
-                                </div>
+                                <h3 className="text-lg font-semibold text-white truncate">
+                                  {project.name}
+                                </h3>
                               </div>
                               
-                              <div className="text-xs text-zinc-500">
-                                {new Date(project.updated_at).toLocaleDateString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric'
-                                })}
+                              {project.description && (
+                                <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
+                                  {project.description}
+                                </p>
+                              )}
+                              
+                              <div className="flex items-center justify-between mt-auto pt-4">
+                                <div className="flex items-center gap-3">
+                                  <div className={`flex items-center gap-1 text-xs ${getVisibilityColor(project.visibility)}`}>
+                                    {getVisibilityIcon(project.visibility)}
+                                    <span>{getVisibilityText(project.visibility)}</span>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-1 text-xs text-zinc-500">
+                                    <Users size={12} />
+                                    <span>{project.member_count || 1}</span>
+                                  </div>
+                                </div>
+                                
+                                <div className="text-xs text-zinc-500">
+                                  {new Date(project.updated_at).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric'
+                                  })}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
-                        <Layers className="mx-auto text-zinc-500 mb-4" size={48} />
-                        <h3 className="text-xl font-semibold text-white mb-2">
-                          {searchQuery ? 'No matching projects' : 'No projects yet'}
-                        </h3>
-                        <p className="text-zinc-400 mb-6">
-                          {searchQuery 
-                            ? 'Try adjusting your search query' 
-                            : 'Create your first project to get started'
-                          }
-                        </p>
-                        {!searchQuery && (
-                          <button
-                            onClick={() => setShowCreateModal(true)}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
-                          >
-                            <Plus size={16} />
-                            <span>Create First Project</span>
-                          </button>
-                        )}
+                        ))}
                       </div>
-                    </div>
-                  )}
-                </>
-              )}
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
+                          <Layers className="mx-auto text-zinc-500 mb-4" size={48} />
+                          <h3 className="text-xl font-semibold text-white mb-2">
+                            {searchQuery ? 'No matching projects' : 'No projects yet'}
+                          </h3>
+                          <p className="text-zinc-400 mb-6">
+                            {searchQuery 
+                              ? 'Try adjusting your search query' 
+                              : 'Create your first project to get started'
+                            }
+                          </p>
+                          {!searchQuery && (
+                            <button
+                              onClick={() => setShowCreateModal(true)}
+                              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                            >
+                              <Plus size={16} />
+                              <span>Create First Project</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
+
+        <BoltBadge />
       </div>
 
       {/* Node Details Modal */}
@@ -1319,8 +1323,6 @@ export const ProjectSpacePage: React.FC = () => {
           onClose={() => setToast(null)}
         />
       )}
-
-      <BoltBadge />
-    </div>
+    </>
   )
 }
