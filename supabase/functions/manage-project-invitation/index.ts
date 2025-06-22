@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', 
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           autoRefreshToken: false,
@@ -105,13 +105,11 @@ Deno.serve(async (req) => {
     // Find the pending invitation
     const { data: invitation, error: invitationError } = await supabaseClient
       .from('project_members')
-      .select('id, status, project_id')
+      .select('id, status')
       .eq('project_id', project_id)
       .eq('user_id', user.id)
       .eq('status', 'pending')
       .single()
-
-    console.log('Invitation lookup result:', { invitation, error: invitationError?.message })
 
     if (invitationError || !invitation) {
       return new Response(
@@ -129,12 +127,9 @@ Deno.serve(async (req) => {
     // Update the invitation status
     const newStatus = action === 'accept' ? 'accepted' : 'declined'
     const { error: updateError } = await supabaseClient
-      .from('project_members') 
-      .update({ 
-        status: newStatus,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', invitation.id) 
+      .from('project_members')
+      .update({ status: newStatus })
+      .eq('id', invitation.id)
 
     if (updateError) {
       console.error('Database error:', updateError)
@@ -153,9 +148,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Invitation ${action}ed successfully`, 
-        status: newStatus,
-        project_id: invitation.project_id
+        message: `Invitation ${action}ed successfully`,
+        status: newStatus
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

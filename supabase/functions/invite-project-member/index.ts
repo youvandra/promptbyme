@@ -13,30 +13,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Check for required environment variables
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    
-    if (!supabaseUrl || !supabaseServiceRoleKey) {
-      console.error('Missing required environment variables:', {
-        SUPABASE_URL: !!supabaseUrl,
-        SUPABASE_SERVICE_ROLE_KEY: !!supabaseServiceRoleKey
-      })
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Server configuration error: Missing required environment variables'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
     // Create Supabase client
     const supabaseClient = createClient(
-      supabaseUrl,
-      supabaseServiceRoleKey,
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           autoRefreshToken: false,
@@ -54,7 +34,8 @@ Deno.serve(async (req) => {
           error: 'No authorization header provided'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
         }
       )
     }
@@ -70,7 +51,8 @@ Deno.serve(async (req) => {
           error: 'Invalid authentication token'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
         }
       )
     }
@@ -89,7 +71,8 @@ Deno.serve(async (req) => {
           error: 'Invalid JSON in request body'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
         }
       )
     }
@@ -101,7 +84,8 @@ Deno.serve(async (req) => {
           error: 'Project ID, email, and role are required'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
         }
       )
     }
@@ -113,7 +97,8 @@ Deno.serve(async (req) => {
           error: 'Invalid role specified'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
         }
       )
     }
@@ -123,29 +108,17 @@ Deno.serve(async (req) => {
       .from('flow_projects')
       .select('user_id')
       .eq('id', project_id)
-      .maybeSingle()
+      .single()
 
     if (projectError) {
-      console.error('Project query error:', projectError)
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Project not found: ' + projectError.message
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
-    if (!project) {
       return new Response(
         JSON.stringify({
           success: false,
           error: 'Project not found'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404,
         }
       )
     }
@@ -161,7 +134,7 @@ Deno.serve(async (req) => {
         .eq('project_id', project_id)
         .eq('user_id', user.id)
         .eq('status', 'accepted')
-        .maybeSingle()
+        .single()
 
       if (!memberError && memberData?.role === 'admin') {
         canInvite = true
@@ -175,7 +148,8 @@ Deno.serve(async (req) => {
           error: 'Access denied: You do not have permission to invite members'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
         }
       )
     }
@@ -183,33 +157,24 @@ Deno.serve(async (req) => {
     // Find the user to invite by email
     const { data: invitedUser, error: userError } = await supabaseClient
       .from('users')
-      .select('id, email')
+      .select('id')
       .eq('email', invited_user_email)
-      .maybeSingle()
+      .single()
 
     if (userError || !invitedUser) {
-      console.error('User lookup error:', userError)
-      
-      // Log more details about the query
-      console.log('User lookup details:', {
-        email: invited_user_email,
-        error: userError ? userError.message : 'No user found'
-      })
-      
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'User not found with the provided email address' + (userError ? ': ' + userError.message : '')
+          error: 'User not found with the provided email address'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404,
         }
       )
     }
 
     // Check if user is already a member or has a pending invitation
-    console.log('Found user:', invitedUser)
-    
     const { data: existingMember, error: existingError } = await supabaseClient
       .from('project_members')
       .select('id, status')
@@ -225,7 +190,8 @@ Deno.serve(async (req) => {
             error: 'User is already a member of this project'
           }),
           {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
           }
         )
       } else if (existingMember.status === 'pending') {
@@ -235,15 +201,14 @@ Deno.serve(async (req) => {
             error: 'User already has a pending invitation to this project'
           }),
           {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400,
           }
         )
       }
     }
 
     // Create the invitation
-    console.log('Creating invitation for user:', invitedUser.id)
-    
     const { data: invitation, error: inviteError } = await supabaseClient
       .from('project_members')
       .insert([{
@@ -264,23 +229,21 @@ Deno.serve(async (req) => {
           error: 'Failed to create invitation: ' + inviteError.message
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
         }
       )
     }
 
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         message: 'Invitation sent successfully',
-        invitation_id: invitation.id,
-        invited_user: {
-          id: invitedUser.id,
-          email: invitedUser.email
-        }
+        invitation_id: invitation.id
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
       }
     )
 
@@ -293,7 +256,8 @@ Deno.serve(async (req) => {
         error: error.message || 'An unexpected error occurred'
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
       }
     )
   }

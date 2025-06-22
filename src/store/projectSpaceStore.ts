@@ -640,14 +640,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     
     inviteProjectMember: async (projectId: string, email: string, role: ProjectMember['role']) => {
       try {
-        // Validate inputs
-        if (!projectId || !email || !role) {
-          throw new Error('Project ID, email, and role are required')
-        }
-        
-        // Log the request parameters
-        console.log('Inviting project member:', { projectId, email, role })
-        
         const { data, error } = await supabase.functions.invoke('invite-project-member', {
           body: {
             project_id: projectId,
@@ -658,10 +650,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
         if (error) throw error
 
-        // Log the response for debugging
-        console.log('Invite function response:', data)
-
-        if (!data || !data.success) {
+        if (!data.success) {
           throw new Error(data.error || 'Failed to send invitation')
         }
 
@@ -723,13 +712,11 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     fetchUserInvitations: async () => {
       set({ invitationsLoading: true })
       try {
-        const { data, error } = await supabase.functions.invoke('get-user-invitations', {
-          body: {} // Add empty body to ensure proper request format
-        })
+        const { data, error } = await supabase.functions.invoke('get-user-invitations')
 
         if (error) throw error
 
-        if (!data || !data.success) {
+        if (!data.success) {
           throw new Error(data.error || 'Failed to fetch invitations')
         }
 
@@ -744,11 +731,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     
     manageInvitation: async (projectId: string, action: 'accept' | 'decline') => {
       try {
-        // Validate inputs
-        if (!projectId || !action) {
-          throw new Error('Project ID and action are required')
-        }
-        
         const { data, error } = await supabase.functions.invoke('manage-project-invitation', {
           body: {
             project_id: projectId,
@@ -758,7 +740,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
         if (error) throw error
 
-        if (!data || !data.success) {
+        if (!data.success) {
           throw new Error(data.error || `Failed to ${action} invitation`)
         }
 
