@@ -798,7 +798,6 @@ export const ProjectSpacePage: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
       )}
 
       {/* Create Project Modal */}
