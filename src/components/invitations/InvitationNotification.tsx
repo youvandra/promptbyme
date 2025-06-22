@@ -32,14 +32,12 @@ export const InvitationNotification: React.FC = () => {
     try {
       await manageInvitation(projectId, action)
      
-      // If accepted, navigate to the specific project page, close notification and sidebar on mobile
-      if (action === 'accept') {
-        setIsExpanded(false)
+      // If accepted, navigate to the specific project page and close notification
+     if (action === 'accept') {
+       setIsExpanded(false)
         // Use replace to avoid adding to history stack
-        setTimeout(() => {
-          navigate(`/project/${projectId}`, { replace: true })
-        }, 300) // Small delay to allow UI to update
-      }
+        navigate(`/project/${projectId}`, { replace: true })
+     }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)
     } finally {
