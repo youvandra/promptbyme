@@ -258,6 +258,8 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     selectProject: async (project: FlowProject) => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
+        const projectId = project.id
+        set({ loadingProjectId: projectId })
         
         if (!user) {
           set({ loading: false, loadingProjectId: null })
@@ -266,6 +268,18 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
         // Set loading state to true while fetching project data
         set({ loading: true, selectedProject: null })
+        
+        // Check if project exists
+        const { data: projectData, error: projectError } = await supabase
+          .from('flow_projects')
+          .select('*')
+          .eq('id', project.id)
+          .single()
+          
+        if (projectError || !projectData) {
+          set({ loading: false, loadingProjectId: null })
+          throw new Error('Project not found or access denied')
+        }
         
         // Fetch nodes and connections for the selected project
         const [nodesResult, connectionsResult] = await Promise.all([

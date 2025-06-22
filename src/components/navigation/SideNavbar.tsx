@@ -276,6 +276,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
               <Link
                 to={location.pathname} 
                 onClick={() => {
+                  // Just close the sidebar on mobile, navigation will happen through the link
                   if (window.innerWidth < 1024) {
                     onToggle()
                   }

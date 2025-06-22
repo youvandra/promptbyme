@@ -255,20 +255,7 @@ export const ProjectSpacePage: React.FC = () => {
 
   const openProjectEditor = (project: FlowProject) => {
     // Navigate to the project page with the project ID in the URL
-    setIsLoading(true)
-    setLoadingProjectId(project.id) 
-    useProjectSpaceStore.getState().selectProject(project)
-      .then(() => {
-        navigate(`/project/${project.id}`, { replace: true })
-        setLoadingProjectId(null)
-        setIsLoading(false)
-      })
-      .catch(error => {
-        console.error('Failed to select project:', error)
-        setToast({ message: 'Failed to load project', type: 'error' })
-        setLoadingProjectId(null)
-        setIsLoading(false)
-      })
+    navigate(`/project/${project.id}`)
   }
 
   const openEditModal = (project: FlowProject) => {
@@ -463,10 +450,7 @@ export const ProjectSpacePage: React.FC = () => {
                             <div
                               onClick={(e) => {
                                 e.stopPropagation()
-                                setShowProjectMenu(null)
-                                if (loadingProjectId !== project.id) {
-                                  openProjectEditor(project) 
-                                }
+                               navigate(`/project/${project.id}`)
                               }}
                               className={`w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm ${loadingProjectId === project.id || storeLoadingProjectId === project.id ? 'cursor-wait opacity-50' : 'cursor-pointer'}`}
                             >
@@ -850,8 +834,11 @@ export const ProjectSpacePage: React.FC = () => {
                     </div>
                   </div>
                 )}
-              </div>
-
+                  {/* Project Content - Make entire card clickable */}
+                  <div 
+                    className="flex-1 cursor-pointer" 
+                    onClick={() => navigate(`/project/${project.id}`)}
+                  >
               {/* Footer */}
               <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800/50">
                 <button
