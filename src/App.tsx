@@ -8,25 +8,14 @@ import { PublicProfilePage } from './pages/public-profile/PublicProfilePage'
 import { PlaygroundPage } from './pages/playground/PlaygroundPage'
 import { InvitationNotification } from './components/invitations/InvitationNotification'
 import { ProjectSpacePage } from './pages/project-space/ProjectSpacePage'
-import { ProfilePage } from './pages/profile/ProfilePage'
-import { PublicProfilePage } from './pages/public-profile/PublicProfilePage'
-import { PlaygroundPage } from './pages/playground/PlaygroundPage'
-import { InvitationNotification } from './components/invitations/InvitationNotification'
-import { ProjectSpacePage } from './pages/project-space/ProjectSpacePage'
 
 function App() {
   return (
     <Router>
       <InvitationNotification />
-      <InvitationNotification />
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
-        <Route path="/playground" element={<PlaygroundPage />} />
-        <Route path="/project-space" element={<ProjectSpacePage />} />
-        <Route path="/project/:projectId" element={<ProjectSpacePage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/:username" element={<PublicProfilePage />} />
-        <Route path="/:username/:id" element={<SharedPromptPage />} />
         <Route path="/playground" element={<PlaygroundPage />} />
         <Route path="/project-space" element={<ProjectSpacePage />} />
         <Route path="/project/:projectId" element={<ProjectSpacePage />} />

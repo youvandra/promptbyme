@@ -192,8 +192,7 @@ export const ProjectSpacePage: React.FC = () => {
   }
 
   const openProjectEditor = (project: FlowProject) => {
-    // Navigate to the project page with the project ID
-    window.location.href = `/project/${project.id}`
+    navigate(`/project/${project.id}`)
   }
 
   const openEditModal = (project: FlowProject) => {
@@ -388,7 +387,7 @@ export const ProjectSpacePage: React.FC = () => {
                               className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm cursor-pointer"
                             >
                               <Layers size={14} />
-                              <span>Open Project Space</span>
+                              <span>Open Project</span>
                             </a>
                             
                             {(project.user_id === user.id || currentUserRole === 'admin') && (

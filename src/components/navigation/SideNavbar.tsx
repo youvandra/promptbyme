@@ -107,7 +107,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       // If accepted, navigate to the specific project page
       if (action === 'accept') {
         setShowNotifications(false)
-        window.location.href = `/project/${projectId}`
+        navigate(`/project/${projectId}`)
       }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)
