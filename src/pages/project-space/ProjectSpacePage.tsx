@@ -1,247 +1,252 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   Menu, 
   Plus, 
-  Layers, 
-  Search, 
-  Settings, 
   Trash2, 
-  Edit3, 
+  Settings, 
+  Share2, 
   Users, 
-  Globe, 
-  Lock, 
+  X, 
+  Save,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Globe,
   UserPlus,
-  MoreHorizontal,
-  X,
   Mail,
   Check,
-  AlertTriangle
+  Layers,
+  Edit
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { SideNavbar } from '../../components/navigation/SideNavbar'
-import { BoltBadge } from '../../components/ui/BoltBadge'
-import { Toast } from '../../components/ui/Toast'
-import { useAuthStore } from '../../store/authStore'
-import { useProjectSpaceStore, FlowProject } from '../../store/projectSpaceStore'
+import { NodeEditorModal } from '../../components/project-space/NodeEditorModal'
+import { NodeDetailsModal } from '../../components/project-space/NodeDetailsModal'
+import { PromptImportModal } from '../../components/project-space/PromptImportModal'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
+import { Toast } from '../../components/ui/Toast'
+import { BoltBadge } from '../../components/ui/BoltBadge'
+import { SideNavbar } from '../../components/navigation/SideNavbar'
+import { useAuthStore } from '../../store/authStore'
+import { useProjectSpaceStore, FlowNode } from '../../store/projectSpaceStore'
 
 export const ProjectSpacePage: React.FC = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null)
+  const [showNodeEditor, setShowNodeEditor] = useState(false)
+  const [showNodeDetails, setShowNodeDetails] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [showProjectSettings, setShowProjectSettings] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
-  const [projectName, setProjectName] = useState('')
-  const [projectDescription, setProjectDescription] = useState('')
-  const [projectVisibility, setProjectVisibility] = useState<'private' | 'team' | 'public'>('private')
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
-  const [selectedProject, setSelectedProject] = useState<FlowProject | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [showProjectMenu, setShowProjectMenu] = useState<string | null>(null)
+  const [isInviting, setIsInviting] = useState(false)
+  const [projectNameInput, setProjectNameInput] = useState('')
+  const [projectDescriptionInput, setProjectDescriptionInput] = useState('')
+  const [projectVisibilityInput, setProjectVisibilityInput] = useState<'private' | 'team' | 'public'>('private')
+  const [isSaving, setIsSaving] = useState(false)
+  const [isCreatingProject, setIsCreatingProject] = useState(false)
+  const [newProjectName, setNewProjectName] = useState('')
+  const [showCreateProject, setShowCreateProject] = useState(false)
+  const canvasRef = useRef<HTMLDivElement>(null)
   
   const { user, loading: authLoading } = useAuthStore()
   const { 
-    projects, 
-    loading: projectsLoading, 
+    projects,
+    selectedProject,
+    currentUserRole,
+    loading,
     fetchProjects,
     createProject,
+    selectProject,
     updateProject,
-    deleteProject,
-    selectedProject: currentProject,
-    currentUserRole,
+    createNode,
+    updateNode,
+    deleteNode,
+    createConnection,
+    deleteConnection,
     inviteProjectMember
   } = useProjectSpaceStore()
-  
-  const navigate = useNavigate()
-  const menuRef = useRef<HTMLDivElement>(null)
 
+  // Load projects on mount
   useEffect(() => {
-    if (user && !authLoading) {
+    if (user) {
       fetchProjects()
     }
-  }, [user, authLoading, fetchProjects])
+  }, [user, fetchProjects])
 
-  // Close dropdown when clicking outside
+  // Select first project if none selected
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowProjectMenu(null)
-      }
+    if (!loading && projects.length > 0 && !selectedProject) {
+      selectProject(projects[0])
     }
-    
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [loading, projects, selectedProject, selectProject])
 
-  const filteredProjects = projects.filter(project => 
-    project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (project.description && project.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  )
+  // Initialize project form inputs when project changes
+  useEffect(() => {
+    if (selectedProject) {
+      setProjectNameInput(selectedProject.name)
+      setProjectDescriptionInput(selectedProject.description || '')
+      setProjectVisibilityInput(selectedProject.visibility || 'private')
+    }
+  }, [selectedProject])
 
   const handleCreateProject = async () => {
-    if (!projectName.trim()) return
+    if (!newProjectName.trim()) return
     
-    setIsLoading(true)
+    setIsCreatingProject(true)
     try {
-      const newProject = await createProject(
-        projectName.trim(), 
-        projectDescription.trim() || undefined,
-        projectVisibility
-      )
-      
+      const project = await createProject(newProjectName.trim())
+      await selectProject(project)
+      setShowCreateProject(false)
+      setNewProjectName('')
       setToast({ message: 'Project created successfully', type: 'success' })
-      setShowCreateModal(false)
-      setProjectName('')
-      setProjectDescription('')
-      setProjectVisibility('private')
-      
-      // Navigate to the new project
-      navigate(`/project-space?project=${newProject.id}`)
     } catch (error) {
       console.error('Failed to create project:', error)
       setToast({ message: 'Failed to create project', type: 'error' })
     } finally {
-      setIsLoading(false)
+      setIsCreatingProject(false)
     }
   }
 
-  const handleEditProject = async () => {
-    if (!selectedProject || !projectName.trim()) return
+  const handleSaveProject = async () => {
+    if (!selectedProject || !projectNameInput.trim()) return
     
-    setIsLoading(true)
+    setIsSaving(true)
     try {
       await updateProject(selectedProject.id, {
-        name: projectName.trim(),
-        description: projectDescription.trim() || null,
-        visibility: projectVisibility
+        name: projectNameInput.trim(),
+        description: projectDescriptionInput.trim() || null,
+        visibility: projectVisibilityInput
       })
-      
-      setToast({ message: 'Project updated successfully', type: 'success' })
-      setShowEditModal(false)
+      setShowProjectSettings(false)
+      setToast({ message: 'Project settings saved', type: 'success' })
     } catch (error) {
-      console.error('Failed to update project:', error)
-      setToast({ message: 'Failed to update project', type: 'error' })
+      console.error('Failed to save project:', error)
+      setToast({ message: 'Failed to save project', type: 'error' })
     } finally {
-      setIsLoading(false)
+      setIsSaving(false)
     }
   }
 
-  const handleDeleteProject = async () => {
-    if (!selectedProject) return
+  const handleAddNode = async (type: FlowNode['type']) => {
+    if (!selectedProject || !canvasRef.current) return
     
-    setIsLoading(true)
+    // Calculate center position of the canvas
+    const canvasRect = canvasRef.current.getBoundingClientRect()
+    const position = {
+      x: canvasRect.width / 2,
+      y: canvasRect.height / 2
+    }
+    
     try {
-      await deleteProject(selectedProject.id)
+      // Create a temporary node for the editor
+      const tempNode: FlowNode = {
+        id: `temp-${Date.now()}`,
+        project_id: selectedProject.id,
+        type,
+        title: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+        content: '',
+        position,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
       
-      setToast({ message: 'Project deleted successfully', type: 'success' })
-      setShowDeleteModal(false)
-      setSelectedProject(null)
+      setSelectedNode(tempNode)
+      setShowNodeEditor(true)
     } catch (error) {
-      console.error('Failed to delete project:', error)
-      setToast({ message: 'Failed to delete project', type: 'error' })
-    } finally {
-      setIsLoading(false)
+      console.error('Failed to add node:', error)
+      setToast({ message: 'Failed to add node', type: 'error' })
+    }
+  }
+
+  const handleImportPrompt = () => {
+    if (!selectedProject) return
+    setShowImportModal(true)
+  }
+
+  const handlePromptSelected = async (prompt: any) => {
+    if (!selectedProject || !canvasRef.current) return
+    
+    // Calculate center position of the canvas
+    const canvasRect = canvasRef.current.getBoundingClientRect()
+    const position = {
+      x: canvasRect.width / 2,
+      y: canvasRect.height / 2
+    }
+    
+    try {
+      // Create a node with the imported prompt
+      const node = await createNode(
+        selectedProject.id,
+        'prompt',
+        position,
+        prompt.id
+      )
+      
+      if (node) {
+        setToast({ message: 'Prompt imported successfully', type: 'success' })
+      }
+    } catch (error) {
+      console.error('Failed to import prompt:', error)
+      setToast({ message: 'Failed to import prompt', type: 'error' })
+    }
+  }
+
+  const handleNodeSave = async (nodeId: string, updates: Partial<FlowNode>) => {
+    try {
+      await updateNode(nodeId, updates)
+      setToast({ message: 'Node saved successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to save node:', error)
+      setToast({ message: 'Failed to save node', type: 'error' })
+    }
+  }
+
+  const handleNodeDelete = async (nodeId: string) => {
+    try {
+      await deleteNode(nodeId)
+      setToast({ message: 'Node deleted successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to delete node:', error)
+      setToast({ message: 'Failed to delete node', type: 'error' })
     }
   }
 
   const handleInviteMember = async () => {
-    if (!selectedProject || !inviteEmail.trim()) return
-    
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(inviteEmail)) {
-      setToast({ message: 'Please enter a valid email address', type: 'error' })
+    if (!selectedProject || !inviteEmail.trim() || !inviteRole) {
+      setToast({ message: 'Please enter an email and select a role', type: 'error' })
       return
     }
     
-    setIsLoading(true)
+    setIsInviting(true)
     try {
-      await inviteProjectMember(selectedProject.id, inviteEmail.trim(), inviteRole)
-      
-      setToast({ message: 'Invitation sent successfully', type: 'success' })
-      setShowInviteModal(false)
+      await inviteProjectMember(
+        selectedProject.id,
+        inviteEmail.trim(),
+        inviteRole
+      )
       setInviteEmail('')
-      setInviteRole('viewer')
+      setShowInviteModal(false)
+      setToast({ message: 'Invitation sent successfully', type: 'success' })
     } catch (error: any) {
       console.error('Failed to invite member:', error)
-      setToast({ 
-        message: error.message || 'Failed to invite member', 
-        type: 'error' 
-      })
+      setToast({ message: `Error inviting project member: ${error.message || 'Unknown error'}`, type: 'error' })
     } finally {
-      setIsLoading(false)
+      setIsInviting(false)
     }
   }
 
-  const openProjectEditor = (project: FlowProject) => {
-    navigate(`/project-space?project=${project.id}`)
-  }
-
-  const openEditModal = (project: FlowProject) => {
-    setSelectedProject(project)
-    setProjectName(project.name)
-    setProjectDescription(project.description || '')
-    setProjectVisibility(project.visibility as 'private' | 'team' | 'public')
-    setShowEditModal(true)
-    setShowProjectMenu(null)
-  }
-
-  const openDeleteModal = (project: FlowProject) => {
-    setSelectedProject(project)
-    setShowDeleteModal(true)
-    setShowProjectMenu(null)
-  }
-
-  const openInviteModal = (project: FlowProject) => {
-    setSelectedProject(project)
-    setShowInviteModal(true)
-    setShowProjectMenu(null)
-  }
-
-  const getVisibilityIcon = (visibility: string) => {
-    switch (visibility) {
-      case 'public':
-        return <Globe size={14} className="text-emerald-400" />
-      case 'team':
-        return <Users size={14} className="text-blue-400" />
-      default:
-        return <Lock size={14} className="text-amber-400" />
-    }
-  }
-
-  const getVisibilityText = (visibility: string) => {
-    switch (visibility) {
-      case 'public':
-        return 'Public'
-      case 'team':
-        return 'Team'
-      default:
-        return 'Private'
-    }
-  }
-
-  const getVisibilityColor = (visibility: string) => {
-    switch (visibility) {
-      case 'public':
-        return 'text-emerald-400'
-      case 'team':
-        return 'text-blue-400'
-      default:
-        return 'text-amber-400'
-    }
-  }
-
-  if (authLoading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="text-zinc-400">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-            <span>Loading...</span>
+            <span>Loading project space...</span>
           </div>
         </div>
       </div>
@@ -253,7 +258,9 @@ export const ProjectSpacePage: React.FC = () => {
       <div className="min-h-screen bg-zinc-950 text-white relative">
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <Layers className="mx-auto text-zinc-400 mb-4" size={64} />
+            <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Layers size={32} className="text-indigo-400" />
+            </div>
             <h1 className="text-4xl font-bold text-white mb-4">
               Access Required
             </h1>
@@ -300,194 +307,296 @@ export const ProjectSpacePage: React.FC = () => {
 
           {/* Content */}
           <div className="relative z-10 flex-1">
-            <div className="w-full max-w-7xl px-6 mx-auto py-8">
-              {/* Page Header */}
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-                <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">
-                    Project Space
-                  </h1>
-                  <p className="text-zinc-400">
-                    Create and manage your prompt flow projects
-                  </p>
-                </div>
-                
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover self-start"
-                >
-                  <Plus size={16} />
-                  <span>New Project</span>
-                </button>
-              </div>
-
-              {/* Search Bar */}
-              <div className="mb-8">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search projects..."
-                    className="w-full bg-zinc-900/50 border border-zinc-800/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                  />
-                </div>
-              </div>
-
-              {/* Projects Grid */}
-              {projectsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="flex items-center gap-2 text-zinc-400">
-                    <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-                    <span>Loading projects...</span>
-                  </div>
-                </div>
-              ) : filteredProjects.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredProjects.map((project) => (
-                    <div
-                      key={project.id}
-                      className="group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full"
-                    >
-                      {/* Project Menu */}
-                      <div className="absolute top-4 right-4">
+            <div className="w-full h-full flex flex-col">
+              {/* Project Header */}
+              <div className="border-b border-zinc-800/50 backdrop-blur-xl">
+                <div className="px-6 py-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      {/* Project Selector */}
+                      <div className="relative">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setShowProjectMenu(showProjectMenu === project.id ? null : project.id)
-                          }}
-                          className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                          onClick={() => setShowCreateProject(!showCreateProject)}
+                          className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200"
                         >
-                          <MoreHorizontal size={16} />
+                          {selectedProject ? (
+                            <span className="font-medium">{selectedProject.name}</span>
+                          ) : (
+                            <span className="text-zinc-400">Select Project</span>
+                          )}
+                          <ChevronDown size={16} className="text-zinc-400" />
                         </button>
                         
-                        {showProjectMenu === project.id && (
-                          <div 
-                            ref={menuRef}
-                            className="absolute top-full right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-48 py-1"
-                          >
-                            <button
-                              onClick={() => openProjectEditor(project)}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
+                        <AnimatePresence>
+                          {showCreateProject && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-64"
                             >
-                              <Layers size={14} />
-                              <span>Open Project</span>
-                            </button>
-                            
-                            {(project.user_id === user.id || currentUserRole === 'admin') && (
-                              <>
-                                <button
-                                  onClick={() => openEditModal(project)}
-                                  className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
-                                >
-                                  <Edit3 size={14} />
-                                  <span>Edit Project</span>
-                                </button>
+                              <div className="p-3">
+                                {projects.length > 0 && (
+                                  <>
+                                    <div className="text-xs font-medium text-zinc-500 mb-2 px-2">
+                                      Your Projects
+                                    </div>
+                                    <div className="space-y-1 mb-3">
+                                      {projects.map(project => (
+                                        <button
+                                          key={project.id}
+                                          onClick={() => {
+                                            selectProject(project)
+                                            setShowCreateProject(false)
+                                          }}
+                                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
+                                            selectedProject?.id === project.id 
+                                              ? 'bg-indigo-600/20 text-indigo-300' 
+                                              : 'text-zinc-300 hover:bg-zinc-800/50'
+                                          }`}
+                                        >
+                                          <Layers size={14} />
+                                          <span className="text-sm truncate">{project.name}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                    <div className="border-t border-zinc-800 my-2"></div>
+                                  </>
+                                )}
                                 
-                                <button
-                                  onClick={() => openInviteModal(project)}
-                                  className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
-                                >
-                                  <UserPlus size={14} />
-                                  <span>Invite Member</span>
-                                </button>
-                                
-                                <button
-                                  onClick={() => openDeleteModal(project)}
-                                  className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left text-sm"
-                                >
-                                  <Trash2 size={14} />
-                                  <span>Delete Project</span>
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        )}
+                                <div className="p-2">
+                                  <div className="text-xs font-medium text-zinc-500 mb-2 px-2">
+                                    Create New Project
+                                  </div>
+                                  <div className="space-y-2">
+                                    <input
+                                      type="text"
+                                      value={newProjectName}
+                                      onChange={(e) => setNewProjectName(e.target.value)}
+                                      placeholder="Project name"
+                                      className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 text-sm"
+                                    />
+                                    <button
+                                      onClick={handleCreateProject}
+                                      disabled={!newProjectName.trim() || isCreatingProject}
+                                      className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-lg transition-all duration-200 text-sm"
+                                    >
+                                      {isCreatingProject ? (
+                                        <>
+                                          <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                          <span>Creating...</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Plus size={14} />
+                                          <span>Create Project</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                       
-                      {/* Project Content */}
-                      <div 
-                        className="flex-1 cursor-pointer"
-                        onClick={() => openProjectEditor(project)}
-                      >
-                        <div className="flex items-center gap-2 mb-4">
-                          <div className="p-2 bg-indigo-600/20 rounded-lg text-indigo-400">
-                            <Layers size={18} />
-                          </div>
-                          <h3 className="text-lg font-semibold text-white truncate">
-                            {project.name}
-                          </h3>
+                      {/* Project Visibility */}
+                      {selectedProject && (
+                        <div className="flex items-center gap-2 text-sm">
+                          {selectedProject.visibility === 'private' ? (
+                            <>
+                              <EyeOff size={14} className="text-amber-400" />
+                              <span className="text-amber-400">Private</span>
+                            </>
+                          ) : selectedProject.visibility === 'team' ? (
+                            <>
+                              <Users size={14} className="text-blue-400" />
+                              <span className="text-blue-400">Team</span>
+                            </>
+                          ) : (
+                            <>
+                              <Globe size={14} className="text-emerald-400" />
+                              <span className="text-emerald-400">Public</span>
+                            </>
+                          )}
                         </div>
-                        
-                        {project.description && (
-                          <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
-                            {project.description}
-                          </p>
-                        )}
-                        
-                        <div className="flex items-center justify-between mt-auto pt-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`flex items-center gap-1 text-xs ${getVisibilityColor(project.visibility)}`}>
-                              {getVisibilityIcon(project.visibility)}
-                              <span>{getVisibilityText(project.visibility)}</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-1 text-xs text-zinc-500">
-                              <Users size={12} />
-                              <span>{project.member_count || 1}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="text-xs text-zinc-500">
-                            {new Date(project.updated_at).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            })}
-                          </div>
-                        </div>
-                      </div>
+                      )}
+                      
+                      {/* Team Members Display */}
+                      {selectedProject && (
+                        <TeamMembersDisplay 
+                          projectId={selectedProject.id}
+                          currentUserRole={currentUserRole}
+                        />
+                      )}
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
-                    <Layers className="mx-auto text-zinc-500 mb-4" size={48} />
-                    <h3 className="text-xl font-semibold text-white mb-2">
-                      {searchQuery ? 'No matching projects' : 'No projects yet'}
-                    </h3>
-                    <p className="text-zinc-400 mb-6">
-                      {searchQuery 
-                        ? 'Try adjusting your search query' 
-                        : 'Create your first project to get started'
-                      }
-                    </p>
-                    {!searchQuery && (
-                      <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
-                      >
-                        <Plus size={16} />
-                        <span>Create First Project</span>
-                      </button>
-                    )}
+                    
+                    <div className="flex items-center gap-2">
+                      {/* Invite Member Button */}
+                      {selectedProject && (currentUserRole === 'admin' || selectedProject.user_id === user.id) && (
+                        <button
+                          onClick={() => setShowInviteModal(true)}
+                          className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
+                        >
+                          <UserPlus size={14} className="text-indigo-400" />
+                          <span>Invite</span>
+                        </button>
+                      )}
+                      
+                      {/* Project Settings Button */}
+                      {selectedProject && (
+                        <button
+                          onClick={() => setShowProjectSettings(true)}
+                          className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
+                        >
+                          <Settings size={14} className="text-zinc-400" />
+                          <span>Settings</span>
+                        </button>
+                      )}
+                      
+                      {/* Share Button */}
+                      {selectedProject && (
+                        <button
+                          className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
+                        >
+                          <Share2 size={14} className="text-zinc-400" />
+                          <span>Share</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Canvas Area */}
+              <div 
+                ref={canvasRef}
+                className="flex-1 bg-zinc-900/30 p-6 overflow-auto"
+              >
+                {selectedProject ? (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <Layers size={32} className="text-indigo-400" />
+                      </div>
+                      <h2 className="text-xl font-semibold text-white mb-2">
+                        Project Canvas
+                      </h2>
+                      <p className="text-zinc-400 mb-6 max-w-md">
+                        This is where your project nodes and connections will appear. 
+                        Start by adding nodes to your project.
+                      </p>
+                      <div className="flex flex-wrap items-center justify-center gap-3">
+                        <button
+                          onClick={() => handleAddNode('input')}
+                          className="flex items-center gap-2 px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 transform hover:scale-105"
+                        >
+                          <Plus size={16} />
+                          <span>Add Input</span>
+                        </button>
+                        <button
+                          onClick={() => handleAddNode('prompt')}
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 transform hover:scale-105"
+                        >
+                          <Plus size={16} />
+                          <span>Add Prompt</span>
+                        </button>
+                        <button
+                          onClick={() => handleImportPrompt()}
+                          className="flex items-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 transform hover:scale-105"
+                        >
+                          <Plus size={16} />
+                          <span>Import Prompt</span>
+                        </button>
+                        <button
+                          onClick={() => handleAddNode('condition')}
+                          className="flex items-center gap-2 px-4 py-2 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 transform hover:scale-105"
+                        >
+                          <Plus size={16} />
+                          <span>Add Condition</span>
+                        </button>
+                        <button
+                          onClick={() => handleAddNode('output')}
+                          className="flex items-center gap-2 px-4 py-2 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 transform hover:scale-105"
+                        >
+                          <Plus size={16} />
+                          <span>Add Output</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                        <Layers size={32} className="text-indigo-400" />
+                      </div>
+                      <h2 className="text-xl font-semibold text-white mb-2">
+                        No Project Selected
+                      </h2>
+                      <p className="text-zinc-400 mb-6">
+                        Select an existing project or create a new one to get started.
+                      </p>
+                      <button
+                        onClick={() => setShowCreateProject(true)}
+                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 mx-auto"
+                      >
+                        <Plus size={16} />
+                        <span>Create Project</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Create Project Modal */}
+      {/* Node Editor Modal */}
+      <NodeEditorModal
+        isOpen={showNodeEditor}
+        onClose={() => {
+          setShowNodeEditor(false)
+          setSelectedNode(null)
+        }}
+        node={selectedNode}
+        onSave={handleNodeSave}
+      />
+
+      {/* Node Details Modal */}
+      <NodeDetailsModal
+        isOpen={showNodeDetails}
+        onClose={() => {
+          setShowNodeDetails(false)
+          setSelectedNode(null)
+        }}
+        node={selectedNode}
+        onEdit={(nodeId) => {
+          const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+          if (node) {
+            setSelectedNode(node)
+            setShowNodeEditor(true)
+          }
+        }}
+      />
+
+      {/* Prompt Import Modal */}
+      <PromptImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSelectPrompt={handlePromptSelected}
+      />
+
+      {/* Project Settings Modal */}
       <AnimatePresence>
-        {showCreateModal && (
+        {showProjectSettings && selectedProject && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowProjectSettings(false)} />
             
             <motion.div 
-              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-md"
+              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-lg overflow-hidden flex flex-col"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -496,11 +605,11 @@ export const ProjectSpacePage: React.FC = () => {
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-zinc-800/50">
                 <h2 className="text-xl font-semibold text-white">
-                  Create New Project
+                  Project Settings
                 </h2>
                 
                 <button
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => setShowProjectSettings(false)}
                   className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
                 >
                   <X size={20} />
@@ -511,335 +620,114 @@ export const ProjectSpacePage: React.FC = () => {
               <div className="p-6 space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Project Name *
+                    Project Name
                   </label>
                   <input
                     type="text"
-                    value={projectName}
-                    onChange={(e) => setProjectName(e.target.value)}
+                    value={projectNameInput}
+                    onChange={(e) => setProjectNameInput(e.target.value)}
                     placeholder="Enter project name"
                     className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                    autoFocus
                   />
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={projectDescription}
-                    onChange={(e) => setProjectDescription(e.target.value)}
-                    placeholder="Optional description"
-                    rows={3}
-                    className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Visibility
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <button
-                      onClick={() => setProjectVisibility('private')}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
-                        projectVisibility === 'private' 
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
-                          : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
-                      }`}
-                    >
-                      <Lock size={20} />
-                      <span className="text-xs font-medium">Private</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => setProjectVisibility('team')}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
-                        projectVisibility === 'team' 
-                          ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' 
-                          : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
-                      }`}
-                    >
-                      <Users size={20} />
-                      <span className="text-xs font-medium">Team</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => setProjectVisibility('public')}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
-                        projectVisibility === 'public' 
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                          : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
-                      }`}
-                    >
-                      <Globe size={20} />
-                      <span className="text-xs font-medium">Public</span>
-                    </button>
-                  </div>
-                  
-                  <p className="mt-2 text-xs text-zinc-500">
-                    {projectVisibility === 'private' 
-                      ? 'Only you can access this project' 
-                      : projectVisibility === 'team' 
-                        ? 'You and team members can access this project'
-                        : 'Anyone can view this project'
-                    }
-                  </p>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800/50">
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateProject}
-                  disabled={isLoading || !projectName.trim()}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Creating...</span>
-                    </>
-                  ) : (
-                    <span>Create Project</span>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Edit Project Modal */}
-      <AnimatePresence>
-        {showEditModal && selectedProject && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowEditModal(false)} />
-            
-            <motion.div 
-              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-md"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-zinc-800/50">
-                <h2 className="text-xl font-semibold text-white">
-                  Edit Project
-                </h2>
                 
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Project Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={projectName}
-                    onChange={(e) => setProjectName(e.target.value)}
-                    placeholder="Enter project name"
-                    className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                    autoFocus
-                  />
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
                     Description
                   </label>
                   <textarea
-                    value={projectDescription}
-                    onChange={(e) => setProjectDescription(e.target.value)}
-                    placeholder="Optional description"
+                    value={projectDescriptionInput}
+                    onChange={(e) => setProjectDescriptionInput(e.target.value)}
+                    placeholder="Enter project description (optional)"
                     rows={3}
                     className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
                   />
                 </div>
-
+                
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  <label className="block text-sm font-medium text-zinc-300 mb-3">
                     Visibility
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <button
-                      onClick={() => setProjectVisibility('private')}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
-                        projectVisibility === 'private' 
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
+                      onClick={() => setProjectVisibilityInput('private')}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                        projectVisibilityInput === 'private' 
+                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' 
                           : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
                       }`}
                     >
-                      <Lock size={20} />
-                      <span className="text-xs font-medium">Private</span>
+                      <EyeOff size={20} />
+                      <span className="text-sm font-medium">Private</span>
+                      <span className="text-xs text-center">Only you can access</span>
                     </button>
                     
                     <button
-                      onClick={() => setProjectVisibility('team')}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
-                        projectVisibility === 'team' 
-                          ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' 
+                      onClick={() => setProjectVisibilityInput('team')}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                        projectVisibilityInput === 'team' 
+                          ? 'bg-blue-500/10 border-blue-500/30 text-blue-300' 
                           : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
                       }`}
                     >
                       <Users size={20} />
-                      <span className="text-xs font-medium">Team</span>
+                      <span className="text-sm font-medium">Team</span>
+                      <span className="text-xs text-center">You and team members</span>
                     </button>
                     
                     <button
-                      onClick={() => setProjectVisibility('public')}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
-                        projectVisibility === 'public' 
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                      onClick={() => setProjectVisibilityInput('public')}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                        projectVisibilityInput === 'public' 
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
                           : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
                       }`}
                     >
                       <Globe size={20} />
-                      <span className="text-xs font-medium">Public</span>
+                      <span className="text-sm font-medium">Public</span>
+                      <span className="text-xs text-center">Anyone can view</span>
                     </button>
                   </div>
-                  
-                  <p className="mt-2 text-xs text-zinc-500">
-                    {projectVisibility === 'private' 
-                      ? 'Only you can access this project' 
-                      : projectVisibility === 'team' 
-                        ? 'You and team members can access this project'
-                        : 'Anyone can view this project'
-                    }
-                  </p>
                 </div>
-
-                {/* Team Members Display */}
-                {selectedProject && (
-                  <div className="pt-4 border-t border-zinc-800/50">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-medium text-zinc-300">Team Members</h3>
-                      <TeamMembersDisplay 
-                        projectId={selectedProject.id}
-                        currentUserRole={currentUserRole}
-                      />
-                    </div>
-                  </div>
-                )}
+                
+                <div className="pt-4 border-t border-zinc-800/50">
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+                        // Delete project logic here
+                      }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200 text-sm"
+                  >
+                    <Trash2 size={16} />
+                    <span>Delete Project</span>
+                  </button>
+                </div>
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800/50">
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800/50 bg-zinc-900/30">
                 <button
-                  onClick={() => setShowEditModal(false)}
+                  onClick={() => setShowProjectSettings(false)}
                   className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleEditProject}
-                  disabled={isLoading || !projectName.trim()}
+                  onClick={handleSaveProject}
+                  disabled={isSaving || !projectNameInput.trim()}
                   className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? (
+                  {isSaving ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       <span>Saving...</span>
                     </>
                   ) : (
-                    <span>Save Changes</span>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Delete Project Modal */}
-      <AnimatePresence>
-        {showDeleteModal && selectedProject && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDeleteModal(false)} />
-            
-            <motion.div 
-              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-md"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              {/* Header */}
-              <div className="flex items-center gap-3 p-6 border-b border-zinc-800/50">
-                <div className="p-2 bg-red-500/20 rounded-lg">
-                  <AlertTriangle size={20} className="text-red-400" />
-                </div>
-                <h2 className="text-xl font-semibold text-white">
-                  Delete Project
-                </h2>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <p className="text-zinc-300 mb-4">
-                  Are you sure you want to delete <span className="font-semibold text-white">{selectedProject.name}</span>? This action cannot be undone.
-                </p>
-                
-                <p className="text-zinc-400 text-sm mb-4">
-                  All project data, including nodes and connections, will be permanently deleted.
-                </p>
-                
-                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-                  <p className="text-red-400 text-sm">
-                    Type <span className="font-mono font-bold">delete</span> to confirm
-                  </p>
-                  <input
-                    type="text"
-                    placeholder="delete"
-                    className="mt-2 w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all duration-200"
-                    onChange={(e) => {
-                      // Enable the delete button only if the user types "delete"
-                      const deleteButton = document.getElementById('delete-button') as HTMLButtonElement
-                      if (deleteButton) {
-                        deleteButton.disabled = e.target.value !== 'delete'
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800/50">
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  id="delete-button"
-                  onClick={handleDeleteProject}
-                  disabled={true} // Disabled by default, enabled when user types "delete"
-                  className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Deleting...</span>
+                      <Save size={16} />
+                      <span>Save Changes</span>
                     </>
-                  ) : (
-                    <span>Delete Project</span>
                   )}
                 </button>
               </div>
@@ -855,7 +743,7 @@ export const ProjectSpacePage: React.FC = () => {
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowInviteModal(false)} />
             
             <motion.div 
-              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-md"
+              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-md overflow-hidden flex flex-col"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -864,9 +752,7 @@ export const ProjectSpacePage: React.FC = () => {
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-zinc-800/50">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-600/20 rounded-lg">
-                    <UserPlus size={20} className="text-indigo-400" />
-                  </div>
+                  <UserPlus className="text-indigo-400" size={20} />
                   <h2 className="text-xl font-semibold text-white">
                     Invite Team Member
                   </h2>
@@ -884,7 +770,7 @@ export const ProjectSpacePage: React.FC = () => {
               <div className="p-6 space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Email Address *
+                    Email Address
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
@@ -892,15 +778,14 @@ export const ProjectSpacePage: React.FC = () => {
                       type="email"
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="colleague@example.com"
+                      placeholder="Enter email address"
                       className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                      autoFocus
                     />
                   </div>
                 </div>
-
+                
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  <label className="block text-sm font-medium text-zinc-300 mb-3">
                     Role
                   </label>
                   <div className="grid grid-cols-3 gap-3">
@@ -908,63 +793,49 @@ export const ProjectSpacePage: React.FC = () => {
                       onClick={() => setInviteRole('viewer')}
                       className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
                         inviteRole === 'viewer' 
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                          ? 'bg-green-500/10 border-green-500/30 text-green-300' 
                           : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
                       }`}
                     >
-                      <Eye size={20} />
-                      <span className="text-xs font-medium">Viewer</span>
+                      <Eye size={18} />
+                      <span className="text-sm font-medium">Viewer</span>
                     </button>
                     
                     <button
                       onClick={() => setInviteRole('editor')}
                       className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
                         inviteRole === 'editor' 
-                          ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' 
+                          ? 'bg-blue-500/10 border-blue-500/30 text-blue-300' 
                           : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
                       }`}
                     >
-                      <Edit3 size={20} />
-                      <span className="text-xs font-medium">Editor</span>
+                      <Edit size={18} />
+                      <span className="text-sm font-medium">Editor</span>
                     </button>
                     
                     <button
                       onClick={() => setInviteRole('admin')}
                       className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
                         inviteRole === 'admin' 
-                          ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' 
+                          ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' 
                           : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
                       }`}
                     >
-                      <Settings size={20} />
-                      <span className="text-xs font-medium">Admin</span>
+                      <Settings size={18} />
+                      <span className="text-sm font-medium">Admin</span>
                     </button>
                   </div>
                   
-                  <p className="mt-2 text-xs text-zinc-500">
-                    {inviteRole === 'viewer' 
-                      ? 'Can view but not edit the project' 
-                      : inviteRole === 'editor' 
-                        ? 'Can view and edit the project'
-                        : 'Full access including member management'
-                    }
-                  </p>
-                </div>
-
-                {/* Team Members Display */}
-                <div className="pt-4 border-t border-zinc-800/50">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-medium text-zinc-300">Current Members</h3>
-                    <TeamMembersDisplay 
-                      projectId={selectedProject.id}
-                      currentUserRole={currentUserRole}
-                    />
+                  <div className="mt-3 text-xs text-zinc-500">
+                    <p><strong>Viewer:</strong> Can view but not edit the project</p>
+                    <p><strong>Editor:</strong> Can edit nodes and connections</p>
+                    <p><strong>Admin:</strong> Full access including member management</p>
                   </div>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800/50">
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800/50 bg-zinc-900/30">
                 <button
                   onClick={() => setShowInviteModal(false)}
                   className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
@@ -973,17 +844,17 @@ export const ProjectSpacePage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleInviteMember}
-                  disabled={isLoading || !inviteEmail.trim()}
+                  disabled={isInviting || !inviteEmail.trim()}
                   className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? (
+                  {isInviting ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       <span>Sending...</span>
                     </>
                   ) : (
                     <>
-                      <UserPlus size={16} />
+                      <Check size={16} />
                       <span>Send Invitation</span>
                     </>
                   )}
