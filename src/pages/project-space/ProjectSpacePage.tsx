@@ -1,5 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import ReactFlow, {
+  Background,
+  Controls,
+  MiniMap,
+  Panel,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  Connection,
+  Edge,
+  Node,
+  NodeTypes,
+  NodeProps,
+  MarkerType,
+  ConnectionLineType
+} from 'reactflow'
+import 'reactflow/dist/style.css'
 import { 
   Menu, 
   Plus, 
@@ -49,6 +66,8 @@ export const ProjectSpacePage: React.FC = () => {
   const [projectVisibilityInput, setProjectVisibilityInput] = useState<'private' | 'team' | 'public'>('private')
   const [isSaving, setIsSaving] = useState(false)
   const [isCreatingProject, setIsCreatingProject] = useState(false)
+ const [nodes, setNodes, onNodesChange] = useNodesState([])
+ const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [newProjectName, setNewProjectName] = useState('')
   const [showCreateProject, setShowCreateProject] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -66,6 +85,7 @@ export const ProjectSpacePage: React.FC = () => {
     createNode,
     updateNode,
     deleteNode,
+   moveNode,
     createConnection,
     deleteConnection,
     inviteProjectMember
@@ -93,6 +113,138 @@ export const ProjectSpacePage: React.FC = () => {
       setProjectVisibilityInput(selectedProject.visibility || 'private')
     }
   }, [selectedProject])
+
+ // Convert flow nodes to ReactFlow nodes
+ useEffect(() => {
+   if (selectedProject?.nodes) {
+     const flowNodes = selectedProject.nodes.map(node => ({
+       id: node.id,
+       type: node.type,
+       position: { x: node.position.x, y: node.position.y },
+       data: { 
+         label: node.title,
+         content: node.content,
+         nodeData: node
+       }
+     }))
+     setNodes(flowNodes)
+   } else {
+     setNodes([])
+   }
+ }, [selectedProject?.nodes, setNodes])
+
+ // Convert flow connections to ReactFlow edges
+ useEffect(() => {
+   if (selectedProject?.connections) {
+     const flowEdges = selectedProject.connections.map(connection => ({
+       id: connection.id,
+       source: connection.source_node_id,
+       target: connection.target_node_id,
+       type: 'smoothstep',
+       animated: true,
+       markerEnd: {
+         type: MarkerType.ArrowClosed,
+       },
+     }))
+     setEdges(flowEdges)
+   } else {
+     setEdges([])
+   }
+ }, [selectedProject?.connections, setEdges])
+
+ // Custom node components
+ const InputNode = ({ data }: NodeProps) => (
+   <div className="px-4 py-2 shadow-md rounded-md bg-purple-600/20 border border-purple-500/30 min-w-[150px]">
+     <div className="font-bold text-sm text-purple-300">{data.label}</div>
+     {data.content && (
+       <div className="text-xs text-purple-200 mt-1 line-clamp-2">{data.content}</div>
+     )}
+   </div>
+ )
+
+ const PromptNode = ({ data }: NodeProps) => (
+   <div className="px-4 py-2 shadow-md rounded-md bg-blue-600/20 border border-blue-500/30 min-w-[150px]">
+     <div className="font-bold text-sm text-blue-300">{data.label}</div>
+     {data.content && (
+       <div className="text-xs text-blue-200 mt-1 line-clamp-2">{data.content}</div>
+     )}
+   </div>
+ )
+
+ const ConditionNode = ({ data }: NodeProps) => (
+   <div className="px-4 py-2 shadow-md rounded-md bg-yellow-600/20 border border-yellow-500/30 min-w-[150px]">
+     <div className="font-bold text-sm text-yellow-300">{data.label}</div>
+     {data.content && (
+       <div className="text-xs text-yellow-200 mt-1 line-clamp-2">{data.content}</div>
+     )}
+   </div>
+ )
+
+ const OutputNode = ({ data }: NodeProps) => (
+   <div className="px-4 py-2 shadow-md rounded-md bg-green-600/20 border border-green-500/30 min-w-[150px]">
+     <div className="font-bold text-sm text-green-300">{data.label}</div>
+     {data.content && (
+       <div className="text-xs text-green-200 mt-1 line-clamp-2">{data.content}</div>
+     )}
+   </div>
+ )
+
+ // Node type mapping
+ const nodeTypes: NodeTypes = {
+   input: InputNode,
+   prompt: PromptNode,
+   condition: ConditionNode,
+   output: OutputNode
+ }
+
+ // Handle node click
+ const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+   const flowNode = selectedProject?.nodes?.find(n => n.id === node.id)
+   if (flowNode) {
+     setSelectedNode(flowNode)
+     setShowNodeDetails(true)
+   }
+ }, [selectedProject?.nodes])
+
+ // Handle edge click
+ const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
+   if (window.confirm('Do you want to remove this connection?')) {
+     deleteConnection(edge.id)
+   }
+ }, [deleteConnection])
+
+ // Handle connection
+ const onConnect = useCallback((connection: Connection) => {
+   if (selectedProject && connection.source && connection.target) {
+     createConnection(
+       selectedProject.id,
+       connection.source,
+       connection.target
+     ).then(newConnection => {
+       if (newConnection) {
+         setEdges(eds => addEdge({
+           ...connection,
+           id: newConnection.id,
+           type: 'smoothstep',
+           animated: true,
+           markerEnd: {
+             type: MarkerType.ArrowClosed,
+           },
+         }, eds))
+       }
+     }).catch(error => {
+       console.error('Failed to create connection:', error)
+       setToast({ message: 'Failed to create connection', type: 'error' })
+     })
+   }
+ }, [selectedProject, createConnection, setEdges])
+
+ // Handle node drag
+ const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
+   if (node.position) {
+     moveNode(node.id, node.position)
+   }
+ }, [moveNode])
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) return
@@ -472,60 +624,84 @@ export const ProjectSpacePage: React.FC = () => {
               {/* Canvas Area */}
               <div 
                 ref={canvasRef}
-                className="flex-1 bg-zinc-900/30 p-6 overflow-auto"
+               className="flex-1 bg-zinc-900/30"
               >
                 {selectedProject ? (
-                  <div className="h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <Layers size={32} className="text-indigo-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-white mb-2">
-                        Project Canvas
-                      </h2>
-                      <p className="text-zinc-400 mb-6 max-w-md">
-                        This is where your project nodes and connections will appear. 
-                        Start by adding nodes to your project.
-                      </p>
-                      <div className="flex flex-wrap items-center justify-center gap-3">
-                        <button
-                          onClick={() => handleAddNode('input')}
-                          className="flex items-center gap-2 px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 transform hover:scale-105"
-                        >
-                          <Plus size={16} />
-                          <span>Add Input</span>
-                        </button>
-                        <button
-                          onClick={() => handleAddNode('prompt')}
-                          className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 transform hover:scale-105"
-                        >
-                          <Plus size={16} />
-                          <span>Add Prompt</span>
-                        </button>
-                        <button
-                          onClick={() => handleImportPrompt()}
-                          className="flex items-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 transform hover:scale-105"
-                        >
-                          <Plus size={16} />
-                          <span>Import Prompt</span>
-                        </button>
-                        <button
-                          onClick={() => handleAddNode('condition')}
-                          className="flex items-center gap-2 px-4 py-2 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 transform hover:scale-105"
-                        >
-                          <Plus size={16} />
-                          <span>Add Condition</span>
-                        </button>
-                        <button
-                          onClick={() => handleAddNode('output')}
-                          className="flex items-center gap-2 px-4 py-2 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 transform hover:scale-105"
-                        >
-                          <Plus size={16} />
-                          <span>Add Output</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                 <ReactFlow
+                   nodes={nodes}
+                   edges={edges}
+                   onNodesChange={onNodesChange}
+                   onEdgesChange={onEdgesChange}
+                   onConnect={onConnect}
+                   onNodeClick={onNodeClick}
+                   onEdgeClick={onEdgeClick}
+                   onNodeDragStop={onNodeDragStop}
+                   nodeTypes={nodeTypes}
+                   fitView
+                   connectionLineType={ConnectionLineType.SmoothStep}
+                   defaultEdgeOptions={{
+                     type: 'smoothstep',
+                     markerEnd: {
+                       type: MarkerType.ArrowClosed,
+                     },
+                     animated: true,
+                   }}
+                   className="bg-zinc-900/30"
+                 >
+                   <Background color="#6366f1" gap={16} size={1} />
+                   <Controls />
+                   <MiniMap 
+                     nodeColor={(node) => {
+                       switch (node.type) {
+                         case 'input': return '#8b5cf6';
+                         case 'prompt': return '#3b82f6';
+                         case 'condition': return '#eab308';
+                         case 'output': return '#22c55e';
+                         default: return '#6366f1';
+                       }
+                     }}
+                     maskColor="rgba(0, 0, 0, 0.5)"
+                   />
+                   <Panel position="top-left" className="bg-zinc-900/70 backdrop-blur-sm border border-zinc-800/50 rounded-lg p-2">
+                     <div className="flex flex-wrap items-center gap-2">
+                       <button
+                         onClick={() => handleAddNode('input')}
+                         className="flex items-center gap-1 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs"
+                       >
+                         <Plus size={12} />
+                         <span>Input</span>
+                       </button>
+                       <button
+                         onClick={() => handleAddNode('prompt')}
+                         className="flex items-center gap-1 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 text-xs"
+                       >
+                         <Plus size={12} />
+                         <span>Prompt</span>
+                       </button>
+                       <button
+                         onClick={() => handleImportPrompt()}
+                         className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs"
+                       >
+                         <Plus size={12} />
+                         <span>Import</span>
+                       </button>
+                       <button
+                         onClick={() => handleAddNode('condition')}
+                         className="flex items-center gap-1 px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 text-xs"
+                       >
+                         <Plus size={12} />
+                         <span>Condition</span>
+                       </button>
+                       <button
+                         onClick={() => handleAddNode('output')}
+                         className="flex items-center gap-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 text-xs"
+                       >
+                         <Plus size={12} />
+                         <span>Output</span>
+                       </button>
+                     </div>
+                   </Panel>
+                 </ReactFlow>
                 ) : (
                   <div className="h-full flex items-center justify-center">
                     <div className="text-center">
