@@ -129,9 +129,23 @@ Deno.serve(async (req) => {
       .from('flow_projects')
       .select('user_id')
       .eq('id', project_id)
-      .single()
+      .maybeSingle()
 
     if (projectError) {
+      console.error('Project query error:', projectError)
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Project not found: ' + projectError.message
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404,
+        }
+      )
+    }
+
+    if (!project) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -155,7 +169,7 @@ Deno.serve(async (req) => {
         .eq('project_id', project_id)
         .eq('user_id', user.id)
         .eq('status', 'accepted')
-        .single()
+        .maybeSingle()
 
       if (!memberError && memberData?.role === 'admin') {
         canInvite = true
@@ -180,13 +194,14 @@ Deno.serve(async (req) => {
       .from('users')
       .select('id')
       .eq('email', invited_user_email)
-      .single()
+      .maybeSingle()
 
     if (userError || !invitedUser) {
+      console.error('User lookup error:', userError)
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'User not found with the provided email address'
+          error: 'User not found with the provided email address' + (userError ? ': ' + userError.message : '')
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
