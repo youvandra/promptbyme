@@ -1,459 +1,715 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Menu, Plus, Trash2, Edit3, Save, X, Settings, Share2, Users, Download, Upload, GitBranch, Target, Type, Info, MoreHorizontal, ChevronDown, Layers, Lock, Globe, Eye } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { Menu, Plus, Layers, Upload, Edit3, GitBranch, Target, ZoomIn, ZoomOut, Maximize2, Eye, Copy, Trash2, X, Link2, UserPlus, Keyboard, MoreVertical, Clock, Users, Edit, Settings } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BoltBadge } from '../../components/ui/BoltBadge'
 import { Toast } from '../../components/ui/Toast'
+import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { NodeEditorModal } from '../../components/project-space/NodeEditorModal'
 import { NodeDetailsModal } from '../../components/project-space/NodeDetailsModal'
-import { PromptImportModal } from '../../components/project-space/PromptImportModal'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectSpaceStore, FlowNode, FlowConnection } from '../../store/projectSpaceStore'
-import { useToast } from '../../hooks/useToast'
+
+const NODE_TYPE_CONFIG = {
+  input: {
+    icon: Upload,
+    color: 'from-purple-500 to-purple-600',
+    borderColor: 'border-purple-500/30',
+    label: 'Input',
+    description: 'Define input parameters'
+  },
+  prompt: {
+    icon: Edit3,
+    color: 'from-blue-500 to-blue-600',
+    borderColor: 'border-blue-500/30',
+    label: 'Prompt',
+    description: 'AI prompt instructions'
+  },
+  condition: {
+    icon: GitBranch,
+    color: 'from-yellow-500 to-yellow-600',
+    borderColor: 'border-yellow-500/30',
+    label: 'Condition',
+    description: 'Conditional logic'
+  },
+  output: {
+    icon: Target,
+    color: 'from-green-500 to-green-600',
+    borderColor: 'border-green-500/30',
+    label: 'Output',
+    description: 'Output specifications'
+  }
+}
+
+interface DragState {
+  isDragging: boolean
+  dragType: 'canvas' | 'node' | null
+  draggedNodeId: string | null
+  startPosition: { x: number; y: number }
+  nodeOffset: { x: number; y: number }
+}
+
+interface Viewport {
+  x: number
+  y: number
+  zoom: number
+}
 
 export const ProjectSpacePage: React.FC = () => {
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [selectedProject, setSelectedProject] = useState<string | null>(null)
-  const [showCreateProjectModal, setShowCreateProjectModal] = useState(false)
-  const [showEditProjectModal, setShowEditProjectModal] = useState(false)
-  const [showNodeEditorModal, setShowNodeEditorModal] = useState(false)
-  const [showNodeDetailsModal, setShowNodeDetailsModal] = useState(false)
-  const [showPromptImportModal, setShowPromptImportModal] = useState(false)
-  const [showProjectMenu, setShowProjectMenu] = useState(false)
+  const [selectedProject, setSelectedProject] = useState<any>(null)
+  const [showProjectModal, setShowProjectModal] = useState(false)
+  const [showNodeEditor, setShowNodeEditor] = useState(false)
+  const [showNodeDetails, setShowNodeDetails] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
   const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null)
+  const [editingNode, setEditingNode] = useState<FlowNode | null>(null)
+  const [isConnectMode, setIsConnectMode] = useState(false)
+  const [connectionStart, setConnectionStart] = useState<string | null>(null)
+  const [tempConnection, setTempConnection] = useState<{ start: { x: number; y: number }; end: { x: number; y: number } } | null>(null)
+  const [dragState, setDragState] = useState<DragState>({
+    isDragging: false,
+    dragType: null,
+    draggedNodeId: null,
+    startPosition: { x: 0, y: 0 },
+    nodeOffset: { x: 0, y: 0 }
+  })
+  const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 })
   const [newProjectName, setNewProjectName] = useState('')
   const [newProjectDescription, setNewProjectDescription] = useState('')
-  const [editProjectName, setEditProjectName] = useState('')
-  const [editProjectDescription, setEditProjectDescription] = useState('')
-  const [editProjectVisibility, setEditProjectVisibility] = useState<'private' | 'team' | 'public'>('private')
   const [creatingProject, setCreatingProject] = useState(false)
-  const [updatingProject, setUpdatingProject] = useState(false)
-  const [deletingProject, setDeletingProject] = useState(false)
-  const [isAddingNode, setIsAddingNode] = useState(false)
-  const [newNodeType, setNewNodeType] = useState<'input' | 'prompt' | 'condition' | 'output'>('prompt')
-  const [isDraggingNode, setIsDraggingNode] = useState(false)
-  const [isCreatingConnection, setIsCreatingConnection] = useState(false)
-  const [connectionStart, setConnectionStart] = useState<{ nodeId: string; x: number; y: number } | null>(null)
-  const [connectionEnd, setConnectionEnd] = useState<{ x: number; y: number } | null>(null)
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null)
-  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [hoveredConnection, setHoveredConnection] = useState<string | null>(null)
+  const [showShortcuts, setShowShortcuts] = useState(false)
+  const [currentZoomDisplay, setCurrentZoomDisplay] = useState<number | null>(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [projectToEdit, setProjectToEdit] = useState<any>(null)
+  const [projectToDelete, setProjectToDelete] = useState<any>(null)
+  const [projectToInvite, setProjectToInvite] = useState<any>(null)
+  const [newProjectDesc, setNewProjectDesc] = useState('')
+  const [newProjectVisibility, setNewProjectVisibility] = useState<'private' | 'team' | 'public'>('private')
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
-  const [isInviting, setIsInviting] = useState(false)
-  
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const canvasRef = useRef<HTMLDivElement>(null)
-  const projectMenuRef = useRef<HTMLDivElement>(null)
-  
-  const { toast, showToast, hideToast } = useToast()
+  const svgRef = useRef<SVGSVGElement>(null)
+  const keysPressed = useRef(new Set<string>())
+
   const { user, loading: authLoading, initialize } = useAuthStore()
-  const { 
-    projects, 
-    selectedProject: activeProject,
+  const {
+    projects,
+    selectedProject: storeSelectedProject,
     currentUserRole,
-    loading, 
-    fetchProjects, 
+    loading,
+    fetchProjects,
     createProject,
-    updateProject,
-    deleteProject,
     selectProject,
     createNode,
     updateNode,
     deleteNode,
     moveNode,
+    duplicateNode,
     createConnection,
     deleteConnection,
-    inviteProjectMember,
-    subscribeToProject
+    subscribeToProject,
+    updateProject,
+    deleteProject,
+    inviteProjectMember
   } = useProjectSpaceStore()
 
-  // Initialize auth
   useEffect(() => {
     initialize()
   }, [initialize])
 
-  // Load projects when user is available
   useEffect(() => {
     if (user) {
       fetchProjects()
     }
   }, [user, fetchProjects])
 
-  // Select first project by default if none selected
+  // Subscribe to real-time updates for selected project
   useEffect(() => {
-    if (!loading && projects.length > 0 && !selectedProject) {
-      handleSelectProject(projects[0].id)
-    }
-  }, [loading, projects, selectedProject])
-
-  // Set up subscription to selected project
-  useEffect(() => {
-    if (activeProject) {
-      const unsubscribe = subscribeToProject(activeProject.id)
+    if (storeSelectedProject?.id) {
+      const unsubscribe = subscribeToProject(storeSelectedProject.id)
       return unsubscribe
     }
-  }, [activeProject, subscribeToProject])
+  }, [storeSelectedProject?.id, subscribeToProject])
 
-  // Close project menu when clicking outside
+  // Update local selected project when store changes
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (projectMenuRef.current && !projectMenuRef.current.contains(event.target as Node)) {
-        setShowProjectMenu(false)
-      }
-    }
-    
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    setSelectedProject(storeSelectedProject)
+  }, [storeSelectedProject])
 
-  // Handle canvas click for node placement
-  const handleCanvasClick = (e: React.MouseEvent) => {
-    if (!activeProject || !isAddingNode || !canvasRef.current) return
-    
-    // Get canvas bounds
-    const rect = canvasRef.current.getBoundingClientRect()
-    
-    // Calculate position relative to canvas
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    
-    // Create a temporary node for the editor
-    const tempNode: FlowNode = {
-      id: `temp-${Date.now()}`,
-      project_id: activeProject.id,
-      type: newNodeType,
-      title: `New ${newNodeType.charAt(0).toUpperCase() + newNodeType.slice(1)}`,
-      content: '',
-      position: { x, y },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-    
-    setSelectedNode(tempNode)
-    setShowNodeEditorModal(true)
-    setIsAddingNode(false)
-  }
-
-  // Handle node drag
-  const handleNodeDrag = (nodeId: string, newPosition: { x: number; y: number }) => {
-    if (!activeProject) return
-    
-    moveNode(nodeId, newPosition)
-  }
-
-  // Handle node click
-  const handleNodeClick = (node: FlowNode, e: React.MouseEvent) => {
-    e.stopPropagation()
-    
-    if (isAddingNode) {
-      setIsAddingNode(false)
-      return
-    }
-    
-    if (isCreatingConnection) {
-      if (connectionStart && connectionStart.nodeId !== node.id) {
-        // Complete connection
-        createConnection(activeProject!.id, connectionStart.nodeId, node.id)
-          .then(() => {
-            showToast('Connection created', 'success')
-          })
-          .catch(error => {
-            console.error('Failed to create connection:', error)
-            showToast('Failed to create connection', 'error')
-          })
+  // Keyboard shortcuts handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      keysPressed.current.add(e.key.toLowerCase())
+      
+      // Prevent default browser shortcuts when our shortcuts are active
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case 'z':
+            e.preventDefault()
+            // TODO: Implement undo
+            setToast({ message: 'Undo (Coming soon)', type: 'success' })
+            break
+          case 'y':
+            e.preventDefault()
+            // TODO: Implement redo
+            setToast({ message: 'Redo (Coming soon)', type: 'success' })
+            break
+          case 's':
+            e.preventDefault()
+            setToast({ message: 'Project auto-saved', type: 'success' })
+            break
+          case 'a':
+            e.preventDefault()
+            // Select all nodes (TODO: implement selection)
+            setToast({ message: 'Select all (Coming soon)', type: 'success' })
+            break
+          case 'd':
+            e.preventDefault()
+            // Duplicate selected (TODO: implement)
+            setToast({ message: 'Duplicate (Coming soon)', type: 'success' })
+            break
+          case '/':
+            e.preventDefault()
+            setShowShortcuts(true)
+            break
+        }
       }
       
-      setIsCreatingConnection(false)
-      setConnectionStart(null)
-      setConnectionEnd(null)
-      return
+      // Non-modifier shortcuts
+      switch (e.key.toLowerCase()) {
+        case 'escape':
+          setShowNodeEditor(false)
+          setShowNodeDetails(false)
+          setShowShortcuts(false)
+          break
+        case 'delete':
+        case 'backspace':
+          // TODO: Delete selected nodes
+          break
+        case '1':
+          if (!e.ctrlKey && !e.metaKey) {
+            handleAddNode('input')
+            setToast({ message: 'Input node created', type: 'success' })
+          }
+          break
+        case '2':
+          if (!e.ctrlKey && !e.metaKey) {
+            handleAddNode('prompt')
+            setToast({ message: 'Prompt node created', type: 'success' })
+          }
+          break
+        case '3':
+          if (!e.ctrlKey && !e.metaKey) {
+            handleAddNode('condition')
+            setToast({ message: 'Condition node created', type: 'success' })
+          }
+          break
+        case '4':
+          if (!e.ctrlKey && !e.metaKey) {
+            handleAddNode('output')
+            setToast({ message: 'Output node created', type: 'success' })
+          }
+          break
+        case 'f':
+          if (!e.ctrlKey && !e.metaKey) {
+            // Fit to screen
+            setViewport({ x: 0, y: 0, zoom: 1 })
+            setCurrentZoomDisplay(100)
+            setTimeout(() => setCurrentZoomDisplay(null), 1000)
+          }
+          break
+        case 'r':
+          if (!e.ctrlKey && !e.metaKey) {
+            // Reset zoom
+            setViewport(prev => ({ ...prev, zoom: 1 }))
+            setCurrentZoomDisplay(100)
+            setTimeout(() => setCurrentZoomDisplay(null), 1000)
+          }
+          break
+        case '?':
+          if (!e.ctrlKey && !e.metaKey) {
+            setShowShortcuts(true)
+          }
+          break
+      }
     }
-    
-    setSelectedNode(node)
-    setShowNodeDetailsModal(true)
-  }
 
-  // Handle node connection start
-  const handleNodeConnectionStart = (node: FlowNode, e: React.MouseEvent) => {
-    e.stopPropagation()
-    
-    if (!activeProject) return
-    
-    setIsCreatingConnection(true)
-    setConnectionStart({
-      nodeId: node.id,
-      x: node.position.x,
-      y: node.position.y
-    })
-    setConnectionEnd({
-      x: node.position.x,
-      y: node.position.y
-    })
-  }
-
-  // Handle mouse move during connection creation
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isCreatingConnection || !connectionStart || !canvasRef.current) return
-    
-    const rect = canvasRef.current.getBoundingClientRect()
-    setConnectionEnd({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    })
-  }
-
-  // Handle canvas mouse up
-  const handleCanvasMouseUp = () => {
-    if (isCreatingConnection) {
-      setIsCreatingConnection(false)
-      setConnectionStart(null)
-      setConnectionEnd(null)
+    const handleKeyUp = (e: KeyboardEvent) => {
+      keysPressed.current.delete(e.key.toLowerCase())
     }
-  }
 
-  // Handle node deletion
-  const handleDeleteNode = (nodeId: string) => {
-    if (!activeProject) return
-    
-    if (window.confirm('Are you sure you want to delete this node?')) {
-      deleteNode(nodeId)
-        .then(() => {
-          showToast('Node deleted', 'success')
-        })
-        .catch(error => {
-          console.error('Failed to delete node:', error)
-          showToast('Failed to delete node', 'error')
-        })
+    // Zoom with Ctrl+Scroll
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault()
+        
+        const zoomFactor = 0.1
+        const delta = e.deltaY > 0 ? -zoomFactor : zoomFactor
+        const newZoom = Math.max(0.1, Math.min(3, viewport.zoom + delta))
+        
+        setViewport(prev => ({ ...prev, zoom: newZoom }))
+        setCurrentZoomDisplay(Math.round(newZoom * 100))
+        setTimeout(() => setCurrentZoomDisplay(null), 1000)
+      }
     }
-  }
 
-  // Handle connection deletion
-  const handleDeleteConnection = (connectionId: string) => {
-    if (!activeProject) return
-    
-    if (window.confirm('Are you sure you want to delete this connection?')) {
-      deleteConnection(connectionId)
-        .then(() => {
-          showToast('Connection deleted', 'success')
-        })
-        .catch(error => {
-          console.error('Failed to delete connection:', error)
-          showToast('Failed to delete connection', 'error')
-        })
+    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('keyup', handleKeyUp)
+    document.addEventListener('wheel', handleWheel, { passive: false })
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('keyup', handleKeyUp)
+      document.removeEventListener('wheel', handleWheel)
     }
-  }
+  }, [viewport.zoom, setToast])
 
-  // Handle project selection
-  const handleSelectProject = (projectId: string) => {
-    setSelectedProject(projectId)
-    
-    const project = projects.find(p => p.id === projectId)
-    if (project) {
-      selectProject(project)
-        .catch(error => {
-          console.error('Failed to select project:', error)
-          showToast('Failed to load project', 'error')
-        })
-    }
-  }
-
-  // Handle project creation
   const handleCreateProject = async () => {
     if (!newProjectName.trim()) return
     
-    setCreatingProject(true)
+    setIsSubmitting(true)
     try {
-      await createProject(newProjectName.trim(), newProjectDescription.trim() || undefined)
-      setShowCreateProjectModal(false)
+      await createProject(
+        newProjectName.trim(),
+        newProjectDesc.trim() || undefined,
+        newProjectVisibility
+      )
+      setToast({ message: 'Project created successfully', type: 'success' })
+      setShowCreateModal(false)
       setNewProjectName('')
-      setNewProjectDescription('')
-      showToast('Project created successfully', 'success')
+      setNewProjectDesc('')
+      setNewProjectVisibility('private')
     } catch (error) {
       console.error('Failed to create project:', error)
-      showToast('Failed to create project', 'error')
+      setToast({ message: 'Failed to create project', type: 'error' })
     } finally {
-      setCreatingProject(false)
+      setIsSubmitting(false)
     }
   }
 
-  // Handle project update
   const handleUpdateProject = async () => {
-    if (!activeProject || !editProjectName.trim()) return
+    if (!projectToEdit || !newProjectName.trim()) return
     
-    setUpdatingProject(true)
+    setIsSubmitting(true)
     try {
-      await updateProject(activeProject.id, {
-        name: editProjectName.trim(),
-        description: editProjectDescription.trim() || undefined,
-        visibility: editProjectVisibility
+      await updateProject(projectToEdit.id, {
+        name: newProjectName.trim(),
+        description: newProjectDesc.trim() || null,
+        visibility: newProjectVisibility
       })
-      setShowEditProjectModal(false)
-      showToast('Project updated successfully', 'success')
+      setToast({ message: 'Project updated successfully', type: 'success' })
+      setShowEditModal(false)
     } catch (error) {
       console.error('Failed to update project:', error)
-      showToast('Failed to update project', 'error')
+      setToast({ message: 'Failed to update project', type: 'error' })
     } finally {
-      setUpdatingProject(false)
+      setIsSubmitting(false)
     }
   }
 
-  // Handle project deletion
   const handleDeleteProject = async () => {
-    if (!activeProject) return
+    if (!projectToDelete) return
     
-    if (!window.confirm(`Are you sure you want to delete "${activeProject.name}"? This action cannot be undone.`)) {
-      return
-    }
-    
-    setDeletingProject(true)
+    setIsSubmitting(true)
     try {
-      await deleteProject(activeProject.id)
-      setSelectedProject(null)
-      showToast('Project deleted successfully', 'success')
+      await deleteProject(projectToDelete.id)
+      setToast({ message: 'Project deleted successfully', type: 'success' })
+      setShowDeleteConfirm(false)
     } catch (error) {
       console.error('Failed to delete project:', error)
-      showToast('Failed to delete project', 'error')
+      setToast({ message: 'Failed to delete project', type: 'error' })
     } finally {
-      setDeletingProject(false)
-      setShowProjectMenu(false)
+      setIsSubmitting(false)
     }
   }
 
-  // Handle node update
-  const handleUpdateNode = async (nodeId: string, updates: Partial<FlowNode>) => {
-    if (!activeProject) return
-    
-    try {
-      await updateNode(nodeId, updates)
-      showToast('Node updated successfully', 'success')
-    } catch (error) {
-      console.error('Failed to update node:', error)
-      showToast('Failed to update node', 'error')
-      throw error
-    }
-  }
-
-  // Handle node edit button click
-  const handleEditNode = (nodeId: string) => {
-    if (!activeProject) return
-    
-    const node = activeProject.nodes?.find(n => n.id === nodeId)
-    if (node) {
-      setSelectedNode(node)
-      setShowNodeEditorModal(true)
-    }
-  }
-
-  // Open edit project modal
-  const handleOpenEditProjectModal = () => {
-    if (!activeProject) return
-    
-    setEditProjectName(activeProject.name)
-    setEditProjectDescription(activeProject.description || '')
-    setEditProjectVisibility(activeProject.visibility || 'private')
-    setShowEditProjectModal(true)
-    setShowProjectMenu(false)
-  }
-
-  // Handle member invitation
   const handleInviteMember = async () => {
-    if (!activeProject || !inviteEmail.trim()) return
+    if (!projectToInvite || !inviteEmail.trim()) return
     
-    setIsInviting(true)
+    setIsSubmitting(true)
     try {
-      await inviteProjectMember(activeProject.id, inviteEmail.trim(), inviteRole)
+      await inviteProjectMember(projectToInvite.id, inviteEmail.trim(), inviteRole)
+      setToast({ message: 'Invitation sent successfully', type: 'success' })
+      setShowInviteModal(false)
       setInviteEmail('')
       setInviteRole('viewer')
-      setShowInviteModal(false)
-      showToast('Invitation sent successfully', 'success')
     } catch (error: any) {
       console.error('Failed to invite member:', error)
-      showToast(error.message || 'Failed to invite member', 'error')
+      setToast({ message: error.message || 'Failed to invite member', type: 'error' })
     } finally {
-      setIsInviting(false)
+      setIsSubmitting(false)
     }
   }
 
-  // Get node type configuration
-  const getNodeTypeConfig = (type: string) => {
-    switch (type) {
-      case 'input':
-        return { 
-          icon: Upload, 
-          color: 'bg-purple-500',
-          borderColor: 'border-purple-500/50',
-          hoverColor: 'hover:bg-purple-500/10'
-        }
-      case 'prompt':
-        return { 
-          icon: Type, 
-          color: 'bg-blue-500',
-          borderColor: 'border-blue-500/50',
-          hoverColor: 'hover:bg-blue-500/10'
-        }
-      case 'condition':
-        return { 
-          icon: GitBranch, 
-          color: 'bg-yellow-500',
-          borderColor: 'border-yellow-500/50',
-          hoverColor: 'hover:bg-yellow-500/10'
-        }
-      case 'output':
-        return { 
-          icon: Target, 
-          color: 'bg-green-500',
-          borderColor: 'border-green-500/50',
-          hoverColor: 'hover:bg-green-500/10'
-        }
-      default:
-        return { 
-          icon: Type, 
-          color: 'bg-blue-500',
-          borderColor: 'border-blue-500/50',
-          hoverColor: 'hover:bg-blue-500/10'
-        }
+  const handleSelectProject = async (project: any) => {
+    try {
+      await selectProject(project)
+    } catch (error) {
+      console.error('Failed to select project:', error)
+      setToast({ message: 'Failed to load project', type: 'error' })
     }
   }
 
-  // Calculate connection path
-  const calculateConnectionPath = (connection: FlowConnection) => {
-    if (!activeProject?.nodes) return ''
-    
-    const sourceNode = activeProject.nodes.find(n => n.id === connection.source_node_id)
-    const targetNode = activeProject.nodes.find(n => n.id === connection.target_node_id)
-    
-    if (!sourceNode || !targetNode) return ''
-    
-    const sourceX = sourceNode.position.x + 100 // Assuming node width is 200px
-    const sourceY = sourceNode.position.y + 50 // Assuming node height is 100px
-    const targetX = targetNode.position.x
-    const targetY = targetNode.position.y + 50 // Assuming node height is 100px
-    
-    // Calculate control points for the curve
-    const dx = Math.abs(targetX - sourceX)
-    const controlX1 = sourceX + dx * 0.3
-    const controlX2 = targetX - dx * 0.3
-    
-    return `M ${sourceX} ${sourceY} C ${controlX1} ${sourceY}, ${controlX2} ${targetY}, ${targetX} ${targetY}`
+  const openEditModal = (project: any, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setProjectToEdit(project)
+    setNewProjectName(project.name)
+    setNewProjectDesc(project.description || '')
+    setNewProjectVisibility(project.visibility || 'private')
+    setShowEditModal(true)
   }
 
-  // Calculate temporary connection path
-  const calculateTempConnectionPath = () => {
-    if (!connectionStart || !connectionEnd) return ''
-    
-    // Calculate control points for the curve
-    const dx = Math.abs(connectionEnd.x - connectionStart.x)
-    const controlX1 = connectionStart.x + dx * 0.3
-    const controlX2 = connectionEnd.x - dx * 0.3
-    
-    return `M ${connectionStart.x} ${connectionStart.y} C ${controlX1} ${connectionStart.y}, ${controlX2} ${connectionEnd.y}, ${connectionEnd.x} ${connectionEnd.y}`
+  const openDeleteConfirm = (project: any, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setProjectToDelete(project)
+    setShowDeleteConfirm(true)
   }
 
-  // Check if user can edit project
-  const canEditProject = () => {
-    if (!activeProject || !currentUserRole) return false
-    return activeProject.user_id === user?.id || ['admin', 'editor'].includes(currentUserRole)
+  const openInviteModal = (project: any, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setProjectToInvite(project)
+    setShowInviteModal(true)
+  }
+
+  const canManageProject = (project: any) => {
+    return project.user_id === user?.id || 
+           project.current_user_role === 'admin'
+  }
+
+  const handleAddNode = async (type: FlowNode['type']) => {
+    if (!selectedProject) return
+
+    try {
+      const canvasRect = canvasRef.current?.getBoundingClientRect()
+      if (!canvasRect) return
+
+      // Calculate position in canvas coordinates
+      // Position nodes at the top-center of the canvas
+      const centerX = (canvasRect.width / 2 - viewport.x) / viewport.zoom
+      const centerY = (100 - viewport.y) / viewport.zoom
+
+      const newNode = await createNode(selectedProject.id, type, { x: centerX, y: centerY })
+      setEditingNode(newNode)
+      setShowNodeEditor(true)
+    } catch (error) {
+      console.error('Failed to create node:', error)
+      setToast({ message: 'Failed to create node', type: 'error' })
+    }
+  }
+
+  const handleNodeClick = (node: FlowNode, event: React.MouseEvent) => {
+    event.stopPropagation()
+    
+    if (isConnectMode) {
+      if (!connectionStart) {
+        setConnectionStart(node.id)
+        setToast({ message: 'Select target node to connect', type: 'success' })
+      } else if (connectionStart !== node.id) {
+        handleCreateConnection(connectionStart, node.id)
+        setConnectionStart(null)
+        setIsConnectMode(false)
+      }
+    } else {
+      setSelectedNode(node)
+    }
+  }
+
+  const handleCreateConnection = async (sourceId: string, targetId: string) => {
+    if (!selectedProject) return
+
+    try {
+      await createConnection(selectedProject.id, sourceId, targetId)
+      setToast({ message: 'Connection created', type: 'success' })
+    } catch (error) {
+      console.error('Failed to create connection:', error)
+      setToast({ message: 'Failed to create connection', type: 'error' })
+    }
+  }
+
+  const handleNodeEdit = (node: FlowNode) => {
+    setEditingNode(node)
+    setShowNodeEditor(true)
+    setSelectedNode(null)
+  }
+
+  const handleNodeSave = async (nodeId: string, updates: Partial<FlowNode>) => {
+    try {
+      await updateNode(nodeId, updates)
+      setToast({ message: 'Node updated successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to update node:', error)
+      setToast({ message: 'Failed to update node', type: 'error' })
+    }
+  }
+
+  const handleNodeDelete = async (nodeId: string) => {
+    if (!window.confirm('Are you sure you want to delete this node?')) return
+
+    try {
+      await deleteNode(nodeId)
+      setSelectedNode(null)
+      setToast({ message: 'Node deleted successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to delete node:', error)
+      setToast({ message: 'Failed to delete node', type: 'error' })
+    }
+  }
+
+  const handleNodeDuplicate = async (nodeId: string) => {
+    try {
+      await duplicateNode(nodeId)
+      setToast({ message: 'Node duplicated successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to duplicate node:', error)
+      setToast({ message: 'Failed to duplicate node', type: 'error' })
+    }
+  }
+
+  const handleConnectionDelete = async (connectionId: string) => {
+    try {
+      await deleteConnection(connectionId)
+      setToast({ message: 'Connection deleted', type: 'success' })
+    } catch (error) {
+      console.error('Failed to delete connection:', error)
+      setToast({ message: 'Failed to delete connection', type: 'error' })
+    }
+  }
+
+  // Mouse event handlers for canvas and node dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return // Only handle left mouse button
+
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+
+    // Check if clicking on a node
+    const target = e.target as HTMLElement
+    const nodeElement = target.closest('[data-node-id]')
+    
+    if (nodeElement) {
+      const nodeId = nodeElement.getAttribute('data-node-id')
+      const node = selectedProject?.nodes?.find((n: FlowNode) => n.id === nodeId)
+      
+      if (node && !isConnectMode) {
+        // Start node dragging
+        const nodeRect = nodeElement.getBoundingClientRect()
+        const offsetX = e.clientX - nodeRect.left
+        const offsetY = e.clientY - nodeRect.top
+
+        setDragState({
+          isDragging: true,
+          dragType: 'node',
+          draggedNodeId: nodeId!,
+          startPosition: { x, y },
+          nodeOffset: { x: offsetX, y: offsetY }
+        })
+      }
+    } else {
+      // Start canvas panning
+      setDragState({
+        isDragging: true,
+        dragType: 'canvas',
+        draggedNodeId: null,
+        startPosition: { x, y },
+        nodeOffset: { x: 0, y: 0 }
+      })
+    }
+  }
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!dragState.isDragging) {
+      // Handle temporary connection line
+      if (isConnectMode && connectionStart && canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect()
+        const sourceNode = selectedProject?.nodes?.find((n: FlowNode) => n.id === connectionStart)
+        
+        if (sourceNode) {
+          const startX = sourceNode.position.x * viewport.zoom + viewport.x + 140 // Node width/2
+          const startY = sourceNode.position.y * viewport.zoom + viewport.y + 70  // Node height/2
+          const endX = e.clientX - rect.left
+          const endY = e.clientY - rect.top
+
+          setTempConnection({
+            start: { x: startX, y: startY },
+            end: { x: endX, y: endY }
+          })
+        }
+      }
+      return
+    }
+
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const currentX = e.clientX - rect.left
+    const currentY = e.clientY - rect.top
+    const deltaX = currentX - dragState.startPosition.x
+    const deltaY = currentY - dragState.startPosition.y
+
+    if (dragState.dragType === 'canvas') {
+      // Pan the canvas
+      setViewport(prev => ({
+        ...prev,
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }))
+      
+      setDragState(prev => ({
+        ...prev,
+        startPosition: { x: currentX, y: currentY }
+      }))
+    } else if (dragState.dragType === 'node' && dragState.draggedNodeId) {
+      // Move the node with smooth interpolation
+      const newX = (currentX - dragState.nodeOffset.x - viewport.x) / viewport.zoom
+      const newY = (currentY - dragState.nodeOffset.y - viewport.y) / viewport.zoom
+
+      // Update node position immediately for smooth dragging
+      if (selectedProject?.nodes) {
+        const updatedNodes = selectedProject.nodes.map((node: FlowNode) =>
+          node.id === dragState.draggedNodeId
+            ? { ...node, position: { x: newX, y: newY } }
+            : node
+        )
+        setSelectedProject({ ...selectedProject, nodes: updatedNodes })
+      }
+    }
+  }, [dragState, viewport, isConnectMode, connectionStart, selectedProject])
+
+  const handleMouseUp = useCallback(() => {
+    if (dragState.isDragging && dragState.dragType === 'node' && dragState.draggedNodeId) {
+      // Save final node position to database
+      const node = selectedProject?.nodes?.find((n: FlowNode) => n.id === dragState.draggedNodeId)
+      if (node) {
+        moveNode(dragState.draggedNodeId, node.position).catch(error => {
+          console.error('Failed to save node position:', error)
+          setToast({ message: 'Failed to save node position', type: 'error' })
+        })
+      }
+    }
+
+    setDragState({
+      isDragging: false,
+      dragType: null,
+      draggedNodeId: null,
+      startPosition: { x: 0, y: 0 },
+      nodeOffset: { x: 0, y: 0 }
+    })
+  }, [dragState, selectedProject, moveNode])
+
+  // Add global mouse event listeners
+  useEffect(() => {
+    if (dragState.isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [dragState.isDragging, handleMouseMove, handleMouseUp])
+
+  const handleZoomIn = () => {
+    setViewport(prev => ({ ...prev, zoom: Math.min(prev.zoom * 1.2, 3) }))
+  }
+
+  const handleZoomOut = () => {
+    setViewport(prev => ({ ...prev, zoom: Math.max(prev.zoom / 1.2, 0.3) }))
+  }
+
+  const handleResetView = () => {
+    setViewport({ x: 0, y: 0, zoom: 1 })
+  }
+
+  const renderConnection = (connection: FlowConnection) => {
+    const sourceNode = selectedProject?.nodes?.find((n: FlowNode) => n.id === connection.source_node_id)
+    const targetNode = selectedProject?.nodes?.find((n: FlowNode) => n.id === connection.target_node_id)
+    
+    if (!sourceNode || !targetNode) return null
+
+    const startX = sourceNode.position.x + 140 // Node width/2
+    const startY = sourceNode.position.y + 70  // Node height/2
+    const endX = targetNode.position.x + 140
+    const endY = targetNode.position.y + 70
+
+    const midX = (startX + endX) / 2
+    const controlPoint1X = startX + (midX - startX) * 0.5
+    const controlPoint2X = endX - (endX - midX) * 0.5
+
+    const pathData = `M ${startX} ${startY} C ${controlPoint1X} ${startY} ${controlPoint2X} ${endY} ${endX} ${endY}`
+    const isHovered = hoveredConnection === connection.id
+
+    return (
+      <g key={connection.id}>
+        {/* Invisible wider path for easier clicking */}
+        <path
+          d={pathData}
+          stroke="transparent"
+          strokeWidth="20"
+          fill="none"
+          className="cursor-pointer"
+          onMouseEnter={() => setHoveredConnection(connection.id)}
+          onMouseLeave={() => setHoveredConnection(null)}
+          onClick={() => {
+            if (window.confirm('Delete this connection?')) {
+              handleConnectionDelete(connection.id)
+            }
+          }}
+        />
+        {/* Visible connection line */}
+        <path
+          d={pathData}
+          stroke={isHovered ? "rgba(239, 68, 68, 0.8)" : "rgba(99, 102, 241, 0.6)"}
+          strokeWidth={isHovered ? "3" : "2"}
+          fill="none"
+          className="pointer-events-none transition-all duration-200"
+          style={{
+            filter: isHovered ? 'drop-shadow(0 0 8px rgba(239, 68, 68, 0.4))' : 'none'
+          }}
+        />
+        {/* Connection endpoint */}
+        <circle
+          cx={endX}
+          cy={endY}
+          r={isHovered ? "6" : "4"}
+          fill={isHovered ? "rgba(239, 68, 68, 0.8)" : "rgba(99, 102, 241, 0.8)"}
+          className="pointer-events-none transition-all duration-200"
+        />
+        {/* Delete indicator on hover */}
+        {isHovered && (
+          <g>
+            <circle
+              cx={midX}
+              cy={(startY + endY) / 2}
+              r="12"
+              fill="rgba(239, 68, 68, 0.9)"
+              className="pointer-events-none"
+            />
+            <text
+              x={midX}
+              y={(startY + endY) / 2}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fill="white"
+              fontSize="10"
+              className="pointer-events-none font-bold"
+            >
+              ×
+            </text>
+          </g>
+        )}
+      </g>
+    )
   }
 
   if (authLoading) {
@@ -474,24 +730,15 @@ export const ProjectSpacePage: React.FC = () => {
       <div className="min-h-screen bg-zinc-950 text-white relative">
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <Layers size={32} className="text-indigo-400" />
-            </div>
+            <Layers className="mx-auto text-zinc-400 mb-4" size={64} />
             <h1 className="text-4xl font-bold text-white mb-4">
               Access Required
             </h1>
             <p className="text-xl text-zinc-400 mb-8">
-              Please sign in to access the project space
+              Please sign in to access Project Space
             </p>
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
-            >
-              <span>Go Home</span>
-            </Link>
           </div>
         </div>
-        
         <BoltBadge />
       </div>
     )
@@ -529,415 +776,471 @@ export const ProjectSpacePage: React.FC = () => {
 
           {/* Content */}
           <div className="relative z-10 flex-1 flex flex-col">
-            {/* Project Header */}
-            <div className="border-b border-zinc-800/50 backdrop-blur-xl">
-              <div className="px-6 py-4">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    {/* Project Selector */}
-                    <div className="relative" ref={projectMenuRef}>
-                      <button
-                        onClick={() => setShowProjectMenu(!showProjectMenu)}
-                        className="flex items-center gap-2 px-4 py-2 bg-zinc-900/50 hover:bg-zinc-800/50 border border-zinc-800/50 rounded-xl transition-all duration-200"
-                      >
-                        <span className="text-white font-medium truncate max-w-[150px] md:max-w-[200px]">
-                          {activeProject ? activeProject.name : 'Select Project'}
-                        </span>
-                        <ChevronDown size={16} className={`text-zinc-400 transition-transform duration-200 ${showProjectMenu ? 'rotate-180' : ''}`} />
-                      </button>
-                      
-                      <AnimatePresence>
-                        {showProjectMenu && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 mt-2 w-64 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto"
-                          >
-                            <div className="p-2">
-                              {/* Create New Project Button */}
-                              <button
-                                onClick={() => {
-                                  setShowCreateProjectModal(true)
-                                  setShowProjectMenu(false)
-                                }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-indigo-400 hover:bg-indigo-600/10 hover:text-indigo-300 rounded-lg transition-all duration-200 text-left"
-                              >
-                                <Plus size={16} />
-                                <span>Create New Project</span>
-                              </button>
-                              
-                              <div className="border-t border-zinc-800 my-2"></div>
-                              
-                              {/* Project List */}
-                              {projects.length === 0 ? (
-                                <div className="px-3 py-2 text-zinc-500 text-sm">
-                                  No projects found
-                                </div>
-                              ) : (
-                                projects.map(project => (
-                                  <button
-                                    key={project.id}
-                                    onClick={() => {
-                                      handleSelectProject(project.id)
-                                      setShowProjectMenu(false)
-                                    }}
-                                    className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg transition-all duration-200 text-left ${
-                                      selectedProject === project.id
-                                        ? 'bg-indigo-600/20 text-indigo-300'
-                                        : 'text-white hover:bg-zinc-800/50'
-                                    }`}
-                                  >
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      <Layers size={16} className="flex-shrink-0" />
-                                      <span className="truncate">{project.name}</span>
-                                    </div>
-                                    
-                                    {selectedProject === project.id && (
-                                      <div className="flex items-center">
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            handleOpenEditProjectModal()
-                                          }}
-                                          className="p-1 text-zinc-400 hover:text-white transition-colors"
-                                          title="Edit project"
-                                        >
-                                          <Edit3 size={14} />
-                                        </button>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            handleDeleteProject()
-                                          }}
-                                          className="p-1 text-zinc-400 hover:text-red-400 transition-colors"
-                                          title="Delete project"
-                                        >
-                                          <Trash2 size={14} />
-                                        </button>
-                                      </div>
-                                    )}
-                                  </button>
-                                ))
-                              )}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+            {!selectedProject ? (
+              /* Project Selection View */
+              <div className="flex-1 p-6">
+                <div className="max-w-6xl mx-auto">
+                  {/* Header */}
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+                    <div>
+                      <h1 className="text-3xl font-bold text-white mb-2">
+                        Project Space
+                      </h1>
+                      <p className="text-zinc-400">
+                        Create visual prompt flows and collaborate with your team
+                      </p>
                     </div>
                     
-                    {/* Project Description */}
-                    {activeProject && (
-                      <p className="text-zinc-400 text-sm hidden md:block">
-                        {activeProject.description || 'No description'}
-                      </p>
-                    )}
-                  </div>
-                  
-                  {/* Project Tools */}
-                  {activeProject && (
                     <div className="flex items-center gap-3">
-                      {/* Team Members */}
-                      <div className="flex items-center gap-2">
-                        <TeamMembersDisplay 
-                          projectId={activeProject.id}
-                          currentUserRole={currentUserRole}
-                        />
-                      </div>
-                      
-                      {/* Invite Button */}
-                      {(activeProject.user_id === user.id || currentUserRole === 'admin') && (
-                        <button
-                          onClick={() => setShowInviteModal(true)}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-lg transition-all duration-200 text-sm"
-                        >
-                          <Plus size={14} />
-                          <span>Invite</span>
-                        </button>
-                      )}
-                      
-                      {/* Project Settings */}
                       <button
-                        onClick={handleOpenEditProjectModal}
-                        className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                        title="Project settings"
+                        onClick={() => setShowCreateModal(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
                       >
-                        <Settings size={16} />
+                        <Plus size={16} />
+                        <span>New Project</span>
                       </button>
+                    </div>
+                  </div>
+
+                  {/* Projects Grid */}
+                  {loading ? (
+                    <div className="text-center py-12">
+                      <div className="flex items-center justify-center gap-2 text-zinc-400">
+                        <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+                        <span>Loading projects...</span>
+                      </div>
+                    </div>
+                  ) : projects.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {projects.map((project) => (
+                        <motion.div
+                          key={project.id}
+                          className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group"
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          {/* Options Menu */}
+                          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="relative">
+                              <div className="flex items-center gap-1">
+                                {canManageProject(project) && (
+                                  <>
+                                    <button
+                                      onClick={(e) => openEditModal(project, e)}
+                                      className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                                      title="Edit project"
+                                    >
+                                      <Edit size={16} />
+                                    </button>
+                                    <button
+                                      onClick={(e) => openDeleteConfirm(project, e)}
+                                      className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                                      title="Delete project"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </>
+                                )}
+                                {(project.user_id === user?.id || 
+                                  project.current_user_role === 'admin' || 
+                                  project.current_user_role === 'editor') && (
+                                  <button
+                                    onClick={(e) => openInviteModal(project, e)}
+                                    className="p-2 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all duration-200"
+                                    title="Invite members"
+                                  >
+                                    <UserPlus size={16} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div 
+                            className="flex items-center gap-3 mb-4 cursor-pointer"
+                            onClick={() => handleSelectProject(project)}
+                          >
+                            <div className="p-2.5 bg-indigo-500/20 rounded-lg">
+                              <Layers size={18} className="text-indigo-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-white group-hover:text-indigo-300 transition-colors">
+                              {project.name}
+                            </h3>
+                          </div>
+                          
+                          {project.description && (
+                            <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
+                              {project.description}
+                            </p>
+                          )}
+                          
+                          <div className="flex items-center justify-between text-xs text-zinc-500">
+                            <span className="flex items-center gap-1">
+                              <Clock size={12} className="text-zinc-500" />
+                              Updated {new Date(project.updated_at).toLocaleDateString()}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <Users size={12} className="text-zinc-500" />
+                              <span>{project.member_count || 1} {project.member_count === 1 ? 'member' : 'members'}</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+                        <Layers className="mx-auto text-zinc-500 mb-4" size={64} />
+                        <h3 className="text-xl font-semibold text-white mb-2">
+                          No Projects Yet
+                        </h3>
+                        <p className="text-zinc-400 mb-6">
+                          Create your first project to start building prompt flows
+                        </p>
+                        <button
+                          onClick={() => setShowCreateModal(true)}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105"
+                        >
+                          <Plus size={16} />
+                          <span>Create Project</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
-            </div>
-
-            {/* Canvas Area */}
-            <div className="flex-1 relative overflow-hidden">
-              {loading ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex items-center gap-2 text-zinc-400">
-                    <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-                    <span>Loading project...</span>
-                  </div>
-                </div>
-              ) : !activeProject ? (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center max-w-md px-6">
-                    <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                      <Layers size={32} className="text-indigo-400" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-white mb-2">No Project Selected</h2>
-                    <p className="text-zinc-400 mb-6">
-                      {projects.length === 0 
-                        ? 'Create your first project to get started with visual prompt flows.'
-                        : 'Select a project from the dropdown above to start working.'}
-                    </p>
+            ) : (
+              /* Project Canvas View */
+              <div className="flex-1 flex flex-col relative">
+                {/* Project Header */}
+                <div className="flex items-center justify-between p-4 border-b border-zinc-800/50 bg-zinc-900/30 backdrop-blur-xl">
+                  <div className="flex items-center gap-4">
                     <button
-                      onClick={() => setShowCreateProjectModal(true)}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                      onClick={() => setSelectedProject(null)}
+                      className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                      title="Back to projects"
                     >
-                      <Plus size={16} />
-                      <span>Create Project</span>
+                      <Layers size={20} />
                     </button>
+                    
+                    <div>
+                      <h2 className="text-lg font-semibold text-white">
+                        {selectedProject.name}
+                      </h2>
+                      {selectedProject.description && (
+                        <p className="text-sm text-zinc-400">
+                          {selectedProject.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {/* Team Members Display */}
+                    <TeamMembersDisplay 
+                      projectId={selectedProject.id}
+                      currentUserRole={currentUserRole}
+                    />
+                    
+                    {/* Add Member Button */}
+                    {currentUserRole === 'admin' && (
+                      <motion.button
+                        onClick={() => setShowInviteModal(true)}
+                        className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg transition-all duration-200 text-sm"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        title="Invite team member"
+                      >
+                        <UserPlus size={16} className="text-zinc-400" />
+                        <span className="text-zinc-300">Invite</span>
+                      </motion.button>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div 
+                
+                {/* Canvas Area */}
+                <div
                   ref={canvasRef}
-                  className="absolute inset-0 bg-zinc-950"
-                  onClick={handleCanvasClick}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleCanvasMouseUp}
-                  style={{ cursor: isAddingNode ? 'crosshair' : 'default' }}
+                  className="flex-1 relative overflow-hidden"
+                  onMouseDown={handleMouseDown}
+                  style={{
+                    cursor: isConnectMode ? 'crosshair' : dragState.isDragging ? 'grabbing' : 'grab',
+                    backgroundImage: `
+                      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0)
+                    `,
+                    backgroundSize: `${20 * viewport.zoom}px ${20 * viewport.zoom}px`,
+                    backgroundPosition: `${viewport.x}px ${viewport.y}px`
+                  }}
                 >
-                  {/* Grid Background */}
-                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzMzMzMzMyIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')]" />
-                  
-                  {/* Connections */}
-                  <svg className="absolute inset-0 pointer-events-none">
-                    <defs>
-                      <marker
-                        id="arrowhead"
-                        markerWidth="10"
-                        markerHeight="7"
-                        refX="9"
-                        refY="3.5"
-                        orient="auto"
-                      >
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#8b5cf6" />
-                      </marker>
-                    </defs>
-                    
-                    {/* Existing Connections */}
-                    {activeProject.connections?.map(connection => (
-                      <g key={connection.id}>
-                        <path
-                          d={calculateConnectionPath(connection)}
-                          stroke="#8b5cf6"
-                          strokeWidth="2"
-                          fill="none"
-                          markerEnd="url(#arrowhead)"
-                          className="cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDeleteConnection(connection.id)
-                          }}
-                        />
-                      </g>
-                    ))}
-                    
-                    {/* Temporary Connection */}
-                    {isCreatingConnection && connectionStart && connectionEnd && (
-                      <path
-                        d={calculateTempConnectionPath()}
-                        stroke="#8b5cf6"
-                        strokeWidth="2"
-                        strokeDasharray="5,5"
-                        fill="none"
-                        markerEnd="url(#arrowhead)"
-                      />
-                    )}
-                  </svg>
-                  
-                  {/* Nodes */}
-                  {activeProject.nodes?.map(node => {
-                    const nodeConfig = getNodeTypeConfig(node.type)
-                    const NodeIcon = nodeConfig.icon
-                    const isHovered = hoveredNode === node.id
-                    
-                    return (
-                      <motion.div
-                        key={node.id}
-                        className={`absolute bg-zinc-900/80 backdrop-blur-sm border ${nodeConfig.borderColor} rounded-xl shadow-lg w-[200px] cursor-grab ${isHovered ? nodeConfig.hoverColor : ''}`}
-                        style={{
-                          left: node.position.x,
-                          top: node.position.y,
-                          zIndex: isHovered ? 10 : 1
-                        }}
-                        drag={canEditProject()}
-                        dragMomentum={false}
-                        onDragStart={() => setIsDraggingNode(true)}
-                        onDragEnd={(e, info) => {
-                          setIsDraggingNode(false)
-                          handleNodeDrag(node.id, {
-                            x: node.position.x + info.offset.x,
-                            y: node.position.y + info.offset.y
-                          })
-                        }}
-                        onClick={(e) => !isDraggingNode && handleNodeClick(node, e)}
-                        onMouseEnter={() => setHoveredNode(node.id)}
-                        onMouseLeave={() => setHoveredNode(null)}
-                      >
-                        {/* Node Header */}
-                        <div className="flex items-center justify-between p-3 border-b border-zinc-800/50">
-                          <div className="flex items-center gap-2">
-                            <div className={`p-1.5 ${nodeConfig.color} rounded-lg`}>
-                              <NodeIcon size={14} className="text-white" />
-                            </div>
-                            <h3 className="text-sm font-medium text-white truncate max-w-[120px]">
-                              {node.title}
-                            </h3>
-                          </div>
-                          
-                          {canEditProject() && (
-                            <div className="flex items-center">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleEditNode(node.id)
-                                }}
-                                className="p-1 text-zinc-400 hover:text-white transition-colors"
-                                title="Edit node"
-                              >
-                                <Edit3 size={12} />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDeleteNode(node.id)
-                                }}
-                                className="p-1 text-zinc-400 hover:text-red-400 transition-colors"
-                                title="Delete node"
-                              >
-                                <Trash2 size={12} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Node Content Preview */}
-                        <div className="p-3 text-xs text-zinc-300 max-h-[100px] overflow-hidden">
-                          {node.content ? (
-                            <div className="line-clamp-4">{node.content}</div>
-                          ) : (
-                            <div className="text-zinc-500 italic">No content</div>
-                          )}
-                        </div>
-                        
-                        {/* Connection Handle */}
-                        {canEditProject() && (
-                          <div 
-                            className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-purple-500 rounded-full cursor-pointer border-2 border-zinc-900 hover:scale-125 transition-transform duration-200"
-                            onClick={(e) => e.stopPropagation()}
-                            onMouseDown={(e) => handleNodeConnectionStart(node, e)}
-                          />
-                        )}
-                      </motion.div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Toolbar */}
-            {activeProject && (
-              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10">
-                <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800/50 rounded-xl shadow-lg p-2 flex items-center gap-2">
-                  {canEditProject() && (
-                    <>
-                      <button
-                        onClick={() => {
-                          setIsAddingNode(true)
-                          setNewNodeType('input')
-                        }}
-                        className={`p-2 rounded-lg transition-all duration-200 ${
-                          isAddingNode && newNodeType === 'input'
-                            ? 'bg-purple-500/20 text-purple-400'
-                            : 'text-zinc-400 hover:text-purple-400 hover:bg-purple-500/10'
-                        }`}
-                        title="Add Input Node"
-                      >
-                        <Upload size={16} />
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setIsAddingNode(true)
-                          setNewNodeType('prompt')
-                        }}
-                        className={`p-2 rounded-lg transition-all duration-200 ${
-                          isAddingNode && newNodeType === 'prompt'
-                            ? 'bg-blue-500/20 text-blue-400'
-                            : 'text-zinc-400 hover:text-blue-400 hover:bg-blue-500/10'
-                        }`}
-                        title="Add Prompt Node"
-                      >
-                        <Type size={16} />
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setIsAddingNode(true)
-                          setNewNodeType('condition')
-                        }}
-                        className={`p-2 rounded-lg transition-all duration-200 ${
-                          isAddingNode && newNodeType === 'condition'
-                            ? 'bg-yellow-500/20 text-yellow-400'
-                            : 'text-zinc-400 hover:text-yellow-400 hover:bg-yellow-500/10'
-                        }`}
-                        title="Add Condition Node"
-                      >
-                        <GitBranch size={16} />
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          setIsAddingNode(true)
-                          setNewNodeType('output')
-                        }}
-                        className={`p-2 rounded-lg transition-all duration-200 ${
-                          isAddingNode && newNodeType === 'output'
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'text-zinc-400 hover:text-green-400 hover:bg-green-500/10'
-                        }`}
-                        title="Add Output Node"
-                      >
-                        <Target size={16} />
-                      </button>
-                      
-                      <div className="h-6 border-r border-zinc-700/50 mx-1"></div>
-                      
-                      <button
-                        onClick={() => setShowPromptImportModal(true)}
-                        className="p-2 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all duration-200"
-                        title="Import Prompt"
-                      >
-                        <Download size={16} />
-                      </button>
-                    </>
-                  )}
-                  
-                  <button
-                    onClick={() => {
-                      if (isAddingNode) {
-                        setIsAddingNode(false)
-                      }
-                    }}
-                    className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                    title="Reset View"
+                  {/* SVG for connections */}
+                  <svg
+                    ref={svgRef}
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                    style={{ zIndex: 1 }}
                   >
-                    <X size={16} />
-                  </button>
+                    {/* Render existing connections */}
+                    <g transform={`translate(${viewport.x}, ${viewport.y}) scale(${viewport.zoom})`}>
+                      {selectedProject.connections?.map(renderConnection)}
+                      
+                      {/* Temporary connection line */}
+                      {tempConnection && (
+                        <line
+                          x1={tempConnection.start.x}
+                          y1={tempConnection.start.y}
+                          x2={tempConnection.end.x}
+                          y2={tempConnection.end.y}
+                          stroke="rgba(99, 102, 241, 0.5)"
+                          strokeWidth="2"
+                          strokeDasharray="5,5"
+                        />
+                      )}
+                    </g>
+                  </svg>
+
+                  {/* Render nodes */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
+                      transformOrigin: '0 0',
+                      zIndex: 2
+                    }}
+                  >
+                    {selectedProject.nodes?.map((node: FlowNode) => {
+                      const config = NODE_TYPE_CONFIG[node.type]
+                      const Icon = config.icon
+                      const isSelected = selectedNode?.id === node.id
+                      const isConnectionSource = connectionStart === node.id
+                      const isDragging = dragState.draggedNodeId === node.id
+
+                      return (
+                        <motion.div
+                          key={node.id}
+                          data-node-id={node.id}
+                          className={`absolute w-72 group cursor-pointer ${
+                            isSelected
+                              ? 'z-50'
+                              : isConnectionSource
+                                ? 'z-40'
+                                : isDragging ? 'z-50' : 'z-10'
+                          }`}
+                          style={{
+                            left: node.position.x,
+                            top: node.position.y,
+                          }}
+                          onClick={(e) => handleNodeClick(node, e)}
+                          whileHover={{ scale: isDragging ? 1.05 : 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          animate={{
+                            scale: isDragging ? 1.05 : 1,
+                          }}
+                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        >
+                          {/* Node Card */}
+                          <div className={`
+                            bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 
+                            transition-all duration-200 hover:bg-white/10 hover:border-white/20
+                            ${isSelected ? 'ring-2 ring-indigo-500/50 bg-indigo-500/10 border-indigo-500/30' : ''}
+                            ${isConnectionSource ? 'ring-2 ring-orange-500/50 bg-orange-500/10 border-orange-500/30' : ''}
+                            ${isDragging ? 'shadow-2xl shadow-black/50' : 'shadow-lg shadow-black/20'}
+                          `}>
+                            {/* Node Header */}
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className={`p-2.5 bg-gradient-to-r ${config.color} rounded-lg shadow-lg`}>
+                                <Icon size={18} className="text-white" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-white font-medium text-sm truncate">
+                                  {node.title}
+                                </h4>
+                                <p className="text-zinc-400 text-xs">
+                                  {config.description}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Node Content Preview */}
+                            {node.content && (
+                              <div className="text-zinc-300 text-xs leading-relaxed line-clamp-3 mb-4 bg-white/5 rounded-lg p-3 border border-white/10">
+                                {node.content.substring(0, 120)}
+                                {node.content.length > 120 && '...'}
+                              </div>
+                            )}
+
+                            {/* Connection Points */}
+                            <div className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-zinc-700 border-2 border-zinc-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-zinc-700 border-2 border-zinc-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Empty state */}
+                  {(!selectedProject.nodes || selectedProject.nodes.length === 0) && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center mt-20">
+                        <div className="w-16 h-16 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                          <Layers className="text-zinc-400" size={32} />
+                        </div>
+                        <h3 className="text-xl font-semibold text-zinc-400 mb-2">
+                          Empty Canvas
+                        </h3>
+                        <p className="text-zinc-500 mb-6">
+                          Add your first node to start building your prompt flow
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                {/* Node Creation Toolbar - Top Center */}
+                <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-50">
+                  <div className="flex items-center gap-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-2 shadow-xl">
+                    {Object.entries(NODE_TYPE_CONFIG).map(([type, config]) => {
+                      const Icon = config.icon
+                      return (
+                        <motion.button
+                          key={type}
+                          onClick={() => handleAddNode(type as FlowNode['type'])}
+                          className="flex items-center gap-2 px-3 py-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200 text-sm font-medium"
+                          title={`Add ${config.label}`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Icon size={16} />
+                          <span className="hidden sm:inline">{config.label}</span>
+                        </motion.button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Viewport Toolbar - Left Bottom */}
+                <div className="absolute bottom-6 left-6 z-50">
+                  <div className="flex flex-col gap-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-2 shadow-xl">
+                    {/* Current Zoom Display */}
+                    {currentZoomDisplay && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="px-3 py-1 bg-zinc-800/90 backdrop-blur-sm border border-zinc-700/50 rounded-lg text-sm text-white"
+                      >
+                        {currentZoomDisplay}%
+                      </motion.div>
+                    )}
+                    
+                    <motion.button
+                      onClick={handleZoomIn}
+                      className="p-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                      title="Zoom in"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <ZoomIn size={18} />
+                    </motion.button>
+                    <div className="text-xs text-zinc-400 text-center px-2 py-1 font-mono">
+                      {Math.round(viewport.zoom * 100)}%
+                    </div>
+                    <motion.button
+                      onClick={handleZoomOut}
+                      className="p-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                      title="Zoom out"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <ZoomOut size={18} />
+                    </motion.button>
+                    <motion.button
+                      onClick={handleResetView}
+                      className="p-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                      title="Reset view"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <Maximize2 size={18} />
+                    </motion.button>
+                  </div>
+                </div>
+
+                {/* Contextual Toolbar - Middle Bottom (when node selected) */}
+                <AnimatePresence>
+                  {selectedNode && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                      className="absolute bottom-6 transform z-50"
+                      style={{ left: '45%', transform: 'translateX(-45%)' }}
+                    >
+                      <div className="flex items-center gap-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-2 shadow-xl">
+                        <motion.button
+                          onClick={() => handleNodeEdit(selectedNode)}
+                          className="p-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                          title="Edit node"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Edit3 size={18} />
+                        </motion.button>
+                        <motion.button
+                          onClick={() => setShowNodeDetails(true)}
+                          className="p-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                          title="View details"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Eye size={18} />
+                        </motion.button>
+                        <motion.button
+                          onClick={() => {
+                            setIsConnectMode(!isConnectMode)
+                            setConnectionStart(null)
+                            setTempConnection(null)
+                          }}
+                          className={`p-3 rounded-lg transition-all duration-200 ${
+                            isConnectMode
+                              ? 'text-orange-400 bg-orange-500/20'
+                              : 'text-zinc-400 hover:text-white hover:bg-white/10'
+                          }`}
+                          title={isConnectMode ? 'Exit connect mode' : 'Connect nodes'}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Link2 size={18} />
+                        </motion.button>
+                        <motion.button
+                          onClick={() => handleNodeDuplicate(selectedNode.id)}
+                          className="p-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                          title="Duplicate node"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Copy size={18} />
+                        </motion.button>
+                        <motion.button
+                          onClick={() => handleNodeDelete(selectedNode.id)}
+                          className="p-3 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                          title="Delete node"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Trash2 size={18} />
+                        </motion.button>
+                        <motion.button
+                          onClick={() => setSelectedNode(null)}
+                          className="p-3 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                          title="Close"
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <X size={18} />
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
           </div>
@@ -946,22 +1249,22 @@ export const ProjectSpacePage: React.FC = () => {
 
       {/* Create Project Modal */}
       <AnimatePresence>
-        {showCreateProjectModal && (
+        {showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCreateProjectModal(false)} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCreateModal(false)} />
             
             <motion.div 
-              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-md"
+              className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-md"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center justify-between p-6 border-b border-zinc-800/50">
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
                 <h2 className="text-xl font-semibold text-white">Create New Project</h2>
                 <button
-                  onClick={() => setShowCreateProjectModal(false)}
-                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                  onClick={() => setShowCreateModal(false)}
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
                 >
                   <X size={20} />
                 </button>
@@ -977,38 +1280,53 @@ export const ProjectSpacePage: React.FC = () => {
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
                     placeholder="Enter project name"
-                    className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                     autoFocus
                   />
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Description <span className="text-zinc-500">(optional)</span>
+                    Description
                   </label>
                   <textarea
-                    value={newProjectDescription}
-                    onChange={(e) => setNewProjectDescription(e.target.value)}
-                    placeholder="Enter project description"
+                    value={newProjectDesc}
+                    onChange={(e) => setNewProjectDesc(e.target.value)}
+                    placeholder="Optional description"
                     rows={3}
-                    className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
                   />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    Visibility
+                  </label>
+                  <select
+                    value={newProjectVisibility}
+                    onChange={(e) => setNewProjectVisibility(e.target.value as any)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                  >
+                    <option value="private">Private - Only you and invited members</option>
+                    <option value="team">Team - All members can access</option>
+                    <option value="public">Public - Anyone can view</option>
+                  </select>
                 </div>
               </div>
               
-              <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800/50">
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-white/10">
                 <button
-                  onClick={() => setShowCreateProjectModal(false)}
+                  onClick={() => setShowCreateModal(false)}
                   className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateProject}
-                  disabled={!newProjectName.trim() || creatingProject}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                  disabled={!newProjectName.trim() || isSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 disabled:bg-zinc-700/50 disabled:border-zinc-700/50 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
                 >
-                  {creatingProject ? (
+                  {isSubmitting ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       <span>Creating...</span>
@@ -1028,22 +1346,22 @@ export const ProjectSpacePage: React.FC = () => {
 
       {/* Edit Project Modal */}
       <AnimatePresence>
-        {showEditProjectModal && activeProject && (
+        {showEditModal && projectToEdit && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowEditProjectModal(false)} />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowEditModal(false)} />
             
             <motion.div 
-              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-md"
+              className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-md"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center justify-between p-6 border-b border-zinc-800/50">
+              <div className="flex items-center justify-between p-6 border-b border-white/10">
                 <h2 className="text-xl font-semibold text-white">Edit Project</h2>
                 <button
-                  onClick={() => setShowEditProjectModal(false)}
-                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                  onClick={() => setShowEditModal(false)}
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
                 >
                   <X size={20} />
                 </button>
@@ -1056,24 +1374,24 @@ export const ProjectSpacePage: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    value={editProjectName}
-                    onChange={(e) => setEditProjectName(e.target.value)}
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
                     placeholder="Enter project name"
-                    className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                     autoFocus
                   />
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Description <span className="text-zinc-500">(optional)</span>
+                    Description
                   </label>
                   <textarea
-                    value={editProjectDescription}
-                    onChange={(e) => setEditProjectDescription(e.target.value)}
-                    placeholder="Enter project description"
+                    value={newProjectDesc}
+                    onChange={(e) => setNewProjectDesc(e.target.value)}
+                    placeholder="Optional description"
                     rows={3}
-                    className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
                   />
                 </div>
                 
@@ -1081,100 +1399,191 @@ export const ProjectSpacePage: React.FC = () => {
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
                     Visibility
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <button
-                      onClick={() => setEditProjectVisibility('private')}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all duration-200 ${
-                        editProjectVisibility === 'private'
-                          ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300'
-                          : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:bg-zinc-800 hover:text-white'
-                      }`}
-                    >
-                      <Lock size={16} />
-                      <span className="text-xs">Private</span>
-                    </button>
-                    <button
-                      onClick={() => setEditProjectVisibility('team')}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all duration-200 ${
-                        editProjectVisibility === 'team'
-                          ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300'
-                          : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:bg-zinc-800 hover:text-white'
-                      }`}
-                    >
-                      <Users size={16} />
-                      <span className="text-xs">Team</span>
-                    </button>
-                    <button
-                      onClick={() => setEditProjectVisibility('public')}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all duration-200 ${
-                        editProjectVisibility === 'public'
-                          ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300'
-                          : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:bg-zinc-800 hover:text-white'
-                      }`}
-                    >
-                      <Globe size={16} />
-                      <span className="text-xs">Public</span>
-                    </button>
-                  </div>
+                  <select
+                    value={newProjectVisibility}
+                    onChange={(e) => setNewProjectVisibility(e.target.value as any)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                  >
+                    <option value="private">Private - Only you and invited members</option>
+                    <option value="team">Team - All members can access</option>
+                    <option value="public">Public - Anyone can view</option>
+                  </select>
                 </div>
-                
-                <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
-                  <h4 className="text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
-                    <Info size={14} className="text-indigo-400" />
-                    Visibility Settings
-                  </h4>
-                  <div className="text-xs text-zinc-400">
-                    {editProjectVisibility === 'private' && (
-                      <p>Only you can access this project.</p>
-                    )}
-                    {editProjectVisibility === 'team' && (
-                      <p>Only you and team members you invite can access this project.</p>
-                    )}
-                    {editProjectVisibility === 'public' && (
-                      <p>Anyone with the link can view this project, but only team members can edit.</p>
-                    )}
+
+                {/* Team Members Section */}
+                <div className="pt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium text-zinc-300">Team Members</h3>
+                    <TeamMembersDisplay 
+                      projectId={projectToEdit.id}
+                      currentUserRole={projectToEdit.current_user_role || null}
+                    />
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center justify-between gap-3 p-6 border-t border-zinc-800/50">
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-white/10">
                 <button
-                  onClick={handleDeleteProject}
-                  disabled={deletingProject}
-                  className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
                 >
-                  {deletingProject ? (
-                    <div className="w-4 h-4 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin" />
-                  ) : (
-                    <Trash2 size={16} />
-                  )}
-                  <span>Delete</span>
+                  Cancel
                 </button>
+                <button
+                  onClick={handleUpdateProject}
+                  disabled={!newProjectName.trim() || isSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 disabled:bg-zinc-700/50 disabled:border-zinc-700/50 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Settings size={16} />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && projectToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+            
+            <motion.div 
+              className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-md"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
+                    <Trash2 size={24} className="text-red-400" />
+                  </div>
+                </div>
                 
-                <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold text-white text-center mb-2">Delete Project</h2>
+                <p className="text-zinc-400 text-center mb-6">
+                  Are you sure you want to delete <span className="text-white font-medium">{projectToDelete.name}</span>? This action cannot be undone.
+                </p>
+                
+                <div className="flex items-center justify-center gap-3">
                   <button
-                    onClick={() => setShowEditProjectModal(false)}
+                    onClick={() => setShowDeleteConfirm(false)}
                     className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={handleUpdateProject}
-                    disabled={!editProjectName.trim() || updatingProject}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                    onClick={handleDeleteProject}
+                    disabled={isSubmitting}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
                   >
-                    {updatingProject ? (
+                    {isSubmitting ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Saving...</span>
+                        <span>Deleting...</span>
                       </>
                     ) : (
                       <>
-                        <Save size={16} />
-                        <span>Save Changes</span>
+                        <Trash2 size={16} />
+                        <span>Delete Project</span>
                       </>
                     )}
                   </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      
+      {/* Project Creation Modal */}
+      <AnimatePresence>
+        {showProjectModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowProjectModal(false)} />
+            
+            <motion.div 
+              className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-md"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="p-6">
+                <h2 className="text-xl font-semibold text-white mb-4">Create New Project</h2>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-300 mb-2">
+                      Project Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newProjectName}
+                      onChange={(e) => setNewProjectName(e.target.value)}
+                      placeholder="Enter project name"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-300 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      value={newProjectDescription}
+                      onChange={(e) => setNewProjectDescription(e.target.value)}
+                      placeholder="Optional description"
+                      rows={3}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 mt-6">
+                  <motion.button
+                    onClick={handleCreateProject}
+                    disabled={creatingProject || !newProjectName.trim()}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 disabled:bg-zinc-700/50 disabled:border-zinc-700/50 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {creatingProject ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Creating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={16} />
+                        <span>Create Project</span>
+                      </>
+                    )}
+                  </motion.button>
+                  
+                  <motion.button
+                    onClick={() => setShowProjectModal(false)}
+                    disabled={creatingProject}
+                    className="px-4 py-3 text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    Cancel
+                  </motion.button>
                 </div>
               </div>
             </motion.div>
@@ -1184,183 +1593,321 @@ export const ProjectSpacePage: React.FC = () => {
 
       {/* Node Editor Modal */}
       <NodeEditorModal
-        isOpen={showNodeEditorModal}
-        onClose={() => setShowNodeEditorModal(false)}
-        node={selectedNode}
-        onSave={handleUpdateNode}
+        isOpen={showNodeEditor}
+        onClose={() => {
+          setShowNodeEditor(false)
+          setEditingNode(null)
+        }}
+        node={editingNode}
+        onSave={handleNodeSave}
       />
 
       {/* Node Details Modal */}
       <NodeDetailsModal
-        isOpen={showNodeDetailsModal}
-        onClose={() => setShowNodeDetailsModal(false)}
-        node={selectedNode}
-        onEdit={handleEditNode}
-      />
-
-      {/* Prompt Import Modal */}
-      <PromptImportModal
-        isOpen={showPromptImportModal}
-        onClose={() => setShowPromptImportModal(false)}
-        onSelectPrompt={(prompt) => {
-          if (!activeProject || !canvasRef.current) return
-          
-          // Get canvas center
-          const rect = canvasRef.current.getBoundingClientRect()
-          const x = rect.width / 2 - 100 // Half node width
-          const y = rect.height / 2 - 50 // Half node height
-          
-          // Create node with imported prompt
-          createNode(activeProject.id, 'prompt', { x, y }, prompt.id)
-            .then(() => {
-              showToast('Prompt imported successfully', 'success')
-              setShowPromptImportModal(false)
-            })
-            .catch(error => {
-              console.error('Failed to import prompt:', error)
-              showToast('Failed to import prompt', 'error')
-            })
+        isOpen={showNodeDetails}
+        onClose={() => {
+          setShowNodeDetails(false)
+          setSelectedNode(null)
         }}
+        node={selectedNode}
+        onEdit={handleNodeEdit}
       />
 
       {/* Invite Member Modal */}
-      <AnimatePresence>
-        {showInviteModal && activeProject && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowInviteModal(false)} />
-            
-            <motion.div 
-              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-md"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="flex items-center justify-between p-6 border-b border-zinc-800/50">
-                <h2 className="text-xl font-semibold text-white">Invite Team Member</h2>
-                <button
-                  onClick={() => setShowInviteModal(false)}
-                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="Enter email address"
-                    className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                    autoFocus
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Role
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <button
-                      onClick={() => setInviteRole('viewer')}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all duration-200 ${
-                        inviteRole === 'viewer'
-                          ? 'bg-green-600/20 border-green-500/50 text-green-300'
-                          : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:bg-zinc-800 hover:text-white'
-                      }`}
-                    >
-                      <Eye size={16} />
-                      <span className="text-xs">Viewer</span>
-                    </button>
-                    <button
-                      onClick={() => setInviteRole('editor')}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all duration-200 ${
-                        inviteRole === 'editor'
-                          ? 'bg-blue-600/20 border-blue-500/50 text-blue-300'
-                          : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:bg-zinc-800 hover:text-white'
-                      }`}
-                    >
-                      <Edit3 size={16} />
-                      <span className="text-xs">Editor</span>
-                    </button>
-                    <button
-                      onClick={() => setInviteRole('admin')}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all duration-200 ${
-                        inviteRole === 'admin'
-                          ? 'bg-purple-600/20 border-purple-500/50 text-purple-300'
-                          : 'bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:bg-zinc-800 hover:text-white'
-                      }`}
-                    >
-                      <Settings size={16} />
-                      <span className="text-xs">Admin</span>
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
-                  <h4 className="text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
-                    <Info size={14} className="text-indigo-400" />
-                    Role Permissions
-                  </h4>
-                  <div className="text-xs text-zinc-400">
-                    {inviteRole === 'viewer' && (
-                      <p>Viewers can view the project but cannot make changes.</p>
-                    )}
-                    {inviteRole === 'editor' && (
-                      <p>Editors can view and edit the project, but cannot manage team members.</p>
-                    )}
-                    {inviteRole === 'admin' && (
-                      <p>Admins have full access to edit the project and manage team members.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800/50">
-                <button
-                  onClick={() => setShowInviteModal(false)}
-                  className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleInviteMember}
-                  disabled={!inviteEmail.trim() || isInviting}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
-                >
-                  {isInviting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Sending...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Share2 size={16} />
-                      <span>Send Invitation</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <InviteMemberModal
+        projectId={selectedProject?.id}
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+      />
 
-      {/* Toast */}
+      {/* Keyboard Shortcuts Modal */}
+      {showShortcuts && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowShortcuts(false)} />
+          
+          <motion.div 
+            className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <Keyboard className="text-indigo-400" size={20} />
+                <h2 className="text-xl font-semibold text-white">Keyboard Shortcuts</h2>
+              </div>
+              <button
+                onClick={() => setShowShortcuts(false)}
+                className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Navigation */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">Navigation</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Zoom In</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">Ctrl + Scroll Up</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Zoom Out</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">Ctrl + Scroll Down</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Reset Zoom</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">R</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Fit to Screen</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">F</kbd>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Node Creation */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">Node Creation</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Input Node</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">1</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Prompt Node</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">2</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Condition Node</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">3</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Output Node</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">4</kbd>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Editing */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">Editing</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Undo</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">Ctrl + Z</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Redo</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">Ctrl + Y</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Save</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">Ctrl + S</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Select All</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">Ctrl + A</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Duplicate</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">Ctrl + D</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Delete</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">Del / Backspace</kbd>
+                    </div>
+                  </div>
+                </div>
+
+                {/* General */}
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-4">General</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Close Modal</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">Esc</kbd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-300">Show Shortcuts</span>
+                      <kbd className="px-2 py-1 bg-zinc-800 text-zinc-300 rounded text-sm">? or Ctrl + /</kbd>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tips */}
+              <div className="mt-8 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                <h4 className="text-indigo-300 font-medium mb-2">💡 Pro Tips</h4>
+                <ul className="text-sm text-indigo-200 space-y-1">
+                  <li>• Hold <kbd className="px-1 py-0.5 bg-indigo-800/30 rounded text-xs">Space</kbd> and drag to pan around the canvas</li>
+                  <li>• Use <kbd className="px-1 py-0.5 bg-indigo-800/30 rounded text-xs">Ctrl + Scroll</kbd> for precise zoom control</li>
+                  <li>• Number keys (1-4) quickly select different node types</li>
+                  <li>• Press <kbd className="px-1 py-0.5 bg-indigo-800/30 rounded text-xs">F</kbd> to fit all nodes in view</li>
+                </ul>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Toast - Positioned to avoid sidebar */}
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={hideToast}
-        />
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 lg:left-80 lg:transform-none">
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        </div>
       )}
 
       <BoltBadge />
+    </div>
+  )
+}
+
+// Invite Member Modal Component
+interface InviteMemberModalProps {
+  projectId: string
+  isOpen: boolean
+  onClose: () => void
+}
+
+const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
+  projectId,
+  isOpen,
+  onClose
+}) => {
+  const [email, setEmail] = useState('')
+  const [role, setRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const { inviteProjectMember } = useProjectSpaceStore()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim()) return
+
+    setLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      await inviteProjectMember(projectId, email.trim(), role)
+      setSuccess('Invitation sent successfully!')
+      setEmail('')
+      setRole('viewer')
+      setTimeout(() => {
+        onClose()
+      }, 2000)
+    } catch (error: any) {
+      setError(error.message || 'Failed to send invitation')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      
+      <motion.div 
+        className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-md shadow-2xl"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+      >
+        <div className="p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Invite Team Member</h2>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter email address"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Role
+              </label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value as 'viewer' | 'editor' | 'admin')}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+              >
+                <option value="viewer">Viewer - Can view the project</option>
+                <option value="editor">Editor - Can edit nodes and connections</option>
+                <option value="admin">Admin - Full project access</option>
+              </select>
+            </div>
+
+            {error && (
+              <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="text-emerald-400 text-sm bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3">
+                {success}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 pt-4">
+              <motion.button
+                type="submit"
+                disabled={loading || !email.trim()}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 disabled:bg-zinc-700/50 disabled:border-zinc-700/50 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                whileHover={{ scale: loading || !email.trim() ? 1 : 1.02 }}
+                whileTap={{ scale: loading || !email.trim() ? 1 : 0.98 }}
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={16} />
+                    <span>Send Invitation</span>
+                  </>
+                )}
+              </motion.button>
+              
+              <motion.button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-3 text-zinc-400 hover:text-white transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Cancel
+              </motion.button>
+            </div>
+          </form>
+        </div>
+      </motion.div>
     </div>
   )
 }
