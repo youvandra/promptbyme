@@ -44,6 +44,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [showProjectMenu, setShowProjectMenu] = useState<string | null>(null)
   
+  const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null)
   const { user, loading: authLoading } = useAuthStore()
   const navigate = useNavigate()
   const params = useParams<{ projectId?: string }>()
@@ -70,6 +71,7 @@ export const ProjectSpacePage: React.FC = () => {
     const loadProject = async () => {
       if (projectId && user && !authLoading) {
         setIsLoading(true)
+        setLoadingProjectId(projectId)
         try {
           // First fetch projects if we don't have them yet
           if (projects.length === 0 && !projectsLoading) {
@@ -84,6 +86,7 @@ export const ProjectSpacePage: React.FC = () => {
           console.error('Failed to load project:', error)
           setToast({ message: 'Failed to load project', type: 'error' })
         } finally {
+          setLoadingProjectId(null)
           setIsLoading(false)
         }
       }
@@ -212,14 +215,17 @@ export const ProjectSpacePage: React.FC = () => {
   const openProjectEditor = (project: FlowProject) => {
     // Navigate to the project page with the project ID in the URL
     setIsLoading(true)
+    setLoadingProjectId(project.id)
     useProjectSpaceStore.getState().selectProject(project)
       .then(() => {
         navigate(`/project/${project.id}`, { replace: true })
+        setLoadingProjectId(null)
         setIsLoading(false)
       })
       .catch(error => {
         console.error('Failed to select project:', error)
         setToast({ message: 'Failed to load project', type: 'error' })
+        setLoadingProjectId(null)
         setIsLoading(false)
       })
   }
@@ -393,7 +399,7 @@ export const ProjectSpacePage: React.FC = () => {
                       key={project.id}
                       className="group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full"
                       onClick={() => openProjectEditor(project)}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: loadingProjectId === project.id ? 'wait' : 'pointer' }}
                     >
                       {/* Project Menu */}
                       <div className="absolute top-4 right-4">
@@ -417,12 +423,23 @@ export const ProjectSpacePage: React.FC = () => {
                               onClick={(e) => {
                                 e.stopPropagation()
                                 setShowProjectMenu(null)
-                                openProjectEditor(project)
+                                if (loadingProjectId !== project.id) {
+                                  openProjectEditor(project)
+                                }
                               }}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm cursor-pointer"
+                              className={`w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm ${loadingProjectId === project.id ? 'cursor-wait opacity-50' : 'cursor-pointer'}`}
                             >
-                              <Layers size={14} />
-                              <span>Open Project</span>
+                              {loadingProjectId === project.id ? (
+                                <>
+                                  <div className="w-3 h-3 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+                                  <span>Opening...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Layers size={14} />
+                                  <span>Open Project</span>
+                                </>
+                              )}
                             </div>
                             
                             {(project.user_id === user.id || currentUserRole === 'admin') && (
@@ -474,7 +491,7 @@ export const ProjectSpacePage: React.FC = () => {
                         )}
                         
                         <div className="flex items-center justify-between mt-auto pt-4">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <div className={`flex items-center gap-1 text-xs ${getVisibilityColor(project.visibility)}`}>
                               {getVisibilityIcon(project.visibility)}
                               <span>{getVisibilityText(project.visibility)}</span>
@@ -485,7 +502,7 @@ export const ProjectSpacePage: React.FC = () => {
                               <span>{project.member_count || 1}</span>
                             </div>
                           </div>
-                          
+
                           <div className="text-xs text-zinc-500">
                             {new Date(project.updated_at).toLocaleDateString('en-US', {
                               month: 'short',
@@ -501,8 +518,8 @@ export const ProjectSpacePage: React.FC = () => {
                 <div className="text-center py-12">
                   {isLoading ? (
                     <div className="flex items-center justify-center gap-3">
-                      <div className="w-5 h-5 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-                      <span className="text-zinc-400">Loading project...</span>
+                      <div className="w-6 h-6 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+                      <span className="text-zinc-400 text-lg">Loading project...</span>
                     </div>
                   ) : (
                     <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">

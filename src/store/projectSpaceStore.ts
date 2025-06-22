@@ -119,7 +119,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     fetchProjects: async () => {
       set({ loading: true })
       try {
-        const { data: { user } } = await supabase.auth.getUser() 
+        const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
           set({ loading: false })
           throw new Error('User not authenticated')
@@ -159,7 +159,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         // Sort by updated_at
         allProjects.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
 
-        set({ projects: allProjects })
+        set({ projects: allProjects, loading: false })
         return allProjects
       } catch (error) {
         console.error('Error fetching projects:', error)
@@ -257,7 +257,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
 
         // Set loading state to true while fetching project data
-        set({ loading: true })
+        set({ loading: true, selectedProject: null })
         
         // Fetch nodes and connections for the selected project
         const [nodesResult, connectionsResult] = await Promise.all([
@@ -310,7 +310,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         // Update state with project data
         set({
           selectedProject: projectWithData,
-          currentUserRole: userRole,
+          currentUserRole: userRole || (projectWithData.user_id === user.id ? 'admin' : null),
           loading: false // Make sure to set loading to false when done
         })
         
@@ -773,10 +773,19 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           // If the project was successfully accepted, we should select it to show it to the user
           const projectId = data.project_id
           if (projectId) {
-            const state = get()
-            const acceptedProject = state.projects.find(p => p.id === projectId)
-            if (acceptedProject) {
-              await get().selectProject(acceptedProject)
+            try {
+              // Fetch the projects first to make sure we have the latest data
+              await get().fetchProjects()
+              
+              // Then find the accepted project
+              const state = get()
+              const acceptedProject = state.projects.find(p => p.id === projectId)
+              
+              if (acceptedProject) {
+                await get().selectProject(acceptedProject)
+              }
+            } catch (error) {
+              console.error('Error selecting accepted project:', error)
             }
           }
         }

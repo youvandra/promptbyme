@@ -248,7 +248,11 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={onToggle}
+                  onClick={() => {
+                    if (window.innerWidth < 1024) {
+                      onToggle()
+                    }
+                  }}
                   className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150
                     ${location.pathname === '/project-space' && !location.pathname.includes('/project/') 
                       ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' 
@@ -270,8 +274,12 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
           {location.pathname.includes('/project/') && (
             <div className="p-2 border-b border-zinc-800/30">
               <Link
-                to={location.pathname}
-                onClick={onToggle}
+                to={location.pathname} 
+                onClick={() => {
+                  if (window.innerWidth < 1024) {
+                    onToggle()
+                  }
+                }}
                 className={`
                   group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150
                   ${location.pathname.includes('/project/')
