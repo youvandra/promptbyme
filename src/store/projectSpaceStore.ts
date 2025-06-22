@@ -8,7 +8,7 @@ export interface FlowNode {
   type: 'input' | 'prompt' | 'condition' | 'output'
   title: string
   content: string
-  position: { x: number; y: number }
+  position: { x: number; y: number } // For React Flow
   imported_prompt_id?: string | null
   metadata?: {
     tags?: string[]
@@ -385,63 +385,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
       }
     },
 
-    duplicateNode: async (nodeId: string, offset: { x: number, y: number } = { x: 50, y: 50 }) => {
-      try {
-        // Get the original node
-        const { data: originalNode, error: fetchError } = await supabase
-          .from('flow_nodes')
-          .select('*')
-          .eq('id', nodeId)
-          .single()
-
-        if (fetchError || !originalNode) {
-          throw new Error('Failed to fetch original node')
-        }
-
-        // Create a new node with the same properties but at an offset position
-        const { data: newNode, error: createError } = await supabase
-          .from('flow_nodes')
-          .insert([{
-            project_id: originalNode.project_id,
-            type: originalNode.type,
-            title: `Copy of ${originalNode.title}`,
-            content: originalNode.content,
-            position_x: originalNode.position_x + offset.x,
-            position_y: originalNode.position_y + offset.y,
-            imported_prompt_id: originalNode.imported_prompt_id,
-            metadata: originalNode.metadata
-          }])
-          .select()
-          .single()
-
-        if (createError) {
-          throw createError
-        }
-
-        // Transform node to include position object
-        const transformedNode: FlowNode = {
-          ...newNode,
-          position: { x: newNode.position_x, y: newNode.position_y }
-        }
-
-        // Update selected project if it contains this node
-        const { selectedProject } = get()
-        if (selectedProject?.id === originalNode.project_id) {
-          set({
-            selectedProject: {
-              ...selectedProject,
-              nodes: [...(selectedProject.nodes || []), transformedNode]
-            }
-          })
-        }
-
-        return transformedNode
-      } catch (error) {
-        console.error('Error duplicating node:', error)
-        throw error
-      }
-    },
-
     updateNode: async (nodeId: string, updates: Partial<FlowNode>) => {
       try {
         // Prepare database updates
@@ -546,6 +489,63 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
       } catch (error) {
         console.error('Error moving node:', error)
+        throw error
+      }
+    },
+
+    duplicateNode: async (nodeId: string, offset: { x: number, y: number } = { x: 50, y: 50 }) => {
+      try {
+        // Get the original node
+        const { data: originalNode, error: fetchError } = await supabase
+          .from('flow_nodes')
+          .select('*')
+          .eq('id', nodeId)
+          .single()
+
+        if (fetchError || !originalNode) {
+          throw new Error('Failed to fetch original node')
+        }
+
+        // Create a new node with the same properties but at an offset position
+        const { data: newNode, error: createError } = await supabase
+          .from('flow_nodes')
+          .insert([{
+            project_id: originalNode.project_id,
+            type: originalNode.type,
+            title: `Copy of ${originalNode.title}`,
+            content: originalNode.content,
+            position_x: originalNode.position_x + offset.x,
+            position_y: originalNode.position_y + offset.y,
+            imported_prompt_id: originalNode.imported_prompt_id,
+            metadata: originalNode.metadata
+          }])
+          .select()
+          .single()
+
+        if (createError) {
+          throw createError
+        }
+
+        // Transform node to include position object
+        const transformedNode: FlowNode = {
+          ...newNode,
+          position: { x: newNode.position_x, y: newNode.position_y }
+        }
+
+        // Update selected project if it contains this node
+        const { selectedProject } = get()
+        if (selectedProject?.id === originalNode.project_id) {
+          set({
+            selectedProject: {
+              ...selectedProject,
+              nodes: [...(selectedProject.nodes || []), transformedNode]
+            }
+          })
+        }
+
+        return transformedNode
+      } catch (error) {
+        console.error('Error duplicating node:', error)
         throw error
       }
     },
