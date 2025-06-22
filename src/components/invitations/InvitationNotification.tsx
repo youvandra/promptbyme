@@ -35,7 +35,7 @@ export const InvitationNotification: React.FC = () => {
       // If accepted, navigate to the specific project page
      if (action === 'accept') {
        setIsExpanded(false)
-        navigate(`/project/${projectId}`)
+        window.location.href = `/project/${projectId}`
      }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)

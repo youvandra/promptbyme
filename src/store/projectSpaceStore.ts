@@ -426,6 +426,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
         // Update selected project if it contains this node
         const { selectedProject } = get()
+        const state = get()
         if (selectedProject?.id === originalNode.project_id) {
           set({
             selectedProject: {
@@ -469,6 +470,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
         // Update selected project if it contains this node
         const { selectedProject } = get()
+        const state = get()
         if (selectedProject?.nodes) {
           const updatedNodes = selectedProject.nodes.map(n => 
             n.id === nodeId ? transformedNode : n
