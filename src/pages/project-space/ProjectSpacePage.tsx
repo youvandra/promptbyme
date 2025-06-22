@@ -43,7 +43,7 @@ export const ProjectSpacePage: React.FC = () => {
     updateProject,
     deleteProject,
     currentProject,
-    setCurrentProject
+    selectProject
   } = useProjectSpaceStore()
 
   // State management
@@ -78,14 +78,14 @@ export const ProjectSpacePage: React.FC = () => {
     if (projectId && projects.length > 0) {
       const project = projects.find(p => p.id === projectId)
       if (project) {
-        setCurrentProject(project)
+        selectProject(project)
         setIsViewingProject(true)
       }
     } else {
       setIsViewingProject(false)
-      setCurrentProject(null)
+      selectProject(null)
     }
-  }, [projectId, projects, setCurrentProject])
+  }, [projectId, projects, selectProject])
 
   // Filter projects based on search
   const filteredProjects = projects.filter(project =>
