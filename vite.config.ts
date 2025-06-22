@@ -15,5 +15,14 @@ export default defineConfig({
       // Allow serving files from one level up to the project root and node_modules
       allow: ['..', 'node_modules']
     }
+  },
+  build: {
+    sourcemap: true
+  },
+  server: {
+    fs: {
+      // Allow serving files from one level up to the project root and node_modules
+      allow: ['..', 'node_modules']
+    }
   }
 });

@@ -261,7 +261,9 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     selectProject: async (project: FlowProject) => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
+        
         if (!user) {
+          set({ loading: false, loadingProjectId: null })
           throw new Error('User not authenticated')
         }
 
@@ -282,6 +284,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         ])
 
         if (nodesResult.error) {
+          set({ loading: false, loadingProjectId: null })
           throw nodesResult.error
         }
         if (connectionsResult.error) {
@@ -319,7 +322,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         // Update state with project data
         set({
           selectedProject: projectWithData,
-          currentUserRole: userRole || (projectWithData.user_id === user.id ? 'admin' : null), 
+          currentUserRole: userRole || (project.user_id === user.id ? 'admin' : null), 
           loading: false, // Make sure to set loading to false when done
           loadingProjectId: null
         })
@@ -761,6 +764,10 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     manageInvitation: async (projectId: string, action: 'accept' | 'decline') => {
       try {
         set({ loadingProjectId: projectId })
+        
+        // Add a small delay to ensure UI updates properly
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         const { data, error } = await supabase.functions.invoke('manage-project-invitation', {
           body: {
             project_id: projectId, 
@@ -783,6 +790,9 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (action === 'accept') {
           await get().fetchProjects()
           
+          // Add a small delay to ensure projects are loaded
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
           // If the project was successfully accepted, we should select it to show it to the user
           const projectId = data.project_id
           if (projectId) {
@@ -796,6 +806,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
               
               if (acceptedProject) {
                 await get().selectProject(acceptedProject)
+                return true
               }
             } catch (error) {
               console.error('Error selecting accepted project:', error)
