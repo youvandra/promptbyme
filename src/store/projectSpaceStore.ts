@@ -661,10 +661,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         await get().fetchProjectMembers(projectId)
       } catch (error) {
         console.error('Error inviting project member:', error)
-        // Provide more detailed error information
-        if (error.message && error.message.includes('Edge Function returned a non-2xx status code')) {
-          throw new Error('Failed to send invitation. Please check if the user exists and you have permission to invite members.')
-        }
         throw error
       }
     },

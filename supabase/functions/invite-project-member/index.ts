@@ -28,8 +28,7 @@ Deno.serve(async (req) => {
           error: 'Server configuration error: Missing required environment variables'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -55,8 +54,7 @@ Deno.serve(async (req) => {
           error: 'No authorization header provided'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -72,8 +70,7 @@ Deno.serve(async (req) => {
           error: 'Invalid authentication token'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -92,8 +89,7 @@ Deno.serve(async (req) => {
           error: 'Invalid JSON in request body'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -105,8 +101,7 @@ Deno.serve(async (req) => {
           error: 'Project ID, email, and role are required'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -118,8 +113,7 @@ Deno.serve(async (req) => {
           error: 'Invalid role specified'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -139,8 +133,7 @@ Deno.serve(async (req) => {
           error: 'Project not found: ' + projectError.message
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -152,8 +145,7 @@ Deno.serve(async (req) => {
           error: 'Project not found'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -183,8 +175,7 @@ Deno.serve(async (req) => {
           error: 'Access denied: You do not have permission to invite members'
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -204,8 +195,7 @@ Deno.serve(async (req) => {
           error: 'User not found with the provided email address' + (userError ? ': ' + userError.message : '')
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -226,8 +216,7 @@ Deno.serve(async (req) => {
             error: 'User is already a member of this project'
           }),
           {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         )
       } else if (existingMember.status === 'pending') {
@@ -237,8 +226,7 @@ Deno.serve(async (req) => {
             error: 'User already has a pending invitation to this project'
           }),
           {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           }
         )
       }
@@ -265,8 +253,7 @@ Deno.serve(async (req) => {
           error: 'Failed to create invitation: ' + inviteError.message
         }),
         {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
     }
@@ -278,8 +265,7 @@ Deno.serve(async (req) => {
         invitation_id: invitation.id
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
 
@@ -292,8 +278,7 @@ Deno.serve(async (req) => {
         error: error.message || 'An unexpected error occurred'
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
   }
