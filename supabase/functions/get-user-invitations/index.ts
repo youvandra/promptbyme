@@ -17,10 +17,12 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
-    if (!supabaseUrl || !supabaseServiceKey) {
+    if (!supabaseUrl || !supabaseServiceKey || supabaseUrl.trim() === '' || supabaseServiceKey.trim() === '') {
       console.error('Missing environment variables:', {
         hasUrl: !!supabaseUrl,
-        hasServiceKey: !!supabaseServiceKey
+        hasServiceKey: !!supabaseServiceKey,
+        urlEmpty: !supabaseUrl || supabaseUrl.trim() === '',
+        serviceKeyEmpty: !supabaseServiceKey || supabaseServiceKey.trim() === ''
       })
       return new Response(
         JSON.stringify({
@@ -173,10 +175,27 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error in get-user-invitations function:', error)
     
+    // Ensure we always have a string error message
+    let errorMessage = 'An unexpected error occurred'
+    
+    if (error && typeof error === 'object') {
+      if (error.message && typeof error.message === 'string') {
+        errorMessage = error.message
+      } else if (error.toString && typeof error.toString === 'function') {
+        errorMessage = error.toString()
+      } else {
+        errorMessage = JSON.stringify(error)
+      }
+    } else if (typeof error === 'string') {
+      errorMessage = error
+    } else if (error !== null && error !== undefined) {
+      errorMessage = String(error)
+    }
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'An unexpected error occurred'
+        error: errorMessage
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
