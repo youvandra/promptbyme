@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   Home,
   User, 
@@ -26,6 +26,7 @@ interface SideNavbarProps {
 
 export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation()
+  const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
   const { 
     userInvitations, 
