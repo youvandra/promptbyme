@@ -36,9 +36,9 @@ export const InvitationNotification: React.FC = () => {
       if (action === 'accept') {
         setIsExpanded(false)
         // Use replace to avoid adding to history stack
-        setTimeout(() => {
-          navigate(`/project/${projectId}`, { replace: true })
-        }, 300) // Small delay to allow UI to update
+        setTimeout(() => { 
+          navigate(`/project/${projectId}`, { replace: true }) 
+        }, 500) // Slightly longer delay to allow UI to update and data to load
       }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)

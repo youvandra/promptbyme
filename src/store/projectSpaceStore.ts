@@ -68,6 +68,7 @@ export interface UserInvitation {
 interface ProjectSpaceState {
   projects: FlowProject[]
   selectedProject: FlowProject | null
+  loadingProjectId: string | null
   projectMembers: ProjectMember[]
   userInvitations: UserInvitation[]
   currentUserRole: string | null
@@ -109,6 +110,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
   subscribeWithSelector((set, get) => ({
     projects: [],
     selectedProject: null,
+    loadingProjectId: null,
     projectMembers: [],
     userInvitations: [],
     currentUserRole: null,
@@ -124,6 +126,9 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           set({ loading: false })
           throw new Error('User not authenticated')
         }
+        
+        const projectId = project.id
+        set({ loadingProjectId: projectId })
 
         // Get projects where user is owner OR a member
         const { data: ownedProjects, error: ownedError } = await supabase
@@ -229,6 +234,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
     deleteProject: async (id: string) => {
       try {
+        set({ loadingProjectId: id })
         const { error } = await supabase
           .from('flow_projects')
           .delete()
@@ -237,14 +243,17 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (error) throw error
 
         const { projects, selectedProject } = get()
-        const updatedProjects = projects.filter(p => p.id !== id)
+        const updatedProjects = projects.filter(p => p.id !== id) 
         
         set({ 
           projects: updatedProjects,
-          selectedProject: selectedProject?.id === id ? null : selectedProject
+          selectedProject: selectedProject?.id === id ? null : selectedProject,
+          loadingProjectId: null
         })
+        return true
       } catch (error) {
         console.error('Error deleting project:', error)
+        set({ loadingProjectId: null })
         throw error
       }
     },
@@ -262,7 +271,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         // Fetch nodes and connections for the selected project
         const [nodesResult, connectionsResult] = await Promise.all([
           supabase
-            .from('flow_nodes')
+            .from('flow_nodes') 
             .select('*')
             .eq('project_id', project.id)
             .order('created_at'),
@@ -310,14 +319,15 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         // Update state with project data
         set({
           selectedProject: projectWithData,
-          currentUserRole: userRole || (projectWithData.user_id === user.id ? 'admin' : null),
-          loading: false // Make sure to set loading to false when done
+          currentUserRole: userRole || (projectWithData.user_id === user.id ? 'admin' : null), 
+          loading: false, // Make sure to set loading to false when done
+          loadingProjectId: null
         })
         
         return projectWithData
       } catch (error) {
         console.error('Error selecting project:', error)
-        set({ loading: false }) // Make sure to set loading to false on error
+        set({ loading: false, loadingProjectId: null }) // Make sure to set loading to false on error
         throw error
       }
     },
@@ -750,6 +760,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     
     manageInvitation: async (projectId: string, action: 'accept' | 'decline') => {
       try {
+        set({ loadingProjectId: projectId })
         const { data, error } = await supabase.functions.invoke('manage-project-invitation', {
           body: {
             project_id: projectId, 
@@ -762,6 +773,8 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (!data.success) {
           throw new Error(data.error || `Failed to ${action} invitation`)
         }
+        
+        set({ loadingProjectId: null })
         
         // Refresh invitations
         await get().fetchUserInvitations()
@@ -790,7 +803,8 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           }
         }
       } catch (error) {
-        console.error(`Error ${action}ing invitation:`, error)
+        console.error(`Error ${action}ing invitation:`, error) 
+        set({ loadingProjectId: null })
         throw error
       }
     },

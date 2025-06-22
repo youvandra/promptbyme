@@ -5,15 +5,15 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    exclude: [],
+    include: ['react-router-dom', 'lucide-react'],
   },
   build: {
     sourcemap: true
   },
   server: {
     fs: {
-      // Allow serving files from one level up to the project root
-      allow: ['..']
+      // Allow serving files from one level up to the project root and node_modules
+      allow: ['..', 'node_modules']
     }
   }
 });
