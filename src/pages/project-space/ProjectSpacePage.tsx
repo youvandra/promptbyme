@@ -58,7 +58,8 @@ export const ProjectSpacePage: React.FC = () => {
     deleteProject,
     selectedProject: currentProject,
     currentUserRole,
-    inviteProjectMember
+    inviteProjectMember,
+    selectProject
   } = useProjectSpaceStore()
   
   const navigate = useNavigate()
