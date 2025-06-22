@@ -119,11 +119,8 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     fetchProjects: async () => {
       set({ loading: true })
       try {
-        const { data: { user } } = await supabase.auth.getUser() 
-        if (!user) {
-          set({ loading: false })
-          throw new Error('User not authenticated')
-        }
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('User not authenticated')
 
         // Get projects where user is owner OR a member
         const { data: ownedProjects, error: ownedError } = await supabase
@@ -160,10 +157,8 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         allProjects.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
 
         set({ projects: allProjects })
-        return allProjects
       } catch (error) {
         console.error('Error fetching projects:', error)
-        set({ loading: false })
         throw error
       } finally {
         set({ loading: false })
@@ -280,7 +275,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
 
         // Transform nodes to include position object
-        const nodes = (nodesResult.data || []).map(node => ({
+        const nodes: FlowNode[] = (nodesResult.data || []).map(node => ({
           ...node,
           position: { x: node.position_x, y: node.position_y }
         }))
@@ -311,13 +306,13 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         set({
           selectedProject: projectWithData,
           currentUserRole: userRole,
-          loading: false // Make sure to set loading to false when done
+          loading: false
         })
         
         return projectWithData
       } catch (error) {
         console.error('Error selecting project:', error)
-        set({ loading: false }) // Make sure to set loading to false on error
+        set({ loading: false })
         throw error
       }
     },

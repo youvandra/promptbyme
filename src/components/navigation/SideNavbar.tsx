@@ -99,11 +99,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   const handleInvitationAction = async (projectId: string, action: 'accept' | 'decline') => {
     if (actionLoading) return
     
-    // Close sidebar on mobile when accepting invitation
-    if (action === 'accept' && window.innerWidth < 1024) {
-      onToggle()
-    }
-    
     setActionLoading(projectId)
     try {
       await manageInvitation(projectId, action)
@@ -249,45 +244,23 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                   key={item.path}
                   to={item.path}
                   onClick={onToggle}
-                  className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150
-                    ${location.pathname === '/project-space' && !location.pathname.includes('/project/') 
+                  className={`
+                    group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150
+                    ${active 
                       ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' 
                       : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
                     }
                   `}
                 >
-                  <Layers size={18} className={location.pathname === '/project-space' && !location.pathname.includes('/project/') ? 'text-white' : ''} />
+                  <Icon size={18} className={active ? 'text-white' : ''} />
                   <div className="flex-1">
-                    <p className="font-medium text-sm">Project Space</p>
-                    <p className="text-xs opacity-70">Visual prompt flows</p>
+                    <p className="font-medium text-sm">{item.label}</p>
+                    <p className="text-xs opacity-70">{item.description}</p>
                   </div>
                 </Link>
               )
             })}
           </div>
-              
-          {/* Project Link - Show when on a specific project page */}
-          {location.pathname.includes('/project/') && (
-            <div className="p-2 border-b border-zinc-800/30">
-              <Link
-                to={location.pathname}
-                onClick={onToggle}
-                className={`
-                  group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150
-                  ${location.pathname.includes('/project/')
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                  }
-                `}
-              >
-                <Layers size={18} className="text-white" />
-                <div className="flex-1">
-                  <p className="font-medium text-sm">Current Project</p>
-                  <p className="text-xs opacity-70">Back to editor</p>
-                </div>
-              </Link>
-            </div>
-          )}
         </nav>
 
         {/* Bottom Section - Sign Out, User Profile - Fixed at bottom */}

@@ -146,7 +146,7 @@ export const InvitationNotification: React.FC = () => {
                     <button
                       onClick={() => handleInvitationAction(invitation.project_id, 'accept')}
                       disabled={actionLoading === invitation.project_id}
-                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 text-white text-sm font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 text-white text-sm font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
                     >
                       {actionLoading === invitation.project_id ? (
                         <div className="w-3 h-3 border border-white/30 border-t-white rounded-full animate-spin" />
@@ -159,7 +159,7 @@ export const InvitationNotification: React.FC = () => {
                     <button
                       onClick={() => handleInvitationAction(invitation.project_id, 'decline')}
                       disabled={actionLoading === invitation.project_id}
-                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-zinc-700 hover:bg-zinc-600 disabled:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+                      className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-zinc-700 hover:bg-zinc-600 disabled:bg-zinc-800 text-white text-sm font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
                     >
                       <X size={14} />
                       <span>Decline</span>
