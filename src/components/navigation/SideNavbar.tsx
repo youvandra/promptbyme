@@ -59,7 +59,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       try {
         const { data, error } = await supabase
           .from('users')
-        // If accepted, navigate to the specific project page and close sidebar on mobile
           .eq('id', user.id)
           .single()
 
@@ -89,10 +88,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
         const target = event.target as Node
         if (sidebar && !sidebar.contains(target)) {
           setShowNotifications(false)
-          navigate(`/project/${projectId}`, { replace: true })
-          if (window.innerWidth < 1024) {
-            onToggle()
-          }
+        }
       }
     }
 
