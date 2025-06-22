@@ -27,6 +27,7 @@ interface SideNavbarProps {
 export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation()
   const navigate = useNavigate()
+  const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
   const { 
     userInvitations, 
@@ -105,9 +106,20 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       onToggle()
     }
     
+    // Close sidebar on mobile when accepting invitation
+    if (action === 'accept' && window.innerWidth < 1024) {
+      onToggle()
+    }
+    
     setActionLoading(projectId)
     try {
       await manageInvitation(projectId, action)
+      
+      // If accepted, navigate to the specific project page
+      if (action === 'accept') {
+        setShowNotifications(false)
+        navigate(`/project/${projectId}`)
+      }
       
       // If accepted, navigate to the specific project page
       if (action === 'accept') {

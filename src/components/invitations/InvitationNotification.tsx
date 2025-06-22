@@ -3,6 +3,7 @@ import { X, Check, Users, Clock, Bell } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useProjectSpaceStore } from '../../store/projectSpaceStore'
 import { useAuthStore } from '../../store/authStore'
+import { useNavigate } from 'react-router-dom'
  import { useNavigate } from 'react-router-dom'
 
 export const InvitationNotification: React.FC = () => {
@@ -16,6 +17,7 @@ export const InvitationNotification: React.FC = () => {
   
   const [isExpanded, setIsExpanded] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const navigate = useNavigate()
  const navigate = useNavigate()
 
   useEffect(() => {
@@ -31,6 +33,15 @@ export const InvitationNotification: React.FC = () => {
     setActionLoading(projectId)
     try {
       await manageInvitation(projectId, action)
+     
+      // If accepted, navigate to the specific project page, close notification and sidebar on mobile
+      if (action === 'accept') {
+        setIsExpanded(false)
+        // Use replace to avoid adding to history stack
+        setTimeout(() => { 
+          navigate(`/project/${projectId}`, { replace: true }) 
+        }, 500) // Slightly longer delay to allow UI to update and data to load
+      }
      
       // If accepted, navigate to the specific project page, close notification and sidebar on mobile
       if (action === 'accept') {
