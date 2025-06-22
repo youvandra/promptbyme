@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { 
   Menu, 
   Plus, 
-  Layers, 
+  Layers,
   Search, 
   Settings, 
   Trash2, 
@@ -368,13 +368,13 @@ export const ProjectSpacePage: React.FC = () => {
                             ref={menuRef}
                             className="absolute top-full right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-48 py-1"
                           >
-                            <div
+                            <button
                               onClick={() => openProjectEditor(project)}
                               className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm cursor-pointer"
                             >
                               <Layers size={14} />
                               <span>Open Project</span>
-                            </div>
+                            </button>
                             
                             {(project.user_id === user.id || currentUserRole === 'admin') && (
                               <>
@@ -410,9 +410,7 @@ export const ProjectSpacePage: React.FC = () => {
                       {/* Project Content */}
                       <div 
                         className="flex-1 cursor-pointer"
-                        onClick={() => {
-                          openProjectEditor(project)
-                        }}
+                        onClick={() => openProjectEditor(project)}
                       >
                         <div className="flex items-center gap-2 mb-4">
                           <div className="p-2 bg-indigo-600/20 rounded-lg text-indigo-400">
@@ -833,7 +831,7 @@ export const ProjectSpacePage: React.FC = () => {
                 <button
                   id="delete-button"
                   onClick={handleDeleteProject}
-                  disabled={true} // Disabled by default, enabled when user types "delete"
+                  disabled={isLoading} // Only disabled when loading
                   className="flex items-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (

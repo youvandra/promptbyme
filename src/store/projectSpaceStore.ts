@@ -743,13 +743,23 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (!data.success) {
           throw new Error(data.error || `Failed to ${action} invitation`)
         }
-
+        
         // Refresh invitations
         await get().fetchUserInvitations()
         
         // If accepted, refresh projects list and select the project
         if (action === 'accept') {
           await get().fetchProjects()
+          
+          // If the project was successfully accepted, we should select it to show it to the user
+          const projectId = data.project_id
+          if (projectId) {
+            const { projects } = get()
+            const acceptedProject = projects.find(p => p.id === projectId)
+            if (acceptedProject) {
+              await get().selectProject(acceptedProject)
+            }
+          }
         }
       } catch (error) {
         console.error(`Error ${action}ing invitation:`, error)
