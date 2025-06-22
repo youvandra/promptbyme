@@ -45,6 +45,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showProjectMenu, setShowProjectMenu] = useState<string | null>(null)
   
   const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null)
+  const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null)
   const { user, loading: authLoading } = useAuthStore() 
   const navigate = useNavigate()
   const params = useParams<{ projectId?: string }>()
@@ -55,11 +56,12 @@ export const ProjectSpacePage: React.FC = () => {
     loading: projectsLoading, 
     fetchProjects,
     createProject,
-    updateProject, 
+   updateProject,
     deleteProject, 
     selectedProject: currentProject,
     currentUserRole,
-    inviteProjectMember,
+   inviteProjectMember,
+   loadingProjectId: storeLoadingProjectId
     loadingProjectId: storeLoadingProjectId
   } = useProjectSpaceStore((state) => state)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -72,6 +74,7 @@ export const ProjectSpacePage: React.FC = () => {
     const loadProject = async () => {
       if (projectId && user && !authLoading) {
         setIsLoading(true)
+       setLoadingProjectId(projectId) 
         setLoadingProjectId(projectId) 
         try {
           // First fetch projects if we don't have them yet
@@ -81,7 +84,7 @@ export const ProjectSpacePage: React.FC = () => {
           
           const project = projects.find(p => p.id === projectId)
           if (project) {
-            await useProjectSpaceStore.getState().selectProject(project) 
+           await useProjectSpaceStore.getState().selectProject(project) 
             // If we're on the project-space page but have a project ID, redirect to the project page
             if (location.pathname === '/project-space' && projectId) {
               navigate(`/project/${projectId}`, { replace: true })
@@ -91,6 +94,7 @@ export const ProjectSpacePage: React.FC = () => {
           console.error('Failed to load project:', error)
           setToast({ message: 'Failed to load project', type: 'error' })
         } finally {
+         setLoadingProjectId(null)
           setLoadingProjectId(null)
           setIsLoading(false)
         }
@@ -99,6 +103,12 @@ export const ProjectSpacePage: React.FC = () => {
     loadProject()
   }, [params.projectId, searchParams, user, authLoading, projectsLoading, projects])
   
+  // Sync loading state from store
+  useEffect(() => {
+    if (storeLoadingProjectId) {
+      setLoadingProjectId(storeLoadingProjectId)
+    }
+  }, [storeLoadingProjectId])
   // Sync loading state from store
   useEffect(() => {
     if (storeLoadingProjectId) {
