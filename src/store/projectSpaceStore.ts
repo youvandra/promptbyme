@@ -127,9 +127,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           throw new Error('User not authenticated')
         }
         
-        const projectId = project.id
-        set({ loadingProjectId: projectId })
-
         // Get projects where user is owner OR a member
         const { data: ownedProjects, error: ownedError } = await supabase
           .from('flow_projects')
