@@ -247,10 +247,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     selectProject: async (project: FlowProject) => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
-          console.error('User not authenticated')
-          throw new Error('User not authenticated')
-        }
+        if (!user) throw new Error('User not authenticated')
 
         // Fetch nodes and connections for the selected project
         const [nodesResult, connectionsResult] = await Promise.all([
@@ -264,7 +261,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
             .select('*')
             .eq('project_id', project.id)
         ])
-        
+
         if (nodesResult.error) throw nodesResult.error
         if (connectionsResult.error) throw connectionsResult.error
 
@@ -274,7 +271,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           position: { x: node.position_x, y: node.position_y }
         }))
 
-        // Get user's role in this project
+        // Get user's role in this project - use maybeSingle() to handle no results
         const { data: memberData, error: memberError } = await supabase
           .from('project_members')
           .select('role')
@@ -282,7 +279,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           .eq('user_id', user.id)
           .eq('status', 'accepted')
           .maybeSingle() // Use maybeSingle() instead of single() to handle no results
-        
+
         let userRole = null
         if (!memberError && memberData) {
           userRole = memberData.role
@@ -290,7 +287,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           userRole = 'admin' // Project owner is always admin
         }
 
-        const projectWithData: FlowProject = {
+        const projectWithData = {
           ...project,
           nodes,
           connections: connectionsResult.data || []
@@ -302,8 +299,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         })
       } catch (error) {
         console.error('Error selecting project:', error)
-        // Return a more specific error message
-        throw new Error(`Failed to load project: ${error.message || 'Unknown error'}`)
+        throw error
       }
     },
 
@@ -756,11 +752,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         // If accepted, refresh projects list and select the project
         if (action === 'accept') {
           await get().fetchProjects()
-
+          
           // If the project was successfully accepted, we should select it to show it to the user
           const projectId = data.project_id
           if (projectId) {
-            const acceptedProject = get().projects.find(p => p.id === projectId)
+            const state = get()
+            const acceptedProject = state.projects.find(p => p.id === projectId)
             if (acceptedProject) {
               await get().selectProject(acceptedProject)
             }

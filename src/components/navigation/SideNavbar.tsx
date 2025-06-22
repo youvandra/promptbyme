@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
 import { 
   Home,
   User, 
@@ -30,7 +29,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   const { user, signOut } = useAuthStore()
   const { 
     userInvitations, 
-    selectedProject,
     invitationsLoading, 
     fetchUserInvitations, 
     manageInvitation 
@@ -40,7 +38,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [showNotifications, setShowNotifications] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const navigate = useNavigate()
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
@@ -110,7 +107,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       // If accepted, navigate to the specific project page
       if (action === 'accept') {
         setShowNotifications(false)
-        navigate(`/project/${projectId}`)
+        window.location.href = `/project/${projectId}`
       }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)

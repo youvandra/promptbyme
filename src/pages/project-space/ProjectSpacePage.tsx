@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { 
   Menu, 
-  Loader,
   Plus, 
   Layers,
   Search, 
@@ -37,7 +36,6 @@ export const ProjectSpacePage: React.FC = () => {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [projectName, setProjectName] = useState('')
   const [projectDescription, setProjectDescription] = useState('')
-  const [loadingProject, setLoadingProject] = useState(false)
   const [projectVisibility, setProjectVisibility] = useState<'private' | 'team' | 'public'>('private')
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
@@ -64,16 +62,16 @@ export const ProjectSpacePage: React.FC = () => {
   const navigate = useNavigate()
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // Get project ID from URL path
+  // Get project ID from URL if present
   useEffect(() => {
-    const pathParts = location.pathname.split('/')
-    if (pathParts.length >= 3 && pathParts[1] === 'project') {
-      const projectId = pathParts[2]
-      if (projectId && user && !authLoading) {
-        loadProjectById(projectId)
+    const projectId = searchParams.get('project')
+    if (projectId && user && !authLoading && !projectsLoading) {
+      const project = projects.find(p => p.id === projectId)
+      if (project) {
+        openProjectEditor(project)
       }
     }
-  }, [location.pathname, user, authLoading])
+  }, [searchParams, user, authLoading, projectsLoading, projects])
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -92,41 +90,6 @@ export const ProjectSpacePage: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
-
-  // Function to load a project by ID
-  const loadProjectById = async (projectId: string) => {
-    if (!user) return
-    
-    setLoadingProject(true)
-    try {
-      // First check if the project is in our list
-      let project = projects.find(p => p.id === projectId)
-      
-      if (!project) {
-        // If not found, try to fetch it directly
-        const { data, error } = await supabase
-          .from('flow_projects')
-          .select('*')
-          .eq('id', projectId)
-          .single()
-          
-        if (error) throw error
-        project = data
-      }
-      
-      if (project) {
-        await selectProject(project)
-        setToast({ message: 'Project loaded successfully', type: 'success' })
-      } else {
-        setToast({ message: 'Project not found', type: 'error' })
-      }
-    } catch (error) {
-      console.error('Failed to load project:', error)
-      setToast({ message: 'Failed to load project', type: 'error' })
-    } finally {
-      setLoadingProject(false)
-    }
-  }
 
   const filteredProjects = projects.filter(project => 
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -151,7 +114,7 @@ export const ProjectSpacePage: React.FC = () => {
       setProjectVisibility('private')
       
       // Navigate to the new project
-      navigate(`/project/${newProject.id}`)
+      navigate(`/project-space?project=${newProject.id}`)
     } catch (error) {
       console.error('Failed to create project:', error)
       setToast({ message: 'Failed to create project', type: 'error' })
@@ -230,7 +193,7 @@ export const ProjectSpacePage: React.FC = () => {
 
   const openProjectEditor = (project: FlowProject) => {
     // Navigate to the project page with the project ID
-    navigate(`/project/${project.id}`)
+    window.location.href = `/project/${project.id}`
   }
 
   const openEditModal = (project: FlowProject) => {
@@ -287,13 +250,13 @@ export const ProjectSpacePage: React.FC = () => {
     }
   }
 
-  if (authLoading || loadingProject) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="text-zinc-400">
           <div className="flex items-center gap-2">
-            <Loader size={24} className="animate-spin text-indigo-500" />
-            <span>{loadingProject ? 'Loading project...' : 'Loading...'}</span>
+            <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+            <span>Loading...</span>
           </div>
         </div>
       </div>
