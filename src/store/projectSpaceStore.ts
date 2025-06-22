@@ -754,8 +754,8 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           // If the project was successfully accepted, we should select it to show it to the user
           const projectId = data.project_id
           if (projectId) {
-            const { projects } = get()
-            const acceptedProject = projects.find(p => p.id === projectId)
+            const state = get()
+            const acceptedProject = state.projects.find(p => p.id === projectId)
             if (acceptedProject) {
               await get().selectProject(acceptedProject)
             }

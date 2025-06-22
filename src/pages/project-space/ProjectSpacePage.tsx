@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { 
   Menu, 
   Plus, 
@@ -45,6 +45,8 @@ export const ProjectSpacePage: React.FC = () => {
   const [showProjectMenu, setShowProjectMenu] = useState<string | null>(null)
   
   const { user, loading: authLoading } = useAuthStore()
+  const [searchParams] = useSearchParams()
+  const location = useLocation()
   const { 
     projects, 
     loading: projectsLoading, 
@@ -59,6 +61,17 @@ export const ProjectSpacePage: React.FC = () => {
   
   const navigate = useNavigate()
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // Get project ID from URL if present
+  useEffect(() => {
+    const projectId = searchParams.get('project')
+    if (projectId && user && !authLoading && !projectsLoading) {
+      const project = projects.find(p => p.id === projectId)
+      if (project) {
+        openProjectEditor(project)
+      }
+    }
+  }, [searchParams, user, authLoading, projectsLoading, projects])
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -179,7 +192,7 @@ export const ProjectSpacePage: React.FC = () => {
   }
 
   const openProjectEditor = (project: FlowProject) => {
-    navigate(`/project-space?project=${project.id}`)
+    navigate(`/project/${project.id}`)
   }
 
   const openEditModal = (project: FlowProject) => {
@@ -368,13 +381,14 @@ export const ProjectSpacePage: React.FC = () => {
                             ref={menuRef}
                             className="absolute top-full right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-48 py-1"
                           >
-                            <button
+                            <a
+                              href={`/project/${project.id}`}
                               onClick={() => openProjectEditor(project)}
                               className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm cursor-pointer"
                             >
                               <Layers size={14} />
                               <span>Open Project</span>
-                            </button>
+                            </a>
                             
                             {(project.user_id === user.id || currentUserRole === 'admin') && (
                               <>
