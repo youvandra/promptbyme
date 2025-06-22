@@ -15,7 +15,9 @@ import {
   Globe,
   UserPlus,
   Mail,
-  Check
+  Check,
+  Layers,
+  Edit
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NodeEditorModal } from '../../components/project-space/NodeEditorModal'
