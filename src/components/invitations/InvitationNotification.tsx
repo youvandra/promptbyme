@@ -3,6 +3,7 @@ import { X, Check, Users, Clock, Bell } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useProjectSpaceStore } from '../../store/projectSpaceStore'
 import { useAuthStore } from '../../store/authStore'
+ import { useNavigate } from 'react-router-dom'
 
 export const InvitationNotification: React.FC = () => {
   const { user, authLoading } = useAuthStore()
@@ -15,6 +16,7 @@ export const InvitationNotification: React.FC = () => {
   
   const [isExpanded, setIsExpanded] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+ const navigate = useNavigate()
 
   useEffect(() => {
     // Only fetch invitations if user is authenticated and auth is not loading
@@ -29,6 +31,12 @@ export const InvitationNotification: React.FC = () => {
     setActionLoading(projectId)
     try {
       await manageInvitation(projectId, action)
+     
+     // If accepted, navigate to the project space page
+     if (action === 'accept') {
+       setIsExpanded(false)
+       navigate('/project-space')
+     }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)
     } finally {

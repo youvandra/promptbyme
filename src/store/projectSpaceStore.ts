@@ -749,7 +749,15 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         
         // If accepted, refresh projects list
         if (action === 'accept') {
+         // Fetch the projects to ensure the newly accepted project is included
           await get().fetchProjects()
+         
+         // If the project was successfully accepted, we should select it to show it to the user
+         const { projects } = get()
+         const acceptedProject = projects.find(p => p.id === projectId)
+         if (acceptedProject) {
+           await get().selectProject(acceptedProject)
+         }
         }
       } catch (error) {
         console.error(`Error ${action}ing invitation:`, error)
