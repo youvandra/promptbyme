@@ -221,7 +221,7 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
             {/* Live preview of variables */}
             {detectedVariables.length > 0 && (
               <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 backdrop-blur-sm">
-                <h4 className="text-sm font-medium text-indigo-300 mb-2">
+                <h4 className="text-sm font-medium text-indigo-300 mb-2 flex items-center gap-2">
                   <Wand2 size={16} />
                   Variables detected: {detectedVariables.join(', ')}
                 </h4>

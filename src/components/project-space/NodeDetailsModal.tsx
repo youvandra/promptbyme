@@ -40,7 +40,7 @@ const NODE_TYPE_CONFIG = {
 export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
   isOpen,
   onClose,
-  node, 
+  node,
   onEdit
 }) => {
   const [copied, setCopied] = React.useState(false)
@@ -102,7 +102,7 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
       
       <AnimatePresence>
         <motion.div 
-          className="relative  backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+          className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
@@ -137,9 +137,9 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
           </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 glass-morphism">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Node Type Description */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-white/20">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
             <h3 className="text-sm font-medium text-zinc-300 mb-2">Node Type</h3>
             <p className="text-zinc-400 text-sm">{nodeConfig.description}</p>
           </div>
@@ -164,7 +164,7 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                 </motion.button>
               )}
             </div>
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-white/20">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
               {node.content ? (
                 <div className="text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap font-mono">
                   {node.content}
@@ -179,13 +179,13 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
           
           {/* Variables */}
           {node.type === 'prompt' && variables.length > 0 && (
-            <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-300 hover:border-indigo-500/30">
+            <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 backdrop-blur-sm">
               <h3 className="text-sm font-medium text-zinc-300 mb-3">Variables ({variables.length} found)</h3>
               <div className="flex flex-wrap gap-2">
                 {variables.map((variable, index) => (
                   <div
                     key={index}
-                    className="px-3 py-1 bg-indigo-500/10 text-indigo-300 rounded-full text-xs border border-indigo-500/20 hover:bg-indigo-500/20 hover:border-indigo-500/30 transition-all duration-200 transform hover:scale-105"
+                    className="px-3 py-1 bg-white/10 text-indigo-300 rounded-full text-xs border border-white/20"
                   >
                     {`{{${variable}}}`}
                   </div>
@@ -196,7 +196,7 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
 
           {/* Imported Prompt Info */}
           {node.imported_prompt_id && (
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-300 hover:border-blue-500/30">
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 backdrop-blur-sm">
               <h3 className="text-sm font-medium text-blue-300 mb-2">Imported Prompt</h3>
               <p className="text-blue-200 text-sm">
                 This node was created from an imported prompt from your gallery.
@@ -211,7 +211,7 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                 <Calendar size={16} />
                 Created
               </h3>
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-white/20">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3">
                 <p className="text-zinc-200 text-sm">{formatDate(node.created_at)}</p>
               </div>
             </div>
@@ -221,7 +221,7 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                 <Calendar size={16} />
                 Last Updated
               </h3>
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-white/20">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3">
                 <p className="text-zinc-200 text-sm">{formatDate(node.updated_at)}</p>
               </div>
             </div>
@@ -230,7 +230,7 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
           {/* Statistics - Only show token estimation for prompt nodes */}
           <div>
             <h3 className="text-sm font-medium text-zinc-300 mb-3">Statistics</h3>
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:border-white/20">
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
               <div className={`grid gap-4 text-sm ${node.type === 'prompt' ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
                 <div>
                   <span className="text-zinc-500">Characters:</span>
@@ -256,7 +256,7 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
               {node.type === 'prompt' && (
                 <div className="mt-3 pt-3 border-t border-white/10">
                   <p className="text-xs text-zinc-500">
-                    Token estimation based on ~4 chars/token + variable overhead.
+                    Token estimation based on ~4 chars/token + variable overhead. 
                     Actual usage may vary by model and content complexity.
                   </p>
                 </div>
@@ -266,7 +266,7 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-white/10 bg-white/5 backdrop-blur-md flex-shrink-0">
+        <div className="p-6 border-t border-white/10 bg-white/5 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="text-xs text-zinc-500">
               Node ID: {node.id}
@@ -277,7 +277,7 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                   onEdit(node.id)
                   onClose()
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 text-white rounded-lg transition-all duration-200 text-sm hover:scale-105 hover:shadow-lg"
+                className="flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 text-white rounded-lg transition-all duration-200 text-sm"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
