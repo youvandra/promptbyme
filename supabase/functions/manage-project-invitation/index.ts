@@ -3,7 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 }
 
 Deno.serve(async (req) => {
@@ -13,10 +13,31 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Check if required environment variables are available
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing environment variables:', {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!supabaseServiceKey
+      })
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Server configuration error: Missing required environment variables'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
+    }
+
     // Create Supabase client
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      supabaseUrl,
+      supabaseServiceKey,
       {
         auth: {
           autoRefreshToken: false,
@@ -24,6 +45,21 @@ Deno.serve(async (req) => {
         }
       }
     )
+
+    // Verify the client was created successfully
+    if (!supabaseClient) {
+      console.error('Failed to create Supabase client')
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Server configuration error: Failed to initialize database client'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
+    }
 
     // Get the authorization header
     const authHeader = req.headers.get('Authorization')
@@ -57,86 +93,32 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Parse request body
-    let project_id, action
-    try {
-      const body = await req.json()
-      project_id = body.project_id
-      action = body.action
-    } catch (e) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Invalid JSON in request body'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      )
-    }
-    
-    if (!project_id || !action) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Project ID and action are required'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      )
-    }
-
-    if (!['accept', 'decline'].includes(action)) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Invalid action. Must be "accept" or "decline"'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      )
-    }
-
-    // Find the pending invitation
-    const { data: invitation, error: invitationError } = await supabaseClient
+    // Get all pending invitations for the user
+    const { data: invitations, error: invitationsError } = await supabaseClient
       .from('project_members')
-      .select('id, status')
-      .eq('project_id', project_id)
+      .select(`
+        id,
+        project_id,
+        role,
+        status,
+        created_at,
+        invited_by_user_id,
+        flow_projects!inner (
+          id,
+          name,
+          description
+        )
+      `)
       .eq('user_id', user.id)
       .eq('status', 'pending')
-      .single()
+      .order('created_at', { ascending: false })
 
-    if (invitationError || !invitation) {
+    if (invitationsError) {
+      console.error('Database error:', invitationsError)
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'No pending invitation found for this project'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 404,
-        }
-      )
-    }
-
-    // Update the invitation status
-    const newStatus = action === 'accept' ? 'accepted' : 'declined'
-    const { error: updateError } = await supabaseClient
-      .from('project_members')
-      .update({ status: newStatus })
-      .eq('id', invitation.id)
-
-    if (updateError) {
-      console.error('Database error:', updateError)
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: `Failed to ${action} invitation: ` + updateError.message
+          error: 'Failed to fetch invitations: ' + invitationsError.message
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -145,11 +127,42 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Get inviter details from users table
+    const inviterIds = invitations?.map(inv => inv.invited_by_user_id).filter(Boolean) || []
+    let inviters = []
+    
+    if (inviterIds.length > 0) {
+      const { data: inviterData, error: inviterError } = await supabaseClient
+        .from('users')
+        .select('id, display_name, email')
+        .in('id', inviterIds)
+
+      if (!inviterError) {
+        inviters = inviterData || []
+      }
+    }
+
+    // Format the response
+    const formattedInvitations = (invitations || []).map(invitation => {
+      const inviter = inviters.find(inv => inv.id === invitation.invited_by_user_id)
+      
+      return {
+        id: invitation.id,
+        project_id: invitation.project_id,
+        project_name: invitation.flow_projects?.name || 'Unknown Project',
+        project_description: invitation.flow_projects?.description || null,
+        role: invitation.role,
+        status: invitation.status,
+        invited_by: inviter?.display_name || inviter?.email || 'Unknown',
+        invited_at: invitation.created_at
+      }
+    })
+
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Invitation ${action}ed successfully`,
-        status: newStatus
+        invitations: formattedInvitations,
+        total_count: formattedInvitations.length
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -158,7 +171,7 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
-    console.error(`Error in manage-project-invitation function:`, error)
+    console.error('Error in get-user-invitations function:', error)
     
     return new Response(
       JSON.stringify({

@@ -751,6 +751,15 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (action === 'accept') {
          // Fetch the projects to ensure the newly accepted project is included
           await get().fetchProjects()
+          
+          // Find the newly accepted project
+          const { projects } = get()
+          const acceptedProject = projects.find(p => p.id === projectId)
+          
+          // If found, select it to make it the active project
+          if (acceptedProject) {
+            await get().selectProject(acceptedProject)
+          }
          
          // If the project was successfully accepted, we should select it to show it to the user
          const { projects } = get()
