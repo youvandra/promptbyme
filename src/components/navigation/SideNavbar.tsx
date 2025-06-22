@@ -104,10 +104,10 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
     try {
       await manageInvitation(projectId, action)
       
-      // If accepted, navigate to the specific project page
+      // If accepted, navigate to the project space page
       if (action === 'accept') {
         setShowNotifications(false)
-        navigate(`/project/${projectId}`)
+        navigate('/project-space')
       }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)

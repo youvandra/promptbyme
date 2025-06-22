@@ -32,10 +32,10 @@ export const InvitationNotification: React.FC = () => {
     try {
       await manageInvitation(projectId, action)
      
-      // If accepted, navigate to the specific project page
+     // If accepted, navigate to the project space page
      if (action === 'accept') {
        setIsExpanded(false)
-        navigate(`/project/${projectId}`)
+       navigate('/project-space')
      }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)
