@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useSearchParams, useParams } from 'react-rout
 import { 
   Menu, 
   Plus, 
-  Layers,
+  Layers, 
   Search, 
   Settings, 
   Trash2, 
@@ -45,6 +45,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showProjectMenu, setShowProjectMenu] = useState<string | null>(null)
   
   const { user, loading: authLoading } = useAuthStore()
+  const navigate = useNavigate()
   const params = useParams<{ projectId?: string }>()
   const [searchParams] = useSearchParams()
   const location = useLocation()
@@ -58,9 +59,7 @@ export const ProjectSpacePage: React.FC = () => {
     selectedProject: currentProject,
     currentUserRole,
     inviteProjectMember
-  } = useProjectSpaceStore()
-
-  const navigate = useNavigate()
+  } = useProjectSpaceStore((state) => state)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Load project from URL params or search params
@@ -68,17 +67,28 @@ export const ProjectSpacePage: React.FC = () => {
     // First check URL params (for /project/:projectId route)
     const projectId = params.projectId || searchParams.get('project')
     
-    if (projectId && user && !authLoading && !projectsLoading) {
-      const project = projects.find(p => p.id === projectId)
-      if (project) {
-        // Select the project in the store
-        useProjectSpaceStore.getState().selectProject(project)
-          .catch(error => {
-            console.error('Failed to select project:', error)
-            setToast({ message: 'Failed to load project', type: 'error' })
-          })
+    const loadProject = async () => {
+      if (projectId && user && !authLoading) {
+        setIsLoading(true)
+        try {
+          // First fetch projects if we don't have them yet
+          if (projects.length === 0 && !projectsLoading) {
+            await fetchProjects()
+          }
+          
+          const project = projects.find(p => p.id === projectId)
+          if (project) {
+            await useProjectSpaceStore.getState().selectProject(project)
+          }
+        } catch (error) {
+          console.error('Failed to load project:', error)
+          setToast({ message: 'Failed to load project', type: 'error' })
+        } finally {
+          setIsLoading(false)
+        }
       }
     }
+    loadProject()
   }, [params.projectId, searchParams, user, authLoading, projectsLoading, projects])
 
   useEffect(() => {
@@ -201,7 +211,17 @@ export const ProjectSpacePage: React.FC = () => {
 
   const openProjectEditor = (project: FlowProject) => {
     // Navigate to the project page with the project ID in the URL
-    navigate(`/project/${project.id}`, { replace: true })
+    setIsLoading(true)
+    useProjectSpaceStore.getState().selectProject(project)
+      .then(() => {
+        navigate(`/project/${project.id}`, { replace: true })
+        setIsLoading(false)
+      })
+      .catch(error => {
+        console.error('Failed to select project:', error)
+        setToast({ message: 'Failed to load project', type: 'error' })
+        setIsLoading(false)
+      })
   }
 
   const openEditModal = (project: FlowProject) => {
@@ -372,6 +392,8 @@ export const ProjectSpacePage: React.FC = () => {
                     <div
                       key={project.id}
                       className="group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full"
+                      onClick={() => openProjectEditor(project)}
+                      style={{ cursor: 'pointer' }}
                     >
                       {/* Project Menu */}
                       <div className="absolute top-4 right-4">
@@ -389,9 +411,11 @@ export const ProjectSpacePage: React.FC = () => {
                           <div 
                             ref={menuRef}
                             className="absolute top-full right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-48 py-1"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <button
-                              onClick={() => {
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation()
                                 setShowProjectMenu(null)
                                 openProjectEditor(project)
                               }}
@@ -399,7 +423,7 @@ export const ProjectSpacePage: React.FC = () => {
                             >
                               <Layers size={14} />
                               <span>Open Project</span>
-                            </button>
+                            </div>
                             
                             {(project.user_id === user.id || currentUserRole === 'admin') && (
                               <>
@@ -433,13 +457,7 @@ export const ProjectSpacePage: React.FC = () => {
                       </div>
                       
                       {/* Project Content */}
-                      <div 
-                        className="flex-1 cursor-pointer"
-                        onClick={() => {
-                          // Navigate to the project page when clicking on the card
-                          openProjectEditor(project)
-                        }}
-                      >
+                      <div className="flex-1">
                         <div className="flex items-center gap-2 mb-4">
                           <div className="p-2 bg-indigo-600/20 rounded-lg text-indigo-400">
                             <Layers size={18} />
@@ -481,27 +499,34 @@ export const ProjectSpacePage: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
-                    <Layers className="mx-auto text-zinc-500 mb-4" size={48} />
-                    <h3 className="text-xl font-semibold text-white mb-2">
-                      {searchQuery ? 'No matching projects' : 'No projects yet'}
-                    </h3>
-                    <p className="text-zinc-400 mb-6">
-                      {searchQuery 
-                        ? 'Try adjusting your search query' 
-                        : 'Create your first project to get started'
-                      }
-                    </p>
-                    {!searchQuery && (
-                      <button
-                        onClick={() => setShowCreateModal(true)}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
-                      >
-                        <Plus size={16} />
-                        <span>Create First Project</span>
-                      </button>
-                    )}
-                  </div>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-5 h-5 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+                      <span className="text-zinc-400">Loading project...</span>
+                    </div>
+                  ) : (
+                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
+                      <Layers className="mx-auto text-zinc-500 mb-4" size={48} />
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        {searchQuery ? 'No matching projects' : 'No projects yet'}
+                      </h3>
+                      <p className="text-zinc-400 mb-6">
+                        {searchQuery 
+                          ? 'Try adjusting your search query' 
+                          : 'Create your first project to get started'
+                        }
+                      </p>
+                      {!searchQuery && (
+                        <button
+                          onClick={() => setShowCreateModal(true)}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                        >
+                          <Plus size={16} />
+                          <span>Create First Project</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
