@@ -733,8 +733,8 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
       try {
         const { data, error } = await supabase.functions.invoke('manage-project-invitation', {
           body: {
-            project_id: projectId, 
-            action: action
+            project_id: projectId,
+            action
           }
         })
 
@@ -747,9 +747,19 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         // Refresh invitations
         await get().fetchUserInvitations()
         
-        // If accepted, refresh projects list and select the project
+        // If accepted, refresh projects list
         if (action === 'accept') {
+         // Fetch the projects to ensure the newly accepted project is included
           await get().fetchProjects()
+          
+          // Find the newly accepted project
+          const { projects } = get()
+          const acceptedProject = projects.find(p => p.id === projectId)
+          
+          // If found, select it to make it the active project
+          if (acceptedProject) {
+            await get().selectProject(acceptedProject)
+          }
         }
       } catch (error) {
         console.error(`Error ${action}ing invitation:`, error)

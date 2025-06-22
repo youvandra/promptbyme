@@ -370,7 +370,6 @@ export const ProjectSpacePage: React.FC = () => {
                             <button
                               onClick={() => openProjectEditor(project)}
                               className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
-                              disabled={!(project.user_id === user.id || project.current_user_role)}
                             >
                               <Layers size={14} />
                               <span>Open Project</span>
@@ -410,17 +409,7 @@ export const ProjectSpacePage: React.FC = () => {
                       {/* Project Content */}
                       <div 
                         className="flex-1 cursor-pointer"
-                        onClick={() => {
-                          // Only open the project if it's the user's own project or they're a member
-                          if (project.user_id === user.id || project.current_user_role) {
-                            openProjectEditor(project)
-                          } else {
-                            setToast({ 
-                              message: 'You do not have access to this project', 
-                              type: 'error' 
-                            })
-                          }
-                        }}
+                        onClick={() => openProjectEditor(project)}
                       >
                         <div className="flex items-center gap-2 mb-4">
                           <div className="p-2 bg-indigo-600/20 rounded-lg text-indigo-400">
