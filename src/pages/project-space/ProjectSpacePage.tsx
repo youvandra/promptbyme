@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Menu, Plus, Trash2, Edit3, Save, X, Settings, Share2, Users, Download, Upload, GitBranch, Target, Type, Info, MoreHorizontal, ChevronDown } from 'lucide-react'
+import { Menu, Plus, Trash2, Edit3, Save, X, Settings, Share2, Users, Download, Upload, GitBranch, Target, Type, Info, MoreHorizontal, ChevronDown, Layers, Lock, Globe, Eye } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BoltBadge } from '../../components/ui/BoltBadge'
