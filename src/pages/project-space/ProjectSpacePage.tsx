@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useParams } from 'react-router-dom'
 import ReactFlow, {
   Background,
   Controls,
@@ -34,7 +34,18 @@ import {
   Mail,
   Check,
   Layers,
-  Edit
+  Edit,
+  Grid,
+  ArrowLeft,
+  MoreHorizontal,
+  Copy,
+  Pencil,
+  Trash,
+  Link2,
+  Unlink,
+  Maximize,
+  Minimize,
+  Zap
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NodeEditorModal } from '../../components/project-space/NodeEditorModal'
@@ -47,9 +58,209 @@ import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectSpaceStore, FlowNode } from '../../store/projectSpaceStore'
 
+// Dashboard component for project listing
+const ProjectDashboard = ({ 
+  projects, 
+  loading, 
+  onSelectProject, 
+  onCreateProject 
+}) => {
+  const [newProjectName, setNewProjectName] = useState('')
+  const [isCreating, setIsCreating] = useState(false)
+  
+  const handleCreateProject = async () => {
+    if (!newProjectName.trim()) return
+    
+    setIsCreating(true)
+    try {
+      await onCreateProject(newProjectName.trim())
+      setNewProjectName('')
+    } catch (error) {
+      console.error('Failed to create project:', error)
+    } finally {
+      setIsCreating(false)
+    }
+  }
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="flex items-center gap-2 text-zinc-400">
+          <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+          <span>Loading projects...</span>
+        </div>
+      </div>
+    )
+  }
+  
+  return (
+    <div className="p-8 max-w-6xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Project Space</h1>
+          <p className="text-zinc-400">Create and manage your visual prompt flows</p>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <input
+              type="text"
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+              placeholder="New project name"
+              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+            />
+          </div>
+          <button
+            onClick={handleCreateProject}
+            disabled={!newProjectName.trim() || isCreating}
+            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 disabled:transform-none"
+          >
+            {isCreating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Creating...</span>
+              </>
+            ) : (
+              <>
+                <Plus size={18} />
+                <span>Create Project</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+      
+      {projects.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((project) => (
+            <div
+              key={project.id}
+              onClick={() => onSelectProject(project)}
+              className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-indigo-500/50 hover:bg-zinc-800/50 transition-all duration-300 transform hover:scale-[1.02] cursor-pointer group"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center text-indigo-400">
+                  <Layers size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-white truncate">{project.name}</h3>
+                  <div className="flex items-center gap-2 text-xs text-zinc-500">
+                    <span>
+                      {project.visibility === 'private' ? (
+                        <div className="flex items-center gap-1">
+                          <EyeOff size={10} className="text-amber-400" />
+                          <span className="text-amber-400">Private</span>
+                        </div>
+                      ) : project.visibility === 'team' ? (
+                        <div className="flex items-center gap-1">
+                          <Users size={10} className="text-blue-400" />
+                          <span className="text-blue-400">Team</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <Globe size={10} className="text-emerald-400" />
+                          <span className="text-emerald-400">Public</span>
+                        </div>
+                      )}
+                    </span>
+                    <span>•</span>
+                    <span>{new Date(project.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {project.description && (
+                <p className="text-zinc-400 text-sm mb-4 line-clamp-2">{project.description}</p>
+              )}
+              
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-800/50">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1 text-xs text-zinc-500">
+                    <Grid size={12} />
+                    <span>{project.nodes?.length || 0} nodes</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-zinc-500">
+                    <Link2 size={12} />
+                    <span>{project.connections?.length || 0} connections</span>
+                  </div>
+                </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="text-xs text-indigo-400">Open →</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-16 bg-zinc-900/30 border border-zinc-800/50 rounded-xl">
+          <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <Layers size={32} className="text-indigo-400" />
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">No Projects Yet</h2>
+          <p className="text-zinc-400 mb-6 max-w-md mx-auto">
+            Create your first project to start building visual prompt flows
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Node context menu component
+const NodeContextMenu = ({ 
+  node, 
+  position, 
+  onClose, 
+  onEdit, 
+  onDelete, 
+  onDuplicate, 
+  onDisconnect 
+}) => {
+  if (!node) return null
+  
+  const menuItems = [
+    { label: 'Edit', icon: <Pencil size={14} />, onClick: () => { onEdit(node.id); onClose(); } },
+    { label: 'Duplicate', icon: <Copy size={14} />, onClick: () => { onDuplicate(node.id); onClose(); } },
+    { label: 'Disconnect', icon: <Unlink size={14} />, onClick: () => { onDisconnect(node.id); onClose(); } },
+    { label: 'Delete', icon: <Trash size={14} />, onClick: () => { onDelete(node.id); onClose(); }, danger: true }
+  ]
+  
+  return (
+    <div 
+      className="absolute z-50 bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/50 rounded-lg shadow-xl py-1 min-w-[160px]"
+      style={{ 
+        left: position.x, 
+        top: position.y 
+      }}
+    >
+      <div className="px-3 py-2 border-b border-zinc-800/50">
+        <div className="text-xs font-medium text-zinc-400 truncate max-w-[180px]">
+          {node.type.charAt(0).toUpperCase() + node.type.slice(1)}: {node.title}
+        </div>
+      </div>
+      {menuItems.map((item, index) => (
+        <button
+          key={index}
+          onClick={item.onClick}
+          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
+            item.danger 
+              ? 'text-red-400 hover:bg-red-500/10 hover:text-red-300' 
+              : 'text-zinc-300 hover:bg-zinc-800/50 hover:text-white'
+          }`}
+        >
+          {item.icon}
+          <span>{item.label}</span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export const ProjectSpacePage: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { projectId: urlProjectId } = useParams<{ projectId?: string }>()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null)
@@ -66,10 +277,19 @@ export const ProjectSpacePage: React.FC = () => {
   const [projectVisibilityInput, setProjectVisibilityInput] = useState<'private' | 'team' | 'public'>('private')
   const [isSaving, setIsSaving] = useState(false)
   const [isCreatingProject, setIsCreatingProject] = useState(false)
- const [nodes, setNodes, onNodesChange] = useNodesState([])
- const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [nodes, setNodes, onNodesChange] = useNodesState([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [newProjectName, setNewProjectName] = useState('')
   const [showCreateProject, setShowCreateProject] = useState(false)
+  const [contextMenu, setContextMenu] = useState<{
+    show: boolean;
+    node: FlowNode | null;
+    position: { x: number; y: number };
+  }>({
+    show: false,
+    node: null,
+    position: { x: 0, y: 0 }
+  })
   const canvasRef = useRef<HTMLDivElement>(null)
   
   const { user, loading: authLoading } = useAuthStore()
@@ -91,6 +311,18 @@ export const ProjectSpacePage: React.FC = () => {
     inviteProjectMember
   } = useProjectSpaceStore()
 
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (contextMenu.show) {
+        setContextMenu(prev => ({ ...prev, show: false }))
+      }
+    }
+    
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [contextMenu.show])
+
   // Load projects on mount
   useEffect(() => {
     if (user) {
@@ -98,12 +330,22 @@ export const ProjectSpacePage: React.FC = () => {
     }
   }, [user, fetchProjects])
 
+  // Select project from URL if provided
+  useEffect(() => {
+    if (urlProjectId && projects.length > 0 && !selectedProject) {
+      const projectToSelect = projects.find(p => p.id === urlProjectId)
+      if (projectToSelect) {
+        selectProject(projectToSelect)
+      }
+    }
+  }, [urlProjectId, projects, selectedProject, selectProject])
+
   // Select first project if none selected
   useEffect(() => {
-    if (!loading && projects.length > 0 && !selectedProject) {
+    if (!loading && projects.length > 0 && !selectedProject && !urlProjectId) {
       selectProject(projects[0])
     }
-  }, [loading, projects, selectedProject, selectProject])
+  }, [loading, projects, selectedProject, selectProject, urlProjectId])
 
   // Initialize project form inputs when project changes
   useEffect(() => {
@@ -206,6 +448,19 @@ export const ProjectSpacePage: React.FC = () => {
    }
  }, [selectedProject?.nodes])
 
+  // Handle node context menu
+  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+    event.preventDefault()
+    const flowNode = selectedProject?.nodes?.find(n => n.id === node.id)
+    if (flowNode) {
+      setContextMenu({
+        show: true,
+        node: flowNode,
+        position: { x: event.clientX, y: event.clientY }
+      })
+    }
+  }, [selectedProject?.nodes])
+
  // Handle edge click
  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
    if (window.confirm('Do you want to remove this connection?')) {
@@ -253,6 +508,7 @@ export const ProjectSpacePage: React.FC = () => {
     try {
       const project = await createProject(newProjectName.trim())
       await selectProject(project)
+      navigate(`/project/${project.id}`)
       setShowCreateProject(false)
       setNewProjectName('')
       setToast({ message: 'Project created successfully', type: 'success' })
@@ -281,6 +537,34 @@ export const ProjectSpacePage: React.FC = () => {
       setToast({ message: 'Failed to save project', type: 'error' })
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleDuplicateNode = async (nodeId: string) => {
+    try {
+      await duplicateNode(nodeId)
+      setToast({ message: 'Node duplicated successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to duplicate node:', error)
+      setToast({ message: 'Failed to duplicate node', type: 'error' })
+    }
+  }
+
+  const handleDisconnectNode = async (nodeId: string) => {
+    try {
+      // Find all connections that involve this node
+      const connectionsToRemove = selectedProject?.connections?.filter(
+        conn => conn.source_node_id === nodeId || conn.target_node_id === nodeId
+      ) || []
+      
+      // Delete each connection
+      for (const conn of connectionsToRemove) {
+        await deleteConnection(conn.id)
+      }
+      setToast({ message: 'Node disconnected successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to disconnect node:', error)
+      setToast({ message: 'Failed to disconnect node', type: 'error' })
     }
   }
 
@@ -392,6 +676,10 @@ export const ProjectSpacePage: React.FC = () => {
     }
   }
 
+  const handleBackToDashboard = () => {
+    navigate('/project-space')
+  }
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -433,7 +721,7 @@ export const ProjectSpacePage: React.FC = () => {
       <div className="flex min-h-screen lg:pl-64">
         {/* Side Navbar */}
         <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-        
+
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-h-screen">
           {/* Mobile Header */}
@@ -461,7 +749,7 @@ export const ProjectSpacePage: React.FC = () => {
           <div className="relative z-10 flex-1">
             <div className="w-full h-full flex flex-col">
               {/* Project Header */}
-              <div className="border-b border-zinc-800/50 backdrop-blur-xl">
+              {selectedProject && <div className="border-b border-zinc-800/50 backdrop-blur-xl">
                 <div className="px-6 py-4">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="flex items-center gap-4">
@@ -469,8 +757,17 @@ export const ProjectSpacePage: React.FC = () => {
                       <div className="relative">
                         <button
                           onClick={() => setShowCreateProject(!showCreateProject)}
-                          className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200"
+                          className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 group"
                         >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleBackToDashboard();
+                            }}
+                            className="mr-2 p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded-lg transition-colors group-hover:text-white"
+                          >
+                            <ArrowLeft size={14} />
+                          </button>
                           {selectedProject ? (
                             <span className="font-medium">{selectedProject.name}</span>
                           ) : (
@@ -619,89 +916,153 @@ export const ProjectSpacePage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div>}
 
               {/* Canvas Area */}
               <div 
                 ref={canvasRef}
-               className="flex-1 bg-zinc-900/30"
+                className="flex-1 bg-zinc-900/30"
               >
-                {selectedProject ? (
-                 <ReactFlow
-                   nodes={nodes}
-                   edges={edges}
-                   onNodesChange={onNodesChange}
-                   onEdgesChange={onEdgesChange}
-                   onConnect={onConnect}
-                   onNodeClick={onNodeClick}
-                   onEdgeClick={onEdgeClick}
-                   onNodeDragStop={onNodeDragStop}
-                   nodeTypes={nodeTypes}
-                   fitView
-                   connectionLineType={ConnectionLineType.SmoothStep}
-                   defaultEdgeOptions={{
-                     type: 'smoothstep',
-                     markerEnd: {
-                       type: MarkerType.ArrowClosed,
-                     },
-                     animated: true,
-                   }}
-                   className="bg-zinc-900/30"
-                 >
-                   <Background color="#6366f1" gap={16} size={1} />
-                   <Controls />
-                   <MiniMap 
-                     nodeColor={(node) => {
-                       switch (node.type) {
-                         case 'input': return '#8b5cf6';
-                         case 'prompt': return '#3b82f6';
-                         case 'condition': return '#eab308';
-                         case 'output': return '#22c55e';
-                         default: return '#6366f1';
-                       }
-                     }}
-                     maskColor="rgba(0, 0, 0, 0.5)"
-                   />
-                   <Panel position="top-left" className="bg-zinc-900/70 backdrop-blur-sm border border-zinc-800/50 rounded-lg p-2">
-                     <div className="flex flex-wrap items-center gap-2">
-                       <button
-                         onClick={() => handleAddNode('input')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs"
-                       >
-                         <Plus size={12} />
-                         <span>Input</span>
-                       </button>
-                       <button
-                         onClick={() => handleAddNode('prompt')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 text-xs"
-                       >
-                         <Plus size={12} />
-                         <span>Prompt</span>
-                       </button>
-                       <button
-                         onClick={() => handleImportPrompt()}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs"
-                       >
-                         <Plus size={12} />
-                         <span>Import</span>
-                       </button>
-                       <button
-                         onClick={() => handleAddNode('condition')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 text-xs"
-                       >
-                         <Plus size={12} />
-                         <span>Condition</span>
-                       </button>
-                       <button
-                         onClick={() => handleAddNode('output')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 text-xs"
-                       >
-                         <Plus size={12} />
-                         <span>Output</span>
-                       </button>
-                     </div>
-                   </Panel>
-                 </ReactFlow>
+                {!selectedProject && !loading ? (
+                  <ProjectDashboard 
+                    projects={projects}
+                    loading={loading}
+                    onSelectProject={(project) => {
+                      selectProject(project)
+                      navigate(`/project/${project.id}`)
+                    }}
+                    onCreateProject={handleCreateProject}
+                  />
+                ) : selectedProject ? (
+                  <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    onNodeClick={onNodeClick}
+                    onNodeContextMenu={onNodeContextMenu}
+                    onEdgeClick={onEdgeClick}
+                    onNodeDragStop={onNodeDragStop}
+                    nodeTypes={nodeTypes}
+                    fitView
+                    connectionLineType={ConnectionLineType.SmoothStep}
+                    defaultEdgeOptions={{
+                      type: 'smoothstep',
+                      markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                      },
+                      animated: true,
+                    }}
+                    className="bg-zinc-900/30"
+                  >
+                    <Background color="#6366f1" gap={16} size={1} />
+                    <Controls />
+                    <MiniMap 
+                      nodeColor={(node) => {
+                        switch (node.type) {
+                          case 'input': return '#8b5cf6';
+                          case 'prompt': return '#3b82f6';
+                          case 'condition': return '#eab308';
+                          case 'output': return '#22c55e';
+                          default: return '#6366f1';
+                        }
+                      }}
+                      maskColor="rgba(0, 0, 0, 0.5)"
+                    />
+                    
+                    {/* Enhanced Toolbar */}
+                    <Panel position="top-left" className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800/50 rounded-xl p-3 shadow-xl">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="text-sm font-medium text-white flex items-center gap-2">
+                            <Zap size={14} className="text-indigo-400" />
+                            <span>Add Nodes</span>
+                          </h3>
+                          <button
+                            onClick={handleBackToDashboard}
+                            className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors"
+                            title="Back to dashboard"
+                          >
+                            <ArrowLeft size={14} />
+                          </button>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => handleAddNode('input')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs transform hover:scale-105"
+                          >
+                            <Plus size={12} />
+                            <span>Input</span>
+                          </button>
+                          <button
+                            onClick={() => handleAddNode('prompt')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 text-xs transform hover:scale-105"
+                          >
+                            <Plus size={12} />
+                            <span>Prompt</span>
+                          </button>
+                          <button
+                            onClick={() => handleImportPrompt()}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs transform hover:scale-105"
+                          >
+                            <Plus size={12} />
+                            <span>Import</span>
+                          </button>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => handleAddNode('condition')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 text-xs transform hover:scale-105"
+                          >
+                            <Plus size={12} />
+                            <span>Condition</span>
+                          </button>
+                          <button
+                            onClick={() => handleAddNode('output')}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 text-xs transform hover:scale-105"
+                          >
+                            <Plus size={12} />
+                            <span>Output</span>
+                          </button>
+                        </div>
+                      </div>
+                    </Panel>
+                    
+                    {/* Project Info Panel */}
+                    <Panel position="top-right" className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800/50 rounded-xl p-3 shadow-xl">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-sm font-medium text-white">{selectedProject.name}</h3>
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-zinc-800/50 rounded-full text-xs">
+                          {selectedProject.visibility === 'private' ? (
+                            <div className="flex items-center gap-1">
+                              <EyeOff size={10} className="text-amber-400" />
+                              <span className="text-amber-400">Private</span>
+                            </div>
+                          ) : selectedProject.visibility === 'team' ? (
+                            <div className="flex items-center gap-1">
+                              <Users size={10} className="text-blue-400" />
+                              <span className="text-blue-400">Team</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Globe size={10} className="text-emerald-400" />
+                              <span className="text-emerald-400">Public</span>
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => setShowProjectSettings(true)}
+                          className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors"
+                          title="Project settings"
+                        >
+                          <Settings size={14} />
+                        </button>
+                      </div>
+                    </Panel>
+                  </ReactFlow>
                 ) : (
                   <div className="h-full flex items-center justify-center">
                     <div className="text-center">
@@ -729,6 +1090,19 @@ export const ProjectSpacePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Node Context Menu */}
+      {contextMenu.show && contextMenu.node && (
+        <NodeContextMenu
+          node={contextMenu.node}
+          position={contextMenu.position}
+          onClose={() => setContextMenu(prev => ({ ...prev, show: false }))}
+          onEdit={handleNodeEdit}
+          onDelete={handleNodeDelete}
+          onDuplicate={handleDuplicateNode}
+          onDisconnect={handleDisconnectNode}
+        />
+      )}
 
       {/* Node Editor Modal */}
       <NodeEditorModal

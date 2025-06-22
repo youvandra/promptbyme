@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { FlowNode } from '../../store/projectSpaceStore'
 import { highlightVariables, extractVariables } from '../../utils/promptUtils'
 import { PromptImportModal } from './PromptImportModal'
+import { extractVariables, highlightVariables } from '../../utils/promptUtils'
 import { useProjectSpaceStore } from '../../store/projectSpaceStore'
 
 interface NodeEditorModalProps {
@@ -52,6 +53,9 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
   const [showImportModal, setShowImportModal] = useState(false)
   const [isNewNode, setIsNewNode] = useState(false)
   const { createNode } = useProjectSpaceStore()
+  
+  // Extract variables from content
+  const detectedVariables = content ? extractVariables(content) : []
 
   useEffect(() => {
     if (node && isOpen) {
@@ -219,7 +223,7 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
             </div>
 
             {/* Live preview of variables */}
-            {detectedVariables.length > 0 && (
+            {detectedVariables && detectedVariables.length > 0 && (
               <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 backdrop-blur-sm">
                 <h4 className="text-sm font-medium text-indigo-300 mb-2 flex items-center gap-2">
                   <Wand2 size={16} />
