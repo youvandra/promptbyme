@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     // Create Supabase client
     const supabaseClient = createClient(
       supabaseUrl,
-      supabaseServiceRoleKey,
+      supabaseServiceKey,
       {
         auth: {
           autoRefreshToken: false,
