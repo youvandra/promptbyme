@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     // Create Supabase client
     const supabaseClient = createClient(
       supabaseUrl,
-      supabaseServiceKey,
+      supabaseServiceRoleKey,
       {
         auth: {
           autoRefreshToken: false,
@@ -97,17 +97,8 @@ Deno.serve(async (req) => {
     const { data: invitations, error: invitationsError } = await supabaseClient
       .from('project_members')
       .select(`
-        id,
-        project_id,
-        role,
-        status,
-        created_at,
-        invited_by_user_id,
-        flow_projects!inner (
-          id,
-          name,
-          description
-        )
+        id, project_id, role, status, created_at, invited_by_user_id,
+        flow_projects!inner(id, name, description)
       `)
       .eq('user_id', user.id)
       .eq('status', 'pending')
@@ -115,6 +106,13 @@ Deno.serve(async (req) => {
 
     if (invitationsError) {
       console.error('Database error:', invitationsError)
+      
+      // Log more details about the query
+      console.log('Invitations query details:', {
+        userId: user.id,
+        error: invitationsError.message
+      })
+      
       return new Response(
         JSON.stringify({
           success: false,
@@ -130,7 +128,10 @@ Deno.serve(async (req) => {
     // Get inviter details from users table
     const inviterIds = invitations?.map(inv => inv.invited_by_user_id).filter(Boolean) || []
     let inviters = []
-    
+
+    console.log('Found invitations:', invitations?.length || 0)
+    console.log('Inviter IDs:', inviterIds)
+
     if (inviterIds.length > 0) {
       const { data: inviterData, error: inviterError } = await supabaseClient
         .from('users')
@@ -145,12 +146,16 @@ Deno.serve(async (req) => {
     // Format the response
     const formattedInvitations = (invitations || []).map(invitation => {
       const inviter = inviters.find(inv => inv.id === invitation.invited_by_user_id)
-      
+
+      // Ensure flow_projects exists before accessing properties
+      const projectName = invitation.flow_projects?.name || 'Unknown Project'
+      const projectDescription = invitation.flow_projects?.description || null
+
       return {
         id: invitation.id,
         project_id: invitation.project_id,
-        project_name: invitation.flow_projects?.name || 'Unknown Project',
-        project_description: invitation.flow_projects?.description || null,
+        project_name: projectName,
+        project_description: projectDescription,
         role: invitation.role,
         status: invitation.status,
         invited_by: inviter?.display_name || inviter?.email || 'Unknown',

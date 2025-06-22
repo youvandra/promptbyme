@@ -183,12 +183,19 @@ Deno.serve(async (req) => {
     // Find the user to invite by email
     const { data: invitedUser, error: userError } = await supabaseClient
       .from('users')
-      .select('id')
+      .select('id, email')
       .eq('email', invited_user_email)
       .maybeSingle()
 
     if (userError || !invitedUser) {
       console.error('User lookup error:', userError)
+      
+      // Log more details about the query
+      console.log('User lookup details:', {
+        email: invited_user_email,
+        error: userError ? userError.message : 'No user found'
+      })
+      
       return new Response(
         JSON.stringify({
           success: false,
@@ -201,6 +208,8 @@ Deno.serve(async (req) => {
     }
 
     // Check if user is already a member or has a pending invitation
+    console.log('Found user:', invitedUser)
+    
     const { data: existingMember, error: existingError } = await supabaseClient
       .from('project_members')
       .select('id, status')
@@ -233,6 +242,8 @@ Deno.serve(async (req) => {
     }
 
     // Create the invitation
+    console.log('Creating invitation for user:', invitedUser.id)
+    
     const { data: invitation, error: inviteError } = await supabaseClient
       .from('project_members')
       .insert([{
@@ -259,10 +270,14 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({
+      JSON.stringify({ 
         success: true,
         message: 'Invitation sent successfully',
-        invitation_id: invitation.id
+        invitation_id: invitation.id,
+        invited_user: {
+          id: invitedUser.id,
+          email: invitedUser.email
+        }
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
