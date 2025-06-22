@@ -59,6 +59,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       try {
         const { data, error } = await supabase
           .from('users')
+          .select('*')
           .eq('id', user.id)
           .single()
 
