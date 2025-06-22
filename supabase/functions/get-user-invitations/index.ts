@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
         status,
         created_at,
         invited_by_user_id,
-        flow_projects!inner (
+        flow_projects (
           id,
           name,
           description
