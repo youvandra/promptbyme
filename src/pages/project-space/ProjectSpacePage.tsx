@@ -124,7 +124,15 @@ export const ProjectSpacePage: React.FC = () => {
        data: { 
          label: node.title,
          content: node.content,
-         nodeData: node
+        nodeData: node,
+        onEdit: (nodeId: string) => {
+          const nodeToEdit = selectedProject.nodes?.find(n => n.id === nodeId);
+          if (nodeToEdit) {
+            setSelectedNode(nodeToEdit);
+            setShowNodeEditor(true);
+          }
+        },
+        onDelete: (nodeId: string) => handleNodeDelete(nodeId)
        }
      }))
      setNodes(flowNodes)
@@ -154,38 +162,146 @@ export const ProjectSpacePage: React.FC = () => {
 
  // Custom node components
  const InputNode = ({ data }: NodeProps) => (
-   <div className="px-4 py-2 shadow-md rounded-md bg-purple-600/20 border border-purple-500/30 min-w-[150px]">
-     <div className="font-bold text-sm text-purple-300">{data.label}</div>
-     {data.content && (
-       <div className="text-xs text-purple-200 mt-1 line-clamp-2">{data.content}</div>
-     )}
+  <div className="group px-4 py-3 shadow-lg rounded-xl backdrop-blur-md bg-purple-600/10 border border-purple-500/20 min-w-[180px] hover:bg-purple-600/15 hover:border-purple-500/30 transition-all duration-300 hover:shadow-purple-500/10 hover:shadow-xl transform hover:scale-[1.02]">
+    <div className="flex items-center justify-between mb-1">
+      <div className="font-bold text-sm text-purple-300">{data.label}</div>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (data.nodeData && data.onEdit) data.onEdit(data.nodeData.id);
+          }}
+          className="p-1 text-purple-400 hover:text-purple-300 hover:bg-purple-500/20 rounded transition-colors"
+        >
+          <Edit size={12} />
+        </button>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (data.nodeData && data.onDelete && window.confirm('Are you sure you want to delete this node?')) {
+              data.onDelete(data.nodeData.id);
+            }
+          }}
+          className="p-1 text-purple-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+        >
+          <Trash2 size={12} />
+        </button>
+      </div>
+    </div>
+    <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent mb-2"></div>
+    {data.content ? (
+      <div className="text-xs text-purple-200 mt-1 line-clamp-2 bg-purple-500/5 p-2 rounded-lg border border-purple-500/10">{data.content}</div>
+    ) : (
+      <div className="text-xs text-purple-300/50 italic mt-1">No content defined</div>
+    )}
    </div>
  )
 
  const PromptNode = ({ data }: NodeProps) => (
-   <div className="px-4 py-2 shadow-md rounded-md bg-blue-600/20 border border-blue-500/30 min-w-[150px]">
-     <div className="font-bold text-sm text-blue-300">{data.label}</div>
-     {data.content && (
-       <div className="text-xs text-blue-200 mt-1 line-clamp-2">{data.content}</div>
-     )}
+  <div className="group px-4 py-3 shadow-lg rounded-xl backdrop-blur-md bg-blue-600/10 border border-blue-500/20 min-w-[180px] hover:bg-blue-600/15 hover:border-blue-500/30 transition-all duration-300 hover:shadow-blue-500/10 hover:shadow-xl transform hover:scale-[1.02]">
+    <div className="flex items-center justify-between mb-1">
+      <div className="font-bold text-sm text-blue-300">{data.label}</div>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (data.nodeData && data.onEdit) data.onEdit(data.nodeData.id);
+          }}
+          className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded transition-colors"
+        >
+          <Edit size={12} />
+        </button>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (data.nodeData && data.onDelete && window.confirm('Are you sure you want to delete this node?')) {
+              data.onDelete(data.nodeData.id);
+            }
+          }}
+          className="p-1 text-blue-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+        >
+          <Trash2 size={12} />
+        </button>
+      </div>
+    </div>
+    <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/30 to-transparent mb-2"></div>
+    {data.content ? (
+      <div className="text-xs text-blue-200 mt-1 line-clamp-2 bg-blue-500/5 p-2 rounded-lg border border-blue-500/10">{data.content}</div>
+    ) : (
+      <div className="text-xs text-blue-300/50 italic mt-1">No content defined</div>
+    )}
    </div>
  )
 
  const ConditionNode = ({ data }: NodeProps) => (
-   <div className="px-4 py-2 shadow-md rounded-md bg-yellow-600/20 border border-yellow-500/30 min-w-[150px]">
-     <div className="font-bold text-sm text-yellow-300">{data.label}</div>
-     {data.content && (
-       <div className="text-xs text-yellow-200 mt-1 line-clamp-2">{data.content}</div>
-     )}
+  <div className="group px-4 py-3 shadow-lg rounded-xl backdrop-blur-md bg-yellow-600/10 border border-yellow-500/20 min-w-[180px] hover:bg-yellow-600/15 hover:border-yellow-500/30 transition-all duration-300 hover:shadow-yellow-500/10 hover:shadow-xl transform hover:scale-[1.02]">
+    <div className="flex items-center justify-between mb-1">
+      <div className="font-bold text-sm text-yellow-300">{data.label}</div>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (data.nodeData && data.onEdit) data.onEdit(data.nodeData.id);
+          }}
+          className="p-1 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/20 rounded transition-colors"
+        >
+          <Edit size={12} />
+        </button>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (data.nodeData && data.onDelete && window.confirm('Are you sure you want to delete this node?')) {
+              data.onDelete(data.nodeData.id);
+            }
+          }}
+          className="p-1 text-yellow-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+        >
+          <Trash2 size={12} />
+        </button>
+      </div>
+    </div>
+    <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-yellow-500/30 to-transparent mb-2"></div>
+    {data.content ? (
+      <div className="text-xs text-yellow-200 mt-1 line-clamp-2 bg-yellow-500/5 p-2 rounded-lg border border-yellow-500/10">{data.content}</div>
+    ) : (
+      <div className="text-xs text-yellow-300/50 italic mt-1">No content defined</div>
+    )}
    </div>
  )
 
  const OutputNode = ({ data }: NodeProps) => (
-   <div className="px-4 py-2 shadow-md rounded-md bg-green-600/20 border border-green-500/30 min-w-[150px]">
-     <div className="font-bold text-sm text-green-300">{data.label}</div>
-     {data.content && (
-       <div className="text-xs text-green-200 mt-1 line-clamp-2">{data.content}</div>
-     )}
+  <div className="group px-4 py-3 shadow-lg rounded-xl backdrop-blur-md bg-green-600/10 border border-green-500/20 min-w-[180px] hover:bg-green-600/15 hover:border-green-500/30 transition-all duration-300 hover:shadow-green-500/10 hover:shadow-xl transform hover:scale-[1.02]">
+    <div className="flex items-center justify-between mb-1">
+      <div className="font-bold text-sm text-green-300">{data.label}</div>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (data.nodeData && data.onEdit) data.onEdit(data.nodeData.id);
+          }}
+          className="p-1 text-green-400 hover:text-green-300 hover:bg-green-500/20 rounded transition-colors"
+        >
+          <Edit size={12} />
+        </button>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (data.nodeData && data.onDelete && window.confirm('Are you sure you want to delete this node?')) {
+              data.onDelete(data.nodeData.id);
+            }
+          }}
+          className="p-1 text-green-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+        >
+          <Trash2 size={12} />
+        </button>
+      </div>
+    </div>
+    <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-green-500/30 to-transparent mb-2"></div>
+    {data.content ? (
+      <div className="text-xs text-green-200 mt-1 line-clamp-2 bg-green-500/5 p-2 rounded-lg border border-green-500/10">{data.content}</div>
+    ) : (
+      <div className="text-xs text-green-300/50 italic mt-1">No content defined</div>
+    )}
    </div>
  )
 
@@ -666,35 +782,35 @@ export const ProjectSpacePage: React.FC = () => {
                      <div className="flex flex-wrap items-center gap-2">
                        <button
                          onClick={() => handleAddNode('input')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs"
+                         className="flex items-center gap-1 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs hover:scale-105 hover:shadow-purple-500/20 hover:shadow-md"
                        >
                          <Plus size={12} />
                          <span>Input</span>
                        </button>
                        <button
                          onClick={() => handleAddNode('prompt')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 text-xs"
+                         className="flex items-center gap-1 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 text-xs hover:scale-105 hover:shadow-blue-500/20 hover:shadow-md"
                        >
                          <Plus size={12} />
                          <span>Prompt</span>
                        </button>
                        <button
                          onClick={() => handleImportPrompt()}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs"
+                         className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs hover:scale-105 hover:shadow-indigo-500/20 hover:shadow-md"
                        >
                          <Plus size={12} />
                          <span>Import</span>
                        </button>
                        <button
                          onClick={() => handleAddNode('condition')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 text-xs"
+                         className="flex items-center gap-1 px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 text-xs hover:scale-105 hover:shadow-yellow-500/20 hover:shadow-md"
                        >
                          <Plus size={12} />
                          <span>Condition</span>
                        </button>
                        <button
                          onClick={() => handleAddNode('output')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 text-xs"
+                         className="flex items-center gap-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 text-xs hover:scale-105 hover:shadow-green-500/20 hover:shadow-md"
                        >
                          <Plus size={12} />
                          <span>Output</span>

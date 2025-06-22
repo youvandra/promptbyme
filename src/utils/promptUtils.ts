@@ -12,7 +12,9 @@ export const highlightVariables = (text: string) => {
 
 export const extractVariables = (content: string): string[] => {
   const matches = content.match(/\{\{([^}]+)\}\}/g)
-  return matches ? matches.map(match => match.replace(/[{}]/g, '')) : []
+  // Remove duplicates by using a Set
+  const uniqueMatches = matches ? Array.from(new Set(matches.map(match => match.replace(/[{}]/g, '')))) : []
+  return uniqueMatches
 }
 
 export const estimateTokens = (content: string): number => {
