@@ -16,7 +16,8 @@ import {
   X,
   Mail,
   Check,
-  AlertTriangle
+  AlertTriangle,
+  Eye
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
