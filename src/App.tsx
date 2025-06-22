@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { HomePage } from './pages/home/HomePage'
 import { SharedPromptPage } from './pages/shared-prompt/SharedPromptPage'
 import { GalleryPage } from './pages/gallery/GalleryPage'
+import { ProjectEditorPage } from './pages/project-space/ProjectEditorPage'
 import { ProfilePage } from './pages/profile/ProfilePage'
 import { PublicProfilePage } from './pages/public-profile/PublicProfilePage'
 import { PlaygroundPage } from './pages/playground/PlaygroundPage'
@@ -17,7 +18,7 @@ function App() {
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/playground" element={<PlaygroundPage />} />
         <Route path="/project-space" element={<ProjectSpacePage />} />
-        <Route path="/project/:projectId" element={<ProjectSpacePage />} />
+        <Route path="/project/:projectId" element={<ProjectEditorPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/:username" element={<PublicProfilePage />} />
         <Route path="/:username/:id" element={<SharedPromptPage />} />
