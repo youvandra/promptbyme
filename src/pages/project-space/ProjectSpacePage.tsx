@@ -368,14 +368,13 @@ export const ProjectSpacePage: React.FC = () => {
                             ref={menuRef}
                             className="absolute top-full right-0 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-48 py-1"
                           >
-                            <button
+                            <div
                               onClick={() => openProjectEditor(project)}
-                              className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
-                              disabled={!(project.user_id === user.id || project.current_user_role)}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm cursor-pointer"
                             >
                               <Layers size={14} />
                               <span>Open Project</span>
-                            </button>
+                            </div>
                             
                             {(project.user_id === user.id || currentUserRole === 'admin') && (
                               <>
@@ -412,15 +411,7 @@ export const ProjectSpacePage: React.FC = () => {
                       <div 
                         className="flex-1 cursor-pointer"
                         onClick={() => {
-                          // Only open the project if it's the user's own project or they're a member
-                          if (project.user_id === user.id || project.current_user_role) {
-                            openProjectEditor(project)
-                          } else {
-                            setToast({ 
-                              message: 'You do not have access to this project', 
-                              type: 'error' 
-                            })
-                          }
+                          openProjectEditor(project)
                         }}
                       >
                         <div className="flex items-center gap-2 mb-4">
