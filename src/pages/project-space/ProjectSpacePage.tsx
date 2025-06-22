@@ -20,6 +20,7 @@ import {
   Eye
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { supabase } from '../../lib/supabase'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { Toast } from '../../components/ui/Toast'
@@ -74,6 +75,20 @@ export const ProjectSpacePage: React.FC = () => {
         setIsLoading(true)
         setLoadingProjectId(projectId) 
         try {
+          // Check if user is properly authenticated
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+          if (sessionError) {
+            console.error('Session error:', sessionError)
+            setToast({ message: 'Authentication error. Please sign in again.', type: 'error' })
+            return
+          }
+          
+          if (!session) {
+            console.error('No active session found')
+            setToast({ message: 'Please sign in to access projects', type: 'error' })
+            return
+          }
+          
           // First fetch projects if we don't have them yet
           if (projects.length === 0 && !projectsLoading) {
             await fetchProjects()
@@ -86,10 +101,19 @@ export const ProjectSpacePage: React.FC = () => {
             if (location.pathname === '/project-space' && projectId) {
               navigate(`/project/${projectId}`, { replace: true })
             }
+          } else {
+            console.error('Project not found:', projectId)
+            setToast({ message: 'Project not found or access denied', type: 'error' })
           }
         } catch (error) {
           console.error('Failed to load project:', error)
-          setToast({ message: 'Failed to load project', type: 'error' })
+          if (error.message?.includes('NetworkError') || error.message?.includes('Failed to fetch')) {
+            setToast({ message: 'Network connection error. Please check your internet connection and try again.', type: 'error' })
+          } else if (error.message?.includes('not authenticated')) {
+            setToast({ message: 'Please sign in to access this project', type: 'error' })
+          } else {
+            setToast({ message: 'Failed to load project. Please try again.', type: 'error' })
+          }
         } finally {
           setLoadingProjectId(null)
           setIsLoading(false)
@@ -97,7 +121,7 @@ export const ProjectSpacePage: React.FC = () => {
       }
     }
     loadProject()
-  }, [params.projectId, searchParams, user, authLoading, projectsLoading, projects])
+  }, [params.projectId, searchParams, user, authLoading, projectsLoading, projects, navigate, location.pathname])
   
   // Sync loading state from store
   useEffect(() => {
