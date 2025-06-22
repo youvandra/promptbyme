@@ -247,8 +247,13 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     selectProject: async (project: FlowProject) => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('User not authenticated')
+        if (!user) {
+          throw new Error('User not authenticated')
+        }
 
+        // Set loading state to true while fetching project data
+        set({ loading: true })
+        
         // Fetch nodes and connections for the selected project
         const [nodesResult, connectionsResult] = await Promise.all([
           supabase
@@ -262,8 +267,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
             .eq('project_id', project.id)
         ])
 
-        if (nodesResult.error) throw nodesResult.error
-        if (connectionsResult.error) throw connectionsResult.error
+        if (nodesResult.error) {
+          throw nodesResult.error
+        }
+        if (connectionsResult.error) {
+          throw connectionsResult.error
+        }
 
         // Transform nodes to include position object
         const nodes: FlowNode[] = (nodesResult.data || []).map(node => ({
@@ -293,12 +302,17 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           connections: connectionsResult.data || []
         }
 
-        set({ 
+        // Update state with project data
+        set({
           selectedProject: projectWithData,
-          currentUserRole: userRole
+          currentUserRole: userRole,
+          loading: false
         })
+        
+        return projectWithData
       } catch (error) {
         console.error('Error selecting project:', error)
+        set({ loading: false })
         throw error
       }
     },

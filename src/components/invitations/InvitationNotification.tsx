@@ -32,10 +32,11 @@ export const InvitationNotification: React.FC = () => {
     try {
       await manageInvitation(projectId, action)
      
-      // If accepted, navigate to the specific project page
+      // If accepted, navigate to the specific project page and close notification
      if (action === 'accept') {
        setIsExpanded(false)
-        navigate(`/project/${projectId}`)
+        // Use replace to avoid adding to history stack
+        navigate(`/project/${projectId}`, { replace: true })
      }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)
