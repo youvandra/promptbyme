@@ -477,7 +477,7 @@ export const ProjectSpacePage: React.FC = () => {
   }
 
   return (
-    <>
+    <div>
       <div className="min-h-screen bg-zinc-950 text-white relative">
         {/* Layout Container */}
         <div className="flex min-h-screen lg:pl-64">
@@ -1323,6 +1323,6 @@ export const ProjectSpacePage: React.FC = () => {
           onClose={() => setToast(null)}
         />
       )}
-    </>
+    </div>
   )
 }
