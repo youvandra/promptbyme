@@ -351,12 +351,12 @@ export const ProjectSpacePage: React.FC = () => {
                                 <Trash2 size={14} />
                               </button>
                             </div>
+                          </div>
                           {project.description && (
                             <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
                               {project.description}
                             </p>
                           )}
-                          </div>
                           <div className="flex items-center justify-between text-xs text-zinc-500">
                             <span>
                               Updated {new Date(project.updated_at).toLocaleDateString()}
@@ -396,6 +396,13 @@ export const ProjectSpacePage: React.FC = () => {
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-white">Create New Project</h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all duration-200"
+                >
+                  <X size={18} />
+                </button>
+              </div>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
@@ -409,7 +416,6 @@ export const ProjectSpacePage: React.FC = () => {
                     className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                   />
                 </div>
-                <button
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
                     Description (Optional)
@@ -422,7 +428,6 @@ export const ProjectSpacePage: React.FC = () => {
                     className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
                   />
                 </div>
-                  onClick={() => setShowCreateModal(false)}
                 <div>
                   <label className="block text-sm font-medium text-zinc-300 mb-2">
                     Visibility
@@ -449,7 +454,6 @@ export const ProjectSpacePage: React.FC = () => {
                   </div>
                 </div>
               </div>
-                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all duration-200"
               <div className="flex items-center gap-3 mt-6">
                 <button
                   onClick={() => setShowCreateModal(false)}
@@ -469,7 +473,7 @@ export const ProjectSpacePage: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-                >
+
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {showDeleteModal && projectToDelete && (
@@ -496,12 +500,10 @@ export const ProjectSpacePage: React.FC = () => {
                   <p className="text-sm text-zinc-400">This action cannot be undone</p>
                 </div>
               </div>
-                  <X size={18} />
               <p className="text-zinc-300 mb-6">
                 Are you sure you want to delete <strong>{projectToDelete.name}</strong>? 
                 All project data, including nodes and connections, will be permanently removed.
               </p>
-                </button>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowDeleteModal(false)}
@@ -520,7 +522,7 @@ export const ProjectSpacePage: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-              </div>
+
       {/* Toast Notification */}
       <AnimatePresence>
         {toast && (
