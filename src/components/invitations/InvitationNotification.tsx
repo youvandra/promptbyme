@@ -38,7 +38,7 @@ export const InvitationNotification: React.FC = () => {
         // Use replace to avoid adding to history stack
         setTimeout(() => { 
           navigate(`/project/${projectId}`, { replace: true }) 
-        }, 1000) // Longer delay to allow UI to update and data to load
+        }, 500) // Slightly longer delay to allow UI to update and data to load
       }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)

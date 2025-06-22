@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { 
   Home,
   User, 
@@ -26,7 +26,6 @@ interface SideNavbarProps {
 
 export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation()
-  const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
   const { 
     userInvitations, 
@@ -60,7 +59,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       try {
         const { data, error } = await supabase
           .from('users')
-          .select('*')
           .eq('id', user.id)
           .single()
 
@@ -113,8 +111,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       // If accepted, navigate to the specific project page
       if (action === 'accept') {
         setShowNotifications(false)
-        // Navigation will be handled by the InvitationNotification component
-        // to avoid navigation conflicts
+        navigate(`/project/${projectId}`)
       }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)
@@ -251,19 +248,22 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => window.innerWidth < 1024 && onToggle()}
-                  className={`
-                    group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150
-                    ${active 
+                  onClick={() => {
+                    if (window.innerWidth < 1024) {
+                      onToggle()
+                    }
+                  }}
+                  className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150
+                    ${location.pathname === '/project-space' && !location.pathname.includes('/project/') 
                       ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' 
                       : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
                     }
                   `}
                 >
-                  <Icon size={18} className={active ? 'text-white' : ''} />
+                  <Layers size={18} className={location.pathname === '/project-space' && !location.pathname.includes('/project/') ? 'text-white' : ''} />
                   <div className="flex-1">
-                    <p className="font-medium text-sm">{item.label}</p>
-                    <p className="text-xs opacity-70">{item.description}</p>
+                    <p className="font-medium text-sm">Project Space</p>
+                    <p className="text-xs opacity-70">Visual prompt flows</p>
                   </div>
                 </Link>
               )
@@ -276,7 +276,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
               <Link
                 to={location.pathname} 
                 onClick={() => {
-                  // Just close the sidebar on mobile, navigation will happen through the link
                   if (window.innerWidth < 1024) {
                     onToggle()
                   }

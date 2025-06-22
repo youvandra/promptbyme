@@ -127,6 +127,9 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           throw new Error('User not authenticated')
         }
         
+        const projectId = project.id
+        set({ loadingProjectId: projectId })
+
         // Get projects where user is owner OR a member
         const { data: ownedProjects, error: ownedError } = await supabase
           .from('flow_projects')
@@ -258,28 +261,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     selectProject: async (project: FlowProject) => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
-        const projectId = project.id
-        set({ loadingProjectId: projectId })
-        
         if (!user) {
-          set({ loading: false, loadingProjectId: null })
           throw new Error('User not authenticated')
         }
 
         // Set loading state to true while fetching project data
         set({ loading: true, selectedProject: null })
-        
-        // Check if project exists
-        const { data: projectData, error: projectError } = await supabase
-          .from('flow_projects')
-          .select('*')
-          .eq('id', project.id)
-          .single()
-          
-        if (projectError || !projectData) {
-          set({ loading: false, loadingProjectId: null })
-          throw new Error('Project not found or access denied')
-        }
         
         // Fetch nodes and connections for the selected project
         const [nodesResult, connectionsResult] = await Promise.all([
@@ -295,7 +282,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         ])
 
         if (nodesResult.error) {
-          set({ loading: false, loadingProjectId: null })
           throw nodesResult.error
         }
         if (connectionsResult.error) {
@@ -333,7 +319,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         // Update state with project data
         set({
           selectedProject: projectWithData,
-          currentUserRole: userRole || (project.user_id === user.id ? 'admin' : null), 
+          currentUserRole: userRole || (projectWithData.user_id === user.id ? 'admin' : null), 
           loading: false, // Make sure to set loading to false when done
           loadingProjectId: null
         })
@@ -775,10 +761,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
     manageInvitation: async (projectId: string, action: 'accept' | 'decline') => {
       try {
         set({ loadingProjectId: projectId })
-        
-        // Add a small delay to ensure UI updates properly
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
         const { data, error } = await supabase.functions.invoke('manage-project-invitation', {
           body: {
             project_id: projectId, 
@@ -801,9 +783,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (action === 'accept') {
           await get().fetchProjects()
           
-          // Add a small delay to ensure projects are loaded
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
           // If the project was successfully accepted, we should select it to show it to the user
           const projectId = data.project_id
           if (projectId) {
@@ -817,7 +796,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
               
               if (acceptedProject) {
                 await get().selectProject(acceptedProject)
-                return true
               }
             } catch (error) {
               console.error('Error selecting accepted project:', error)

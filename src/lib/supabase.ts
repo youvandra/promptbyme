@@ -4,54 +4,14 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables:', {
-    url: supabaseUrl ? 'Present' : 'Missing',
-    key: supabaseAnonKey ? 'Present' : 'Missing'
-  })
-  throw new Error('Missing Supabase environment variables. Please check your .env file.')
-}
-
-// Validate URL format
-try {
-  new URL(supabaseUrl)
-} catch (error) {
-  console.error('Invalid Supabase URL format:', supabaseUrl)
-  throw new Error('Invalid Supabase URL format. Please check your VITE_SUPABASE_URL in .env file.')
+  throw new Error('Missing Supabase environment variables')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
-    debug: import.meta.env.DEV
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'supabase-js-web',
-      'Access-Control-Allow-Origin': '*'
-    }
-  },
-  db: {
-    schema: 'public'
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10
-    }
-  },
-  // Add retry configuration for network issues
-  fetch: (url, options = {}) => {
-    return fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey'
-      }
-    })
+    detectSessionInUrl: true
   }
 })
 

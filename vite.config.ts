@@ -11,8 +11,6 @@ export default defineConfig({
     sourcemap: true
   },
   server: {
-    host: true,
-    port: 5173,
     fs: {
       // Allow serving files from one level up to the project root and node_modules
       allow: ['..', 'node_modules']
