@@ -35,14 +35,13 @@ import {
   Mail,
   Check,
   Layers,
-  Edit,
-  Edit3,
-  Maximize2
+  Edit
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { NodeEditorModal } from '../../components/project-space/NodeEditorModal'
 import { NodeDetailsModal } from '../../components/project-space/NodeDetailsModal'
 import { PromptImportModal } from '../../components/project-space/PromptImportModal'
+import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar'
 import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { Toast } from '../../components/ui/Toast'
@@ -710,7 +709,7 @@ useEffect(() => {
                    <Panel position="top-center" className="bg-zinc-900/70 backdrop-blur-sm border border-zinc-800/50 rounded-lg p-2">
                      <div className="flex flex-wrap items-center gap-2">
                        <button
-                        onClick={() => handleAddNode('input')} 
+                         onClick={() => handleAddNode('input')}
                          className="flex items-center gap-1 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs"
                        >
                          <Plus size={12} />
@@ -767,89 +766,6 @@ useEffect(() => {
                         <span>Create Project</span>
                       </button>
                     </div>
-                    
-                    {/* Node Details Toolbar - Positioned beside node creation buttons */}
-                    {(selectedNodeForToolbar || selectedNode) && (
-                      <div className="mt-2 flex items-center justify-between bg-zinc-900/90 backdrop-blur-sm border border-zinc-800/50 rounded-lg p-2">
-                        <div className="flex items-center gap-2">
-                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-                            selectedNodeForToolbar?.type === 'input' ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' :
-                            selectedNodeForToolbar?.type === 'prompt' ? 'bg-blue-500/10 border-blue-500/30 text-blue-300' :
-                            selectedNodeForToolbar?.type === 'condition' ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300' :
-                            'bg-green-500/10 border-green-500/30 text-green-300'
-                          } border overflow-hidden`}>
-                            <span className="font-medium text-sm truncate max-w-[200px]">
-                              {selectedNodeForToolbar?.title || selectedNode?.title}
-                            </span>
-                            <span className="text-xs px-2 py-0.5 bg-zinc-800/50 rounded-full">
-                              {selectedNodeForToolbar?.type || selectedNode?.type}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center">
-                          <button
-                            onClick={() => {
-                              const nodeId = selectedNodeForToolbar?.id || selectedNode?.id;
-                              if (nodeId) {
-                                const node = selectedProject?.nodes?.find(n => n.id === nodeId);
-                                if (node) {
-                                  setSelectedNode(node);
-                                  setShowNodeDetails(true);
-                                }
-                              }
-                            }}
-                            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                            title="View details"
-                          >
-                            <Maximize2 size={16} />
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              const nodeId = selectedNodeForToolbar?.id || selectedNode?.id;
-                              if (nodeId) {
-                                const node = selectedProject?.nodes?.find(n => n.id === nodeId);
-                                if (node) {
-                                  setSelectedNode(node);
-                                  setShowNodeEditor(true);
-                                }
-                              }
-                            }}
-                            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                            title="Edit node"
-                          >
-                            <Edit3 size={16} />
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              const nodeId = selectedNodeForToolbar?.id || selectedNode?.id;
-                              if (nodeId && window.confirm(`Are you sure you want to delete this node?`)) {
-                                handleNodeDelete(nodeId);
-                              }
-                            }}
-                            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-                            title="Delete node"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                          
-                          <div className="h-8 w-px bg-zinc-800/50 mx-2"></div>
-                          
-                          <button
-                            onClick={() => {
-                              setSelectedNodeForToolbar(null);
-                              setActiveNodeId(null);
-                            }}
-                            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                            title="Close toolbar"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -860,6 +776,33 @@ useEffect(() => {
 
       {/* Node Details Toolbar */}
       {/* Node Details Toolbar */}
+      <AnimatePresence>
+        {(selectedNodeForToolbar || selectedNode) && (
+          <NodeDetailsToolbar
+            selectedNode={selectedNodeForToolbar || selectedNode}
+            onEdit={(nodeId) => {
+              const node = selectedProject?.nodes?.find(n => n.id === nodeId);
+              if (node) {
+                setSelectedNode(node);
+                setShowNodeEditor(true);
+              }
+            }}
+            onDelete={handleNodeDelete}
+            onViewDetails={(nodeId) => {
+              const node = selectedProject?.nodes?.find(n => n.id === nodeId);
+              if (node) {
+                setSelectedNode(node);
+                setShowNodeDetails(true);
+              }
+            }}
+            onClose={() => {
+              setSelectedNodeForToolbar(null);
+              setActiveNodeId(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Node Editor Modal */}
       <NodeEditorModal
         isOpen={showNodeEditor}
