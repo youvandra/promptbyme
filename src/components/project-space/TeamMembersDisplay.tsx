@@ -232,9 +232,6 @@ export const TeamMembersDisplay: React.FC<TeamMembersDisplayProps> = ({
                             </p>
                           </div>
                           <p className="text-xs text-zinc-500 truncate">{member.email}</p>
-                          <p className="text-xs text-zinc-600">
-                            Last active: {formatLastActive(member.last_active)}
-                          </p>
                         </div>
                       </div>
                       
