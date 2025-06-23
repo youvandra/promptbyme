@@ -42,6 +42,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { NodeEditorModal } from '../../components/project-space/NodeEditorModal'
 import { NodeDetailsModal } from '../../components/project-space/NodeDetailsModal'
 import { PromptImportModal } from '../../components/project-space/PromptImportModal'
+import CustomFlowNode from '../../components/project-space/CustomFlowNode'
 import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
@@ -50,7 +51,6 @@ import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectSpaceStore, FlowNode } from '../../store/projectSpaceStore'
-import { InputNode, PromptNode, ConditionNode, OutputNode } from '../../components/project-space/CustomNodeComponents'
 
 export const ProjectSpacePage: React.FC = () => {
   const navigate = useNavigate()
@@ -68,7 +68,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [sourceNodeId, setSourceNodeId] = useState<string | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
+  const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('editor')
   const [isInviting, setIsInviting] = useState(false)
   const [projectNameInput, setProjectNameInput] = useState('')
   const [projectDescriptionInput, setProjectDescriptionInput] = useState('')
@@ -102,25 +102,27 @@ export const ProjectSpacePage: React.FC = () => {
   } = useProjectSpaceStore() 
 
   // Define node types outside of the component render
-  const nodeTypes = React.useMemo(() => ({
-    input: InputNode,
-    prompt: PromptNode,
-    condition: ConditionNode,
-    output: OutputNode
-  }), [])
+  const nodeTypes: NodeTypes = React.useMemo(() => {
+    return {
+      input: CustomFlowNode,
+      prompt: CustomFlowNode,
+      condition: CustomFlowNode,
+      output: CustomFlowNode
+    }
+  }, [])
 
   // Define edge options outside of the component render
   const defaultEdgeOptions = React.useMemo(() => ({
-    type: 'smoothstep',
+    type: 'default',
     markerEnd: { type: MarkerType.ArrowClosed },
-    animated: true,
-    style: { stroke: '#6366f1', strokeWidth: 4 }
+    animated: true, 
+    style: { stroke: '#6366f1', strokeWidth: 3 }
   }), [])
 
   // Connection line style
   const connectionLineStyle = {
     stroke: '#6366f1',
-    strokeWidth: 4,
+    strokeWidth: 3,
     strokeDasharray: '5,5',
   }
 
@@ -150,10 +152,25 @@ export const ProjectSpacePage: React.FC = () => {
  // Convert flow nodes to ReactFlow nodes
  useEffect(() => {
    if (selectedProject?.nodes) {
-     const flowNodes = selectedProject.nodes.map(node => {
-       // Define source and target handles based on node type
-       const sourceHandlePosition = node.type === 'condition' ? Position.Bottom : Position.Right;
-       const targetHandlePosition = node.type === 'output' ? Position.Left : Position.Top;
+     const flowNodes = selectedProject.nodes.map(node => {       
+       // Define node color based on type
+       let nodeColor;
+       switch (node.type) {
+         case 'input':
+           nodeColor = '#8b5cf6'; // purple
+           break;
+         case 'prompt':
+           nodeColor = '#3b82f6'; // blue
+           break;
+         case 'condition':
+           nodeColor = '#eab308'; // yellow
+           break;
+         case 'output':
+           nodeColor = '#22c55e'; // green
+           break;
+         default:
+           nodeColor = '#6366f1'; // indigo
+       }
        
        return {
        id: node.id,
@@ -163,9 +180,8 @@ export const ProjectSpacePage: React.FC = () => {
          label: node.title,
          content: node.content,
          nodeData: node,
-        activeNodeId: activeNodeId,
-         sourceHandlePosition,
-         targetHandlePosition,
+         type: node.type,
+          activeNodeId: activeNodeId,
          onEdit: (nodeId: string) => {
            const node = selectedProject?.nodes?.find(n => n.id === nodeId)
            if (node) {
@@ -182,9 +198,12 @@ export const ProjectSpacePage: React.FC = () => {
            }
          }
        },
-       // Add source and target handles
-       sourcePosition: sourceHandlePosition,
-       targetPosition: targetHandlePosition
+       style: {
+         background: `${nodeColor}20`,
+         borderColor: `${nodeColor}50`,
+         borderWidth: 1
+       }
+       // No need to specify sourcePosition and targetPosition here
      }})
      setNodes(flowNodes)
    } else {
@@ -198,12 +217,12 @@ useEffect(() => {
     const flowEdges = selectedProject.connections.map(connection => {
       return {
         id: connection.id,
-        source: connection.source_node_id,
-        target: connection.target_node_id,
-        type: 'smoothstep',
+        source: connection.source_node_id, 
+        target: connection.target_node_id, 
+        type: 'default',
         animated: true, 
-        markerEnd: { type: MarkerType.ArrowClosed },
-        style: { stroke: '#6366f1', strokeWidth: 4, className: 'font-bold' }
+        markerEnd: { type: MarkerType.ArrowClosed }, 
+        style: { stroke: '#6366f1', strokeWidth: 3 }
       };
     });
     setEdges(flowEdges);
@@ -211,7 +230,6 @@ useEffect(() => {
     setEdges([]);
   }
 }, [selectedProject?.connections, setEdges]);
-
 
   const handleNodeDelete = async (nodeId: string) => {
     try {
@@ -231,7 +249,7 @@ useEffect(() => {
     setSourceNodeId(nodeId)
   }
 
-  // Handle node connection
+  // Handle connecting nodes
   const handleConnectNodes = (targetNodeId: string) => {
     if (isConnectingNodes && sourceNodeId && targetNodeId && sourceNodeId !== targetNodeId) {
       if (selectedProject) {
@@ -255,7 +273,7 @@ useEffect(() => {
     }
   }
 
- // Handle node click
+ // Handle node click - either connect nodes or select a node
  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
   if (isConnectingNodes) {
     handleConnectNodes(node.id)
@@ -271,7 +289,7 @@ useEffect(() => {
     }
   }
  }, [isConnectingNodes, sourceNodeId, selectedProject, createConnection])
-
+  
   // Handle background click to deselect node
   const onPaneClick = useCallback(() => {
     if (isConnectingNodes) {
@@ -284,7 +302,7 @@ useEffect(() => {
     }
   }, [isConnectingNodes])
 
- // Handle edge click
+ // Handle edge click to delete connections
  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
    if (window.confirm('Do you want to remove this connection?')) {
      deleteConnection(edge.id)
@@ -292,7 +310,7 @@ useEffect(() => {
  }, [deleteConnection])
 
  // Handle connection
- const onConnect = useCallback((connection: Connection) => {
+ const onConnect = useCallback((connection: Connection) => {   
    if (selectedProject && connection.source && connection.target) {
      // Create the connection in the database
      createConnection(
@@ -308,7 +326,7 @@ useEffect(() => {
    }
  }, [selectedProject, createConnection])
 
- // Handle node drag
+ // Handle node drag to update position
  const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
    if (node.position) {
      moveNode(node.id, node.position)
@@ -316,6 +334,7 @@ useEffect(() => {
  }, [moveNode])
 
   const handleCreateProject = async () => {
+    // Create a new project
     if (!newProjectName.trim()) return
     
     setIsCreatingProject(true)
@@ -334,6 +353,7 @@ useEffect(() => {
   }
 
   const handleAddNode = async (type: FlowNode['type']) => {
+    // Add a new node to the project
     if (!selectedProject || !canvasRef.current) return
     
     // Calculate top-center position of the canvas
@@ -369,6 +389,7 @@ useEffect(() => {
   }
 
   const handleImportPrompt = () => {
+    // Import a prompt from the gallery
     if (!selectedProject) return
     setShowImportModal(true)
   }
@@ -412,6 +433,7 @@ useEffect(() => {
   }
 
   const handleInviteMember = async () => {
+    // Invite a new member to the project
     if (!selectedProject || !inviteEmail.trim() || !inviteRole) {
       setToast({ message: 'Please enter an email and select a role', type: 'error' })
       return
@@ -435,6 +457,7 @@ useEffect(() => {
     }
   }
 
+  // Loading state
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -448,6 +471,7 @@ useEffect(() => {
     )
   }
 
+  // Not authenticated
   if (!user) {
     return (
       <div className="min-h-screen bg-zinc-950 text-white relative">
@@ -470,6 +494,7 @@ useEffect(() => {
     )
   }
 
+  // Main component render
   return (
     <div className="min-h-screen bg-zinc-950 text-white relative">
       {/* Layout Container */}
@@ -509,7 +534,7 @@ useEffect(() => {
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="flex items-center gap-4">
                       {/* Project Selector */}
-                      <div className="relative">
+                      <div className="relative z-20">
                         <button
                           onClick={() => setShowCreateProject(!showCreateProject)}
                           className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200"
@@ -523,7 +548,7 @@ useEffect(() => {
                       </div>
                       
                       {/* Project Visibility */}
-                      {selectedProject && (
+                      {selectedProject && selectedProject.visibility && (
                         <div className="flex items-center gap-2 text-sm">
                           {selectedProject.visibility === 'private' ? (
                             <>
@@ -546,7 +571,7 @@ useEffect(() => {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      {/* Team Members Display */}
+                      {/* Team Members Display - only show if project exists */}
                       {selectedProject && (
                         <TeamMembersDisplay 
                           onClick={() => setShowMembersModal(true)}
@@ -554,7 +579,7 @@ useEffect(() => {
                           currentUserRole={currentUserRole}
                         />
                       )}
-                      {/* Invite Member Button */}
+                      {/* Invite Member Button - only show for admins */}
                       {selectedProject && (currentUserRole === 'admin' || selectedProject.user_id === user.id) && (
                         <button
                           onClick={() => setShowInviteModal(true)}
@@ -571,7 +596,7 @@ useEffect(() => {
 
               {/* Canvas Area */}
               <div 
-                ref={canvasRef}
+               ref={canvasRef}
                className="flex-1 bg-zinc-900/30"
               >
                 {selectedProject ? (
@@ -586,8 +611,8 @@ useEffect(() => {
                    onEdgeClick={onEdgeClick}
                    onNodeDragStop={onNodeDragStop}
                    nodeTypes={nodeTypes}
-                   fitView
-                   connectionLineType={ConnectionLineType.Straight}
+                   fitView 
+                   connectionLineType={ConnectionLineType.Bezier}
                    connectionLineStyle={connectionLineStyle}
                    defaultEdgeOptions={defaultEdgeOptions}
                    elementsSelectable={true}

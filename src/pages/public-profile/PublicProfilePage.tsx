@@ -234,7 +234,7 @@ export const PublicProfilePage: React.FC = () => {
                   </div>
                   <div className="text-center lg:text-left">
                     <div className="text-2xl font-bold text-white">{formatNumber(stats.totalForks)}</div>
-                    <div className="text-sm text-zinc-400">Forks</div>
+                    <div className="text-sm text-zinc-400">Clone</div>
                   </div>
                 </div>
 
