@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import ReactFlow, {
   Background,
   Controls,
-  MiniMap,
+  MiniMap, 
   Panel,
   useNodesState,
   useEdgesState,
@@ -198,16 +198,17 @@ export const ProjectSpacePage: React.FC = () => {
 useEffect(() => {
   if (selectedProject?.connections) {
     const flowEdges = selectedProject.connections.map(connection => ({
-      id: connection.id,
-      source: connection.source_node_id,
-      target: connection.target_node_id,
-      type: 'straight',
-      animated: true,
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-      },
+      id: connection.id, 
+      source: connection.source_node_id, 
+      target: connection.target_node_id, 
+      type: 'straight', 
+      animated: true, 
+      markerEnd: { 
+        type: MarkerType.ArrowClosed 
+      }, 
+      style: { stroke: '#6366f1', strokeWidth: 2 }
     }));
-    setEdges(flowEdges); // <- jangan lupa ini
+    setEdges(flowEdges);
   } else {
     setEdges([]);
   }
@@ -597,8 +598,8 @@ useEffect(() => {
                    onNodeDragStop={onNodeDragStop}
                    nodeTypes={nodeTypes}
                    fitView
-                  connectionLineType={ConnectionLineType.Straight}
-                  connectionLineStyle={isConnectingNodes ? connectionLineStyle : undefined}
+                   connectionLineType={ConnectionLineType.Straight}
+                   connectionLineStyle={connectionLineStyle}
                    defaultEdgeOptions={defaultEdgeOptions}
                    className="bg-zinc-900/30"
                  >
