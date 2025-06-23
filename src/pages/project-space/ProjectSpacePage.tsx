@@ -684,9 +684,7 @@ useEffect(() => {
                    </Panel>
                  </ReactFlow>
                 ) : (
-                  <div className="h-full flex items-center justify-center">
-                        className={`flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs ${connectingNodeId ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={!!connectingNodeId}
+                    <div className="text-center">
                       <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
                         <Layers size={32} className="text-indigo-400" />
                       </div>
