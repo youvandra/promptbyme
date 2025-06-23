@@ -95,7 +95,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (window.confirm(`Are you sure you want to delete this ${data.nodeData.type} node?`)) {
+              if (window.confirm(`(customflow) Are you sure you want to delete this ${data.nodeData.type} node?`)) {
                 if (data.onDelete) data.onDelete(data.nodeData.id);
               }
             }}
