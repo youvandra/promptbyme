@@ -479,48 +479,7 @@ useEffect(() => {
                           ) : (
                             <span className="text-zinc-400">Select Project</span>
                           )}
-                          <ChevronDown size={16} className="text-zinc-400" />
                         </button>
-                        
-                        <AnimatePresence>
-                          {showCreateProject && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -10 }}
-                              className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-64"
-                            >
-                              <div className="p-3">
-                                {projects.length > 0 && (
-                                  <>
-                                    <div className="text-xs font-medium text-zinc-500 mb-2 px-2">
-                                      Project
-                                    </div>
-                                    <div className="space-y-1 mb-3">
-                                      {projects.map(project => (
-                                        <button
-                                          key={project.id}
-                                          onClick={() => {
-                                            selectProject(project)
-                                            setShowCreateProject(false)
-                                          }}
-                                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
-                                            selectedProject?.id === project.id 
-                                              ? 'bg-indigo-600/20 text-indigo-300' 
-                                              : 'text-zinc-300 hover:bg-zinc-800/50'
-                                          }`}
-                                        >
-                                          <span className="text-sm truncate">{project.name}</span>
-                                        </button>
-                                      ))}
-                                    </div>
-                                    <div className="border-t border-zinc-800 my-2"></div>
-                                  </>
-                                )}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
                       </div>
                       
                       {/* Project Visibility */}
