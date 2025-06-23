@@ -45,7 +45,6 @@ import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsTo
 import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
-import CustomFlowNode from '../../components/project-space/CustomFlowNode'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -64,8 +63,6 @@ export const ProjectSpacePage: React.FC = () => {
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [selectedNodeForToolbar, setSelectedNodeForToolbar] = useState<FlowNode | null>(null)
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
@@ -75,6 +72,8 @@ export const ProjectSpacePage: React.FC = () => {
   const [projectVisibilityInput, setProjectVisibilityInput] = useState<'private' | 'team' | 'public'>('private')
   const [isSaving, setIsSaving] = useState(false)
   const [isCreatingProject, setIsCreatingProject] = useState(false)
+ const [nodes, setNodes, onNodesChange] = useNodesState([])
+ const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [newProjectName, setNewProjectName] = useState('')
   const [showCreateProject, setShowCreateProject] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -124,22 +123,32 @@ export const ProjectSpacePage: React.FC = () => {
  // Convert flow nodes to ReactFlow nodes
  useEffect(() => {
    if (selectedProject?.nodes) {
-      const flowNodes = selectedProject.nodes.map(node => ({
-        id: node.id,
-        type: node.type,
-        position: { x: node.position.x, y: node.position.y },
-        data: { 
-          label: node.title,
-          content: node.content,
-          nodeData: node,
-          activeNodeId: activeNodeId
-        }
-      }))
-      setNodes(flowNodes)
+     const flowNodes = selectedProject.nodes.map(node => {
+       // Define source and target handles based on node type
+       const sourceHandlePosition = node.type === 'condition' ? Position.Bottom : Position.Right;
+       const targetHandlePosition = node.type === 'output' ? Position.Left : Position.Top;
+       
+       return {
+       id: node.id,
+       type: node.type,
+       position: { x: node.position.x, y: node.position.y },
+       data: { 
+         label: node.title,
+         content: node.content,
+         nodeData: node,
+        activeNodeId: activeNodeId,
+         sourceHandlePosition,
+         targetHandlePosition
+       },
+       // Add source and target handles
+       sourcePosition: sourceHandlePosition,
+       targetPosition: targetHandlePosition
+     }})
+     setNodes(flowNodes)
    } else {
      setNodes([])
    }
- }, [selectedProject?.nodes, setNodes, activeNodeId])
+ }, [selectedProject?.nodes, setNodes])
 
  // Convert flow connections to ReactFlow edges
 useEffect(() => {
@@ -161,12 +170,133 @@ useEffect(() => {
 }, [selectedProject?.connections, setEdges]);
 
 
+ // Custom node components
+ const InputNode = ({ data }: NodeProps) => (
+  <div className="px-4 py-3 shadow-md rounded-lg bg-purple-600/30 border border-purple-500/30 w-[250px] h-[150px] hover:bg-purple-600/40 hover:border-purple-500/40 transition-all duration-200 flex flex-col">
+    <div className="font-bold text-sm text-white mb-3">{data.label}</div>
+     {data.activeNodeId === data.nodeData.id && (
+       <NodeContextualToolbar
+         node={data.nodeData}
+         nodeData={data.nodeData}
+         onEdit={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeEditor(true)
+           }
+         }}
+         onDelete={handleNodeDelete}
+         onViewDetails={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeDetails(true)
+           }
+         }}
+       />
+     )}
+     {data.content && (
+      <div className="text-xs text-white bg-purple-800/20 p-3 rounded border border-purple-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
+     )}
+   </div>
+ )
+
+ const PromptNode = ({ data }: NodeProps) => (
+  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/30 border border-blue-500/30 w-[250px] h-[150px] hover:bg-blue-600/40 hover:border-blue-500/40 transition-all duration-200 flex flex-col">
+    <div className="font-bold text-sm text-white mb-3">{data.label}</div>
+     {data.activeNodeId === data.nodeData.id && (
+       <NodeContextualToolbar
+         node={data.nodeData}
+         nodeData={data.nodeData}
+         onEdit={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeEditor(true)
+           }
+         }}
+         onDelete={handleNodeDelete}
+         onViewDetails={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeDetails(true)
+           }
+         }}
+       />
+     )}
+     {data.content && (
+      <div className="text-xs text-white bg-blue-800/20 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
+     )}
+   </div>
+ )
+
+ const ConditionNode = ({ data }: NodeProps) => (
+  <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/30 border border-yellow-500/30 w-[250px] h-[150px] hover:bg-yellow-600/40 hover:border-yellow-500/40 transition-all duration-200 flex flex-col">
+    <div className="font-bold text-sm text-yellow mb-3">{data.label}</div>
+     {data.activeNodeId === data.nodeData.id && (
+       <NodeContextualToolbar
+         node={data.nodeData}
+         nodeData={data.nodeData}
+         onEdit={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeEditor(true)
+           }
+         }}
+         onDelete={handleNodeDelete}
+         onViewDetails={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeDetails(true)
+           }
+         }}
+       />
+     )}
+     {data.content && (
+      <div className="text-xs text-white bg-yellow-800/20 p-3 rounded border border-yellow-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
+     )}
+   </div>
+ )
+
+ const OutputNode = ({ data }: NodeProps) => (
+  <div className="px-4 py-3 shadow-md rounded-lg bg-green-600/30 border border-green-500/30 w-[250px] h-[150px] hover:bg-green-600/40 hover:border-green-500/40 transition-all duration-200 flex flex-col">
+    <div className="font-bold text-sm text-white mb-3">{data.label}</div>
+     {data.activeNodeId === data.nodeData.id && (
+       <NodeContextualToolbar
+         node={data.nodeData}
+         nodeData={data.nodeData}
+         onEdit={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeEditor(true)
+           }
+         }}
+         onDelete={handleNodeDelete}
+         onViewDetails={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeDetails(true)
+           }
+         }}
+       />
+     )}
+     {data.content && (
+      <div className="text-xs text-white bg-green-800/20 p-3 rounded border border-green-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
+     )}
+   </div>
+ )
+
  // Node type mapping
  const nodeTypes: NodeTypes = {
-   input: CustomFlowNode,
-   prompt: CustomFlowNode,
-   condition: CustomFlowNode,
-   output: CustomFlowNode
+   input: InputNode,
+   prompt: PromptNode,
+   condition: ConditionNode,
+   output: OutputNode
  }
 
   const handleNodeDelete = async (nodeId: string) => {
@@ -184,7 +314,7 @@ useEffect(() => {
  // Handle node click
  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
   setActiveNodeId(node.id)
-
+  
   // Find the corresponding flow node for the toolbar
   if (selectedProject?.nodes) {
     const flowNode = selectedProject.nodes.find(n => n.id === node.id);
@@ -192,7 +322,7 @@ useEffect(() => {
       setSelectedNodeForToolbar(flowNode);
     }
   }
- }, [selectedProject?.nodes])
+ }, [])
 
   // Handle background click to deselect node
   const onPaneClick = useCallback(() => {
