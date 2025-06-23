@@ -608,6 +608,7 @@ useEffect(() => {
                      }}
                      maskColor="rgba(0, 0, 0, 0.5)"
                    />
+                   {selectedProject && (currentUserRole === 'admin' || currentUserRole === 'editor') && (
                    <Panel position="top-center" className="bg-zinc-900/70 backdrop-blur-sm border border-zinc-800/50 rounded-lg p-2">
                      <div className="flex flex-wrap items-center gap-2">
                        <button
@@ -659,6 +660,7 @@ useEffect(() => {
                        )}
                      </div>
                    </Panel>
+                   )}
                  </ReactFlow>
                 ) : (
                   <div className="h-full flex items-center justify-center">
