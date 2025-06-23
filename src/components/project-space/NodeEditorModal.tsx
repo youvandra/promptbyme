@@ -291,4 +291,4 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
         onSelectPrompt={handleImportPrompt}
       />
     </>
-  )
+  )}}
