@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X } from 'lucide-react'
+import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link, Copy, CheckCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
+import { useClipboard } from '../../hooks/useClipboard'
 import { supabase } from '../../lib/supabase'
 
 const ROLE_OPTIONS = [
@@ -29,6 +30,8 @@ export const ProfilePage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const { copied, copyToClipboard } = useClipboard()
   
   const [formData, setFormData] = useState({
     email: '',
@@ -253,6 +256,12 @@ export const ProfilePage: React.FC = () => {
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleCopyProfileLink = () => {
+    if (!userProfile?.display_name) return
+    const profileUrl = `${window.location.origin}/${userProfile.display_name}`
+    copyToClipboard(profileUrl)
   }
 
   const formatDate = (dateString: string) => {
@@ -482,7 +491,18 @@ export const ProfilePage: React.FC = () => {
                           <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
                             <div className="flex items-center justify-between">
                               <div>
-                                <h4 className="font-medium text-white text-sm mb-1">Public Profile</h4>
+                                <h4 className="font-medium text-white text-sm mb-1 flex items-center gap-2">
+                                  Public Profile
+                                  {formData.isPublicProfile && (
+                                    <button
+                                      onClick={handleCopyProfileLink}
+                                      className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors"
+                                      title="Copy profile link"
+                                    >
+                                      {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
+                                    </button>
+                                  )}
+                                </h4>
                                 <p className="text-xs text-zinc-400">Allow others to see your public prompts and profile</p>
                               </div>
                               <label className="relative inline-flex items-center cursor-pointer">
@@ -548,10 +568,12 @@ export const ProfilePage: React.FC = () => {
                               <div className="flex items-center gap-3">
                                 <Shield className="text-indigo-400" size={16} />
                                 <div>
-                                  <p className="text-xs text-zinc-500">Status</p>
-                                  <p className="text-white text-sm">
-                                    {user.email_confirmed_at ? 'Verified' : 'Pending Verification'}
-                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-xs text-zinc-500">Status</p>
+                                    <p className="text-white text-sm">
+                                      {user.email_confirmed_at ? 'Verified' : 'Pending Verification'}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -580,24 +602,38 @@ export const ProfilePage: React.FC = () => {
                   <div className="space-y-4">
                     {/* Public Profile Setting (Read-only when not editing) */}
                     <div className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl border border-zinc-700/30">
-                      <div>
-                        <h4 className="font-medium text-white text-sm">Public Profile</h4>
-                        <p className="text-xs text-zinc-400">
-                          {userProfile?.is_public_profile !== false 
-                            ? 'Others can view your public prompts and profile' 
-                            : 'Your profile and prompts are hidden from others'
-                          }
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          userProfile?.is_public_profile !== false ? 'bg-emerald-400' : 'bg-red-400'
-                        }`} />
-                        <span className={`text-sm font-medium ${
-                          userProfile?.is_public_profile !== false ? 'text-emerald-400' : 'text-red-400'
-                        }`}>
-                          {userProfile?.is_public_profile !== false ? 'Enabled' : 'Disabled'}
-                        </span>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-white text-sm">Public Profile</h4>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-zinc-400">
+                              {userProfile?.is_public_profile !== false 
+                                ? 'Others can view your public prompts and profile' 
+                                : 'Your profile and prompts are hidden from others'
+                              }
+                            </p>
+                            {userProfile?.is_public_profile !== false && userProfile?.display_name && (
+                              <button
+                                onClick={handleCopyProfileLink}
+                                className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors flex items-center gap-1"
+                                title="Copy profile link"
+                              >
+                                {copied ? <CheckCircle size={12} /> : <Link size={12} />}
+                                <span className="text-xs">{copied ? 'Copied!' : 'Copy link'}</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${
+                            userProfile?.is_public_profile !== false ? 'bg-emerald-400' : 'bg-red-400'
+                          }`} />
+                          <span className={`text-sm font-medium ${
+                            userProfile?.is_public_profile !== false ? 'text-emerald-400' : 'text-red-400'
+                          }`}>
+                            {userProfile?.is_public_profile !== false ? 'Enabled' : 'Disabled'}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
