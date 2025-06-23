@@ -485,18 +485,6 @@ export const ProfilePage: React.FC = () => {
                                 ))}
                               </select>
                             </div>
-                                                              {formData.isPublicProfile && (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-xs text-zinc-500">promptby.me/{formData.displayName}/</span>
-                                      <button
-                                        onClick={handleCopyProfileLink}
-                                        className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors"
-                                        title="Copy profile link"
-                                      >
-                                        {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
-                                      </button>
-                                    </div>
-                                  )}
                           </div>
                           
                           {/* Public Profile Toggle */}
@@ -580,6 +568,18 @@ export const ProfilePage: React.FC = () => {
                                 </div>
                               </div>
                             </div>
+                            {formData.isPublicProfile && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-zinc-500">promptby.me/{formData.displayName}/</span>
+                                <button
+                                  onClick={handleCopyProfileLink}
+                                  className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors"
+                                  title="Copy profile link"
+                                 >
+                                   {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
+                                 </button>
+                                </div>
+                             )}
                             
                             <div className="space-y-3">
                               {userProfile?.role && (
