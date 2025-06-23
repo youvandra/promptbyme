@@ -154,37 +154,37 @@ export const ProjectSpacePage: React.FC = () => {
 
  // Custom node components
  const InputNode = ({ data }: NodeProps) => (
-   <div className="px-4 py-2 shadow-md rounded-md bg-purple-600/20 border border-purple-500/30 min-w-[150px]">
-     <div className="font-bold text-sm text-purple-300">{data.label}</div>
+  <div className="px-4 py-3 shadow-md rounded-lg bg-purple-600/20 border border-purple-500/30 min-w-[180px] hover:bg-purple-600/30 hover:border-purple-500/50 transition-all duration-200">
+    <div className="font-bold text-sm text-purple-300 mb-1">{data.label}</div>
      {data.content && (
-       <div className="text-xs text-purple-200 mt-1 line-clamp-2">{data.content}</div>
+      <div className="text-xs text-purple-200 line-clamp-2 bg-black/20 p-2 rounded border border-purple-500/20">{data.content}</div>
      )}
    </div>
  )
 
  const PromptNode = ({ data }: NodeProps) => (
-   <div className="px-4 py-2 shadow-md rounded-md bg-blue-600/20 border border-blue-500/30 min-w-[150px]">
-     <div className="font-bold text-sm text-blue-300">{data.label}</div>
+  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/20 border border-blue-500/30 min-w-[180px] hover:bg-blue-600/30 hover:border-blue-500/50 transition-all duration-200">
+    <div className="font-bold text-sm text-blue-300 mb-1">{data.label}</div>
      {data.content && (
-       <div className="text-xs text-blue-200 mt-1 line-clamp-2">{data.content}</div>
+      <div className="text-xs text-blue-200 line-clamp-2 bg-black/20 p-2 rounded border border-blue-500/20">{data.content}</div>
      )}
    </div>
  )
 
  const ConditionNode = ({ data }: NodeProps) => (
-   <div className="px-4 py-2 shadow-md rounded-md bg-yellow-600/20 border border-yellow-500/30 min-w-[150px]">
-     <div className="font-bold text-sm text-yellow-300">{data.label}</div>
+  <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/20 border border-yellow-500/30 min-w-[180px] hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-200">
+    <div className="font-bold text-sm text-yellow-300 mb-1">{data.label}</div>
      {data.content && (
-       <div className="text-xs text-yellow-200 mt-1 line-clamp-2">{data.content}</div>
+      <div className="text-xs text-yellow-200 line-clamp-2 bg-black/20 p-2 rounded border border-yellow-500/20">{data.content}</div>
      )}
    </div>
  )
 
  const OutputNode = ({ data }: NodeProps) => (
-   <div className="px-4 py-2 shadow-md rounded-md bg-green-600/20 border border-green-500/30 min-w-[150px]">
-     <div className="font-bold text-sm text-green-300">{data.label}</div>
+  <div className="px-4 py-3 shadow-md rounded-lg bg-green-600/20 border border-green-500/30 min-w-[180px] hover:bg-green-600/30 hover:border-green-500/50 transition-all duration-200">
+    <div className="font-bold text-sm text-green-300 mb-1">{data.label}</div>
      {data.content && (
-       <div className="text-xs text-green-200 mt-1 line-clamp-2">{data.content}</div>
+      <div className="text-xs text-green-200 line-clamp-2 bg-black/20 p-2 rounded border border-green-500/20">{data.content}</div>
      )}
    </div>
  )

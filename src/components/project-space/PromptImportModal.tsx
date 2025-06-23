@@ -117,32 +117,24 @@ export const PromptImportModal: React.FC<PromptImportModalProps> = ({
               <select
                 value={filterAccess}
                 onChange={(e) => setFilterAccess(e.target.value as 'all' | 'public' | 'private')}
-                className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 w-full"
               >
                 <option value="all">All Prompts</option>
                 <option value="public">Public Only</option>
-                  <button
-                    onClick={() => {
-                      // Create empty prompt node
-                      onSelectPrompt({ id: '', title: '', content: '' })
-                    }}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
-                  >
-                    Create Empty Prompt Node
-                  </button>
                 <option value="private">Private Only</option>
               </select>
             </div>
           </div>
           
           {/* Footer with option to create empty node */}
-          <div className="p-4 border-t border-white/10 bg-white/5">
+          <div className="p-4 border-t border-zinc-800/50 bg-zinc-800/30">
             <motion.button
               onClick={() => {
                 // Create empty prompt node
-                onSelectPrompt({ id: '', title: '', content: '' })
+                onSelectPrompt({ id: '', title: '', content: '' });
+                onClose();
               }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white rounded-lg transition-all duration-200"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/30 hover:border-indigo-500/50 text-indigo-300 rounded-lg transition-all duration-200"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
