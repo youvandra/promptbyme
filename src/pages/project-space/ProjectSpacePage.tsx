@@ -388,20 +388,24 @@ useEffect(() => {
     }
     
     try {
-      // Create a temporary node for the editor
-      const tempNode: FlowNode = {
-        id: `temp-${Date.now()}`,
-        project_id: selectedProject.id,
+      // Create a real node in the database first
+      const newNode = await createNode(
+        selectedProject.id,
         type,
-        title: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
-        content: '',
-        position,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
+        position
+      )
       
-      setSelectedNode(tempNode)
-      setShowNodeEditor(true)
+      if (newNode) {
+        // Set default title and open editor
+        const nodeWithTitle = {
+          ...newNode,
+          title: `New ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+          content: ''
+        }
+        
+        setSelectedNode(nodeWithTitle)
+        setShowNodeEditor(true)
+      }
     } catch (error) {
       console.error('Failed to add node:', error)
       setToast({ message: 'Failed to add node', type: 'error' })
