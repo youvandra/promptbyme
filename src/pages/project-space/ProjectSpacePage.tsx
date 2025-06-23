@@ -727,27 +727,6 @@ useEffect(() => {
         )}
       </AnimatePresence>
 
-      {/* Text for non-editors when node selected */}
-      {(selectedNodeForToolbar || selectedNode) &&
-        currentUserRole === 'viewer' && (
-        <NodeDetailsModal
-          isOpen={showNodeDetails}
-          onClose={() => {
-            setShowNodeDetails(false)
-            setSelectedNode(null)
-          }}
-          node={selectedNode}
-          onEdit={(nodeId) => {
-            const node = selectedProject?.nodes?.find(n => n.id === nodeId)
-            if (node) {
-              setSelectedNode(node)
-              setShowNodeEditor(true)
-            }
-          }}
-        />
-      )}
-
-
 
       {/* Node Editor Modal */}
       <NodeEditorModal
