@@ -377,7 +377,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                           <div className="flex items-center gap-2">
                             <Users className="text-indigo-400" size={16} />
                             <h3 className="text-sm font-semibold text-white">
-                              Project Invitations
+                              Notifications
                             </h3>
                             {userInvitations.length > 0 && (
                               <div className="px-2 py-0.5 bg-indigo-600 text-white text-xs font-bold rounded-full">
