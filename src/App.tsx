@@ -9,6 +9,7 @@ import { PlaygroundPage } from './pages/playground/PlaygroundPage'
 import { InvitationNotification } from './components/invitations/InvitationNotification'
 import { ProjectSpacePage } from './pages/project-space/ProjectSpacePage'
 import { DashboardPage } from './pages/project-space/DashboardPage'
+import { FlowEditorDemo } from './pages/playground/FlowEditorDemo'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/playground" element={<PlaygroundPage />} />
         <Route path="/project-space" element={<DashboardPage />} />
+       <Route path="/flow-demo" element={<FlowEditorDemo />} />
        <Route path="/project/:projectId" element={<ProjectSpacePage />} />
         <Route path="/project/:projectId" element={<ProjectSpacePage />} />
         <Route path="/profile" element={<ProfilePage />} />
