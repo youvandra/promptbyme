@@ -587,6 +587,7 @@ useEffect(() => {
                       {selectedProject && (
                         <TeamMembersDisplay 
                           onClick={() => setShowMembersModal(true)}
+                          onClick={() => setShowMembersModal(true)}
                           projectId={selectedProject.id}
                           currentUserRole={currentUserRole}
                         />
@@ -683,24 +684,41 @@ useEffect(() => {
                    </Panel>
                  </ReactFlow>
                 ) : (
-                    <div className="text-center">
+                  <div className="h-full flex items-center justify-center">
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs ${connectingNodeId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={!!connectingNodeId}
                       <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
                         <Layers size={32} className="text-indigo-400" />
                       </div>
                       <h2 className="text-xl font-semibold text-white mb-2">
                         No Project Selected
                       </h2>
-                      <p className="text-zinc-400 mb-6">
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 text-xs ${connectingNodeId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={!!connectingNodeId}
                         Select an existing project or create a new one to get started.
                       </p>
                       <button
                         onClick={() => setShowCreateProject(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200"
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs ${connectingNodeId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 text-xs ${connectingNodeId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 text-xs ${connectingNodeId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={!!connectingNodeId}
                       >
                         <Plus size={16} />
                         <span>Create Project</span>
                       </button>
+                      
+                      {connectingNodeId && (
+                        <button
+                          onClick={() => setConnectingNodeId(null)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-300 rounded-lg transition-all duration-200 text-xs"
+                        >
+                          <X size={12} />
+                          <span>Cancel Connection</span>
+                        </button>
+                      )}
                     </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -790,6 +808,7 @@ useEffect(() => {
           setConnectingNodeId(null);
           handlePromptSelected(prompt);
         }}
+        onSelectPrompt={handlePromptSelected}
       />
     
       {/* Invite Member Modal */}
