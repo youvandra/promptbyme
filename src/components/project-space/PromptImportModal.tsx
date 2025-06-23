@@ -121,6 +121,15 @@ export const PromptImportModal: React.FC<PromptImportModalProps> = ({
               >
                 <option value="all">All Prompts</option>
                 <option value="public">Public Only</option>
+                  <button
+                    onClick={() => {
+                      // Create empty prompt node
+                      onSelectPrompt({ id: '', title: '', content: '' })
+                    }}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                  >
+                    Create Empty Prompt Node
+                  </button>
                 <option value="private">Private Only</option>
               </select>
             </div>

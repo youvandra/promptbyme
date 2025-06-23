@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { X, Save, Type, GitBranch, Target, Wand2, Download, Upload } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { FlowNode, useProjectSpaceStore } from '../../store/projectSpaceStore'
-import { PromptImportModal } from './PromptImportModal'
+import { FlowNode } from '../../store/projectSpaceStore'
 import { highlightVariables, extractVariables } from '../../utils/promptUtils'
+import { PromptImportModal } from './PromptImportModal'
+import { useProjectSpaceStore } from '../../store/projectSpaceStore'
 
 interface NodeEditorModalProps {
   isOpen: boolean
@@ -66,9 +67,6 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
     }
   }, [node, isOpen])
 
-  // Extract variables from content
-  const detectedVariables = content ? extractVariables(content) : []
-
   const handleSave = async () => {
     if (!node || !title.trim()) return
 
@@ -119,6 +117,7 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
     if (node) {
       node.imported_prompt_id = prompt.id
     }
+    setShowImportModal(false)
   }
 
   if (!isOpen || !node) return null
@@ -126,6 +125,8 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
   const nodeConfig = NODE_TYPE_CONFIG[node.type]
   const Icon = nodeConfig.icon
 
+  // Extract variables from content
+  const detectedVariables = extractVariables(content)
 
   return (
     <>
@@ -218,7 +219,7 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
             </div>
 
             {/* Live preview of variables */}
-            {detectedVariables && detectedVariables.length > 0 && (
+            {detectedVariables.length > 0 && (
               <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 backdrop-blur-sm">
                 <h4 className="text-sm font-medium text-indigo-300 mb-2 flex items-center gap-2">
                   <Wand2 size={16} />

@@ -35,20 +35,20 @@ Deno.serve(async (req) => {
     }
 
     // Create Supabase client
-    let supabaseClient
-    try {
-      supabaseClient = createClient(
-        supabaseUrl,
-        supabaseServiceKey,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
+    const supabaseClient = createClient(
+      supabaseUrl,
+      supabaseServiceKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
         }
-      )
-    } catch (clientError) {
-      console.error('Failed to create Supabase client:', clientError)
+      }
+    )
+
+    // Verify the client was created successfully
+    if (!supabaseClient) {
+      console.error('Failed to create Supabase client')
       return new Response(
         JSON.stringify({
           success: false,
@@ -78,43 +78,13 @@ Deno.serve(async (req) => {
 
     // Verify the user's JWT token
     const token = authHeader.replace('Bearer ', '')
-    let user
-    try {
-      const { data: userData, error: authError } = await supabaseClient.auth.getUser(token)
-      user = userData?.user
-      
-      if (authError) {
-        console.error('Auth error:', authError)
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'Invalid authentication token: ' + authError.message
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 401,
-          }
-        )
-      }
-    } catch (authException) {
-      console.error('Auth exception:', authException)
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Authentication failed'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
-        }
-      )
-    }
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
     
-    if (!user) {
+    if (authError || !user) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'User not found'
+          error: 'Invalid authentication token'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

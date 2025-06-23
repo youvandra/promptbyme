@@ -1,7 +1,7 @@
 // Memoized variable highlighting
 const highlightCache = new Map<string, string>()
 
-export const highlightVariables = (text: string): string => {
+export const highlightVariables = (text: string) => {
   if (highlightCache.has(text)) {
     return highlightCache.get(text)!
   }
@@ -10,9 +10,7 @@ export const highlightVariables = (text: string): string => {
   return highlighted
 }
 
-export const extractVariables = (content: string | undefined): string[] => {
-  if (!content) return []
-  
+export const extractVariables = (content: string): string[] => {
   const matches = content.match(/\{\{([^}]+)\}\}/g)
   return matches ? matches.map(match => match.replace(/[{}]/g, '')) : []
 }
