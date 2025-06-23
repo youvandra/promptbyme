@@ -3,7 +3,6 @@ import { Handle, Position, NodeProps } from 'reactflow'
 import { Edit3, GitBranch, Target, Upload } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FlowNode } from '../../store/projectSpaceStore'
-import { NodeContextualToolbar } from './NodeContextualToolbar'
 
 const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   

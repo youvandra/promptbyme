@@ -41,8 +41,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { NodeEditorModal } from '../../components/project-space/NodeEditorModal'
 import { NodeDetailsModal } from '../../components/project-space/NodeDetailsModal'
 import { PromptImportModal } from '../../components/project-space/PromptImportModal'
-import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar'
-import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
+import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar' 
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
 import { Toast } from '../../components/ui/Toast'
@@ -676,13 +675,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Project Members Modal */}
-      <ProjectMembersModal
-        isOpen={showMembersModal}
-        onClose={() => setShowMembersModal(false)}
-        projectId={selectedProject?.id || ''}
-        currentUserRole={currentUserRole}
-      />
       <ProjectMembersModal
         isOpen={showMembersModal}
         onClose={() => setShowMembersModal(false)}
