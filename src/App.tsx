@@ -1,28 +1,36 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { HomePage } from './pages/home/HomePage'
-import { SharedPromptPage } from './pages/shared-prompt/SharedPromptPage'
-import { GalleryPage } from './pages/gallery/GalleryPage'
-import { ProfilePage } from './pages/profile/ProfilePage'
-import { PublicProfilePage } from './pages/public-profile/PublicProfilePage'
-import { PlaygroundPage } from './pages/playground/PlaygroundPage'
-import { ProjectSpacePage } from './pages/project-space/ProjectSpacePage'
-import { DashboardPage } from './pages/project-space/DashboardPage'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
+import { HomePage } from './pages/HomePage'
+import { AboutPage } from './pages/AboutPage'
+import { FeaturesPage } from './pages/FeaturesPage'
+import { PricingPage } from './pages/PricingPage'
+import { ContactPage } from './pages/ContactPage'
+import { NotFoundPage } from './pages/NotFoundPage'
+import { Layout } from './components/layout/Layout'
+
+// Animation wrapper for routes
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Layout><HomePage /></Layout>} />
+        <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+        <Route path="/features" element={<Layout><FeaturesPage /></Layout>} />
+        <Route path="/pricing" element={<Layout><PricingPage /></Layout>} />
+        <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
+        <Route path="*" element={<Layout><NotFoundPage /></Layout>} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/gallery" element={<GalleryPage />} />
-        <Route path="/playground" element={<PlaygroundPage />} />
-        <Route path="/project-space" element={<DashboardPage />} />
-       <Route path="/project/:projectId" element={<ProjectSpacePage />} />
-        <Route path="/project/:projectId" element={<ProjectSpacePage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/:username" element={<PublicProfilePage />} />
-        <Route path="/:username/:id" element={<SharedPromptPage />} />
-      </Routes>
+      <AnimatedRoutes />
     </Router>
   )
 }
