@@ -49,7 +49,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       
       {/* Node Content */}
       <motion.div 
-        className={`min-w-[200px] max-w-[300px] ${getNodeColor()} backdrop-blur-sm border rounded-xl p-4 shadow-lg ${
+        className={`w-[250px] h-[150px] ${getNodeColor()} backdrop-blur-sm border rounded-xl p-4 shadow-lg ${
           selected ? 'ring-2 ring-white/50' : ''
         }`}
         animate={{
@@ -64,7 +64,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           </div>
         </div>
         
-        <div className="text-zinc-300 text-xs line-clamp-3 break-words">
+        <div className="text-zinc-300 text-xs line-clamp-3 break-words overflow-y-auto flex-1">
           {data.content}
         </div>
         
