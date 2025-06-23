@@ -702,7 +702,6 @@ useEffect(() => {
                         <span>Create Project</span>
                       </button>
                     </div>
-                  </div>
                 )}
               </div>
             </div>
