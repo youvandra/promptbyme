@@ -587,7 +587,6 @@ useEffect(() => {
                       {selectedProject && (
                         <TeamMembersDisplay 
                           onClick={() => setShowMembersModal(true)}
-                          onClick={() => setShowMembersModal(true)}
                           projectId={selectedProject.id}
                           currentUserRole={currentUserRole}
                         />
