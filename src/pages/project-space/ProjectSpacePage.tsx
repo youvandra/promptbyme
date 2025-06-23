@@ -727,6 +727,12 @@ useEffect(() => {
         )}
       </AnimatePresence>
 
+      {/* Text for non-editors when node selected */}
+      {(selectedNodeForToolbar || selectedNode) &&
+        currentUserRole === 'viewer' && (
+          setShowNodeDetails(true);
+      )}
+
 
 
       {/* Node Editor Modal */}
