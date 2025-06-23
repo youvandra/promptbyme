@@ -371,9 +371,6 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
                                 </p>
                               </div>
                               <p className="text-xs text-zinc-500 truncate">{member.email}</p>
-                              <p className="text-xs text-zinc-400 mt-1">
-                                Last active: {formatLastActive(member.last_active)}
-                              </p>
                             </div>
                           </div>
                           
