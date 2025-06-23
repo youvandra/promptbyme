@@ -352,3 +352,23 @@ html {
 .depth-layer-3 { z-index: 30; }
 .depth-layer-4 { z-index: 40; }
 .depth-layer-5 { z-index: 50; }
+
+/* React Flow Node Customization */
+.react-flow__node {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure node handles are visible */
+.react-flow__handle {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  width: 8px;
+  height: 8px;
+}
+
+.react-flow__handle:hover {
+  background: white;
+}
