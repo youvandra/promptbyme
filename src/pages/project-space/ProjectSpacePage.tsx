@@ -157,7 +157,7 @@ export const ProjectSpacePage: React.FC = () => {
 
  // Custom node components
  const InputNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/20 border border-purple-500/30 w-[250px] h-[150px] hover:bg-purple-600/30 hover:border-purple-500/50 transition-all duration-200 flex flex-col">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-purple-600/20 border border-purple-500/30 w-[250px] h-[150px] hover:bg-purple-600/30 hover:border-purple-500/50 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-purple-300 mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
