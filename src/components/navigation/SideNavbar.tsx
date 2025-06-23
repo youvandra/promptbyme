@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   Home,
   User, 
-  FolderOpen, 
+  FolderOpen,
+  Folder,
   LogOut, 
   X,
   Menu,
@@ -138,13 +139,19 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       path: '/gallery',
       icon: FolderOpen,
       label: 'Gallery',
-      description: 'Your prompt collection'
+      description: 'Your prompt library'
     },
     {
       path: '/project-space',
       icon: Layers,
       label: 'Project Space',
-      description: 'Visual prompt flows'
+      description: 'Visual prompt projects'
+    },
+    {
+      path: '/prompt-flow',
+      icon: Folder,
+      label: 'Prompt Flow',
+      description: 'Sequential prompt chains'
     }
   ]
 

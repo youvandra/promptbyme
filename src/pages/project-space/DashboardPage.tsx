@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { 
   Menu, 
   Plus,
+  Folder,
   UserPlus,
   Layers, 
   Settings, 
@@ -232,7 +233,7 @@ export const DashboardPage: React.FC = () => {
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
                 <div>
                   <h1 className="text-3xl font-bold text-white mb-2">
-                    Project Dashboard
+                    Project Space
                   </h1>
                   <p className="text-zinc-400">
                     Manage your prompt flow projects
