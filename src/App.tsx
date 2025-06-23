@@ -8,6 +8,7 @@ import { PublicProfilePage } from './pages/public-profile/PublicProfilePage'
 import { PlaygroundPage } from './pages/playground/PlaygroundPage'
 import { InvitationNotification } from './components/invitations/InvitationNotification'
 import { ProjectSpacePage } from './pages/project-space/ProjectSpacePage'
+import { DashboardPage } from './pages/project-space/DashboardPage'
 
 function App() {
   return (
@@ -17,7 +18,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/playground" element={<PlaygroundPage />} />
-        <Route path="/project-space" element={<ProjectSpacePage />} />
+        <Route path="/project-space" element={<DashboardPage />} />
        <Route path="/project/:projectId" element={<ProjectSpacePage />} />
         <Route path="/project/:projectId" element={<ProjectSpacePage />} />
         <Route path="/profile" element={<ProfilePage />} />
