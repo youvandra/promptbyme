@@ -784,8 +784,7 @@ useEffect(() => {
         projectId={selectedProject?.id || ''}
         currentUserRole={currentUserRole}
       />
-
-      {/* Node Details Toolbar */}
+      
       {/* Node Details Toolbar */}
       <AnimatePresence>
         {(selectedNodeForToolbar || selectedNode) && (
