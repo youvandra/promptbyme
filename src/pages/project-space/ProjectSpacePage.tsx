@@ -701,14 +701,15 @@ useEffect(() => {
         {(selectedNodeForToolbar || selectedNode) && (
           <NodeDetailsToolbar
             selectedNode={selectedNodeForToolbar || selectedNode}
-            onEdit={(nodeId) => {
+            onEdit={currentUserRole === 'viewer' ? undefined : (nodeId) => {
               const node = selectedProject?.nodes?.find(n => n.id === nodeId);
               if (node) {
                 setSelectedNode(node);
                 setShowNodeEditor(true);
               }
             }}
-            onDelete={handleNodeDelete}
+            onDelete={currentUserRole === 'viewer' ? undefined : handleNodeDelete}
+            onConnect={currentUserRole === 'viewer' ? undefined : handleConnectStart}
             onViewDetails={(nodeId) => {
               const node = selectedProject?.nodes?.find(n => n.id === nodeId);
               if (node && !isConnectingNodes) {
@@ -716,7 +717,6 @@ useEffect(() => {
                 setShowNodeDetails(true);
               }
             }}
-            onConnect={handleConnectStart}
             onClose={() => {
               setSelectedNodeForToolbar(null);
               setActiveNodeId(null);
@@ -726,6 +726,7 @@ useEffect(() => {
           />
         )}
       </AnimatePresence>
+
 
       {/* Node Editor Modal */}
       <NodeEditorModal
