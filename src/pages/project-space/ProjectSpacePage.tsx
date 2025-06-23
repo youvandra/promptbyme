@@ -77,7 +77,6 @@ export const ProjectSpacePage: React.FC = () => {
   const [newProjectName, setNewProjectName] = useState('')
   
   const [showCreateProject, setShowCreateProject] = useState(false)
-  const [showMembersModal, setShowMembersModal] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
   
   const { user, loading: authLoading } = useAuthStore()
