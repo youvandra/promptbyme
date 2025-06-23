@@ -35,7 +35,7 @@ import {
   Mail,
   Check,
   Layers,
-  Edit
+  Edit,
   Edit3,
   Maximize2
 } from 'lucide-react'
