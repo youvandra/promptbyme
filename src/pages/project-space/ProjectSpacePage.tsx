@@ -884,19 +884,6 @@ useEffect(() => {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-zinc-800/50">
-                <h2 className="text-xl font-semibold text-white">
-                  Project Settings
-                </h2>
-                
-                <button
-                  onClick={() => setShowProjectSettings(false)}
-                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                >
-                  <X size={20} />
-                </button>
-              </div>
 
               {/* Content */}
               <div className="p-6 space-y-6">
