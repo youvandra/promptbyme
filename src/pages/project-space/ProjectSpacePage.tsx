@@ -62,7 +62,6 @@ export const ProjectSpacePage: React.FC = () => {
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
-  const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
   const [isInviting, setIsInviting] = useState(false)
   const [projectNameInput, setProjectNameInput] = useState('')
