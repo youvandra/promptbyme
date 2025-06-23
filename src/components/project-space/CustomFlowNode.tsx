@@ -3,6 +3,7 @@ import { Handle, Position, NodeProps } from 'reactflow'
 import { Edit3, GitBranch, Target, Upload } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FlowNode } from '../../store/projectSpaceStore'
+import { NodeContextualToolbar } from './NodeContextualToolbar'
 
 const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   
@@ -67,6 +68,21 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         <div className="text-zinc-300 text-xs line-clamp-3 break-words">
           {data.content}
         </div>
+
+        {/* Always show the toolbar */}
+        <NodeContextualToolbar
+          node={data.nodeData}
+          nodeData={data.nodeData}
+          onEdit={(nodeId) => {
+            if (data.onEdit) data.onEdit(nodeId);
+          }}
+          onDelete={(nodeId) => {
+            if (data.onDelete) data.onDelete(nodeId);
+          }}
+          onViewDetails={(nodeId) => {
+            if (data.onViewDetails) data.onViewDetails(nodeId);
+          }}
+        />
       </motion.div>
       
       {/* Output Handle (bottom) */}

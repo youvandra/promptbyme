@@ -45,6 +45,7 @@ import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsTo
 import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
+import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -60,6 +61,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showNodeEditor, setShowNodeEditor] = useState(false)
   const [showNodeDetails, setShowNodeDetails] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [showMembersModal, setShowMembersModal] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [selectedNodeForToolbar, setSelectedNodeForToolbar] = useState<FlowNode | null>(null)
@@ -647,6 +649,7 @@ useEffect(() => {
                       {selectedProject && (
                         <TeamMembersDisplay 
                           onClick={() => setShowMembersModal(true)}
+                          onClick={() => setShowMembersModal(true)}
                           projectId={selectedProject.id}
                           currentUserRole={currentUserRole}
                         />
@@ -785,7 +788,14 @@ useEffect(() => {
         currentUserRole={currentUserRole}
       />
       
-      {/* Node Details Toolbar */}
+      {/* Project Members Modal */}
+      <ProjectMembersModal
+        isOpen={showMembersModal}
+        onClose={() => setShowMembersModal(false)}
+        projectId={selectedProject?.id || ''}
+        currentUserRole={currentUserRole}
+      />
+      
       <AnimatePresence>
         {(selectedNodeForToolbar || selectedNode) && (
           <NodeDetailsToolbar
