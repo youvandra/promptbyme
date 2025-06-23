@@ -559,14 +559,13 @@ export const ProfilePage: React.FC = () => {
                               <div className="flex items-center gap-3">
                                 <Shield className="text-indigo-400" size={16} />
                                 <div>
-                                  <div className="flex items-center gap-2">
                                     <p className="text-xs text-zinc-500">Status</p>
                                     <p className="text-white text-sm">
                                       {user.email_confirmed_at ? 'Verified' : 'Pending Verification'}
                                     </p>
-                                  </div>
                                 </div>
                               </div>
+                              
                             </div>
                             {userProfile?.is_public_profile !== false && userProfile?.display_name && (
                               <div className="flex items-center gap-2 mt-1">
