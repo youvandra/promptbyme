@@ -58,7 +58,6 @@ export const ProjectSpacePage: React.FC = () => {
   const [showNodeEditor, setShowNodeEditor] = useState(false)
   const [showNodeDetails, setShowNodeDetails] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
-  const [showProjectSettings, setShowProjectSettings] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
@@ -378,26 +377,6 @@ useEffect(() => {
     }
   }
 
-  const handleSaveProject = async () => {
-    if (!selectedProject || !projectNameInput.trim()) return
-    
-    setIsSaving(true)
-    try {
-      await updateProject(selectedProject.id, {
-        name: projectNameInput.trim(),
-        description: projectDescriptionInput.trim() || null,
-        visibility: projectVisibilityInput
-      })
-      setShowProjectSettings(false)
-      setToast({ message: 'Project settings saved', type: 'success' })
-    } catch (error) {
-      console.error('Failed to save project:', error)
-      setToast({ message: 'Failed to save project', type: 'error' })
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
   const handleAddNode = async (type: FlowNode['type']) => {
     if (!selectedProject || !canvasRef.current) return
     
@@ -700,16 +679,6 @@ useEffect(() => {
                         </button>
                       )}
                       
-                      {/* Project Settings Button */}
-                      {selectedProject && (
-                        <button
-                          onClick={() => setShowProjectSettings(true)}
-                          className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
-                        >
-                          <Settings size={14} className="text-zinc-400" />
-                          <span>Settings</span>
-                        </button>
-                      )}
                       
                       {/* Share Button */}
                       {selectedProject && (
@@ -871,140 +840,7 @@ useEffect(() => {
         onSelectPrompt={handlePromptSelected}
       />
 
-      {/* Project Settings Modal */}
-      <AnimatePresence>
-        {showProjectSettings && selectedProject && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowProjectSettings(false)} />
-            
-            <motion.div 
-              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-lg overflow-hidden flex flex-col"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-
-              {/* Content */}
-              <div className="p-6 space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Project Name
-                  </label>
-                  <input
-                    type="text"
-                    value={projectNameInput}
-                    onChange={(e) => setProjectNameInput(e.target.value)}
-                    placeholder="Enter project name"
-                    className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={projectDescriptionInput}
-                    onChange={(e) => setProjectDescriptionInput(e.target.value)}
-                    placeholder="Enter project description (optional)"
-                    rows={3}
-                    className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-3">
-                    Visibility
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <button
-                      onClick={() => setProjectVisibilityInput('private')}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
-                        projectVisibilityInput === 'private' 
-                          ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' 
-                          : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
-                      }`}
-                    >
-                      <EyeOff size={20} />
-                      <span className="text-sm font-medium">Private</span>
-                      <span className="text-xs text-center">Only you can access</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => setProjectVisibilityInput('team')}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
-                        projectVisibilityInput === 'team' 
-                          ? 'bg-blue-500/10 border-blue-500/30 text-blue-300' 
-                          : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
-                      }`}
-                    >
-                      <Users size={20} />
-                      <span className="text-sm font-medium">Team</span>
-                      <span className="text-xs text-center">You and team members</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => setProjectVisibilityInput('public')}
-                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
-                        projectVisibilityInput === 'public' 
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
-                          : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
-                      }`}
-                    >
-                      <Globe size={20} />
-                      <span className="text-sm font-medium">Public</span>
-                      <span className="text-xs text-center">Anyone can view</span>
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="pt-4 border-t border-zinc-800/50">
-                  <button
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
-                        // Delete project logic here
-                      }
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200 text-sm"
-                  >
-                    <Trash2 size={16} />
-                    <span>Delete Project</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800/50 bg-zinc-900/30">
-                <button
-                  onClick={() => setShowProjectSettings(false)}
-                  className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveProject}
-                  disabled={isSaving || !projectNameInput.trim()}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
-                >
-                  {isSaving ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save size={16} />
-                      <span>Save Changes</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
+    
       {/* Invite Member Modal */}
       <AnimatePresence>
         {showInviteModal && selectedProject && (
