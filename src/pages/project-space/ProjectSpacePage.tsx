@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import ReactFlow, {
   Background,
   Controls,
@@ -15,7 +15,7 @@ import ReactFlow, {
   NodeProps,
   MarkerType, 
   ConnectionLineType,
-  Position,
+  Position
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { 
@@ -34,6 +34,7 @@ import {
   UserPlus,
   Mail,
   Check,
+  Link,
   Layers,
   Edit
 } from 'lucide-react'
@@ -660,7 +661,7 @@ useEffect(() => {
                        
                        {isConnectingNodes && (
                          <div className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/40 border border-indigo-500/50 text-indigo-300 rounded-lg text-xs animate-pulse">
-                           <Link size={12} />
+                           <Link size={12} className="text-indigo-300" />
                            <span>Select target node...</span>
                          </div>
                        )}
