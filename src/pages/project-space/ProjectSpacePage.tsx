@@ -43,7 +43,6 @@ import { NodeDetailsModal } from '../../components/project-space/NodeDetailsModa
 import { PromptImportModal } from '../../components/project-space/PromptImportModal'
 import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
-import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
