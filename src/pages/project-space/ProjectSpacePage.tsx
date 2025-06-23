@@ -41,6 +41,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { NodeEditorModal } from '../../components/project-space/NodeEditorModal'
 import { NodeDetailsModal } from '../../components/project-space/NodeDetailsModal'
 import { PromptImportModal } from '../../components/project-space/PromptImportModal'
+import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar'
 import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { Toast } from '../../components/ui/Toast'
@@ -667,7 +668,14 @@ useEffect(() => {
                    onEdgesChange={onEdgesChange}
                    onConnect={onConnect}
                    onPaneClick={onPaneClick}
-                   onNodeClick={onNodeClick}
+                   onNodeClick={(event, node) => {
+                     // Find the corresponding flow node
+                     const flowNode = selectedProject?.nodes?.find(n => n.id === node.id);
+                     if (flowNode) {
+                       setSelectedNode(flowNode);
+                     }
+                     onNodeClick(event, node);
+                   }}
                    onEdgeClick={onEdgeClick}
                    onNodeDragStop={onNodeDragStop}
                    nodeTypes={nodeTypes}
@@ -764,6 +772,26 @@ useEffect(() => {
           </div>
         </div>
       </div>
+
+      {/* Node Details Toolbar */}
+      <AnimatePresence>
+        {selectedNode && (
+          <NodeDetailsToolbar
+            selectedNode={selectedNode}
+            onEdit={(nodeId) => {
+              setShowNodeEditor(true);
+            }}
+            onDelete={handleNodeDelete}
+            onViewDetails={(nodeId) => {
+              setShowNodeDetails(true);
+            }}
+            onClose={() => {
+              setSelectedNode(null);
+              setActiveNodeId(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Node Editor Modal */}
       <NodeEditorModal

@@ -323,7 +323,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
         
         // Set default content for different node types if no prompt is imported
-        if (!promptId) {
+        if (!defaultContent) {
           switch (type) {
             case 'input':
               defaultContent = 'Define your input parameters here...'
@@ -342,7 +342,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         
         const { data: node, error } = await supabase
           .from('flow_nodes')
-          .insert([{
+          .insert({
             project_id: projectId,
             type,
             title: nodeTitle,
@@ -355,7 +355,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
               variables: [],
               estimatedTokens: 0
             }
-          }])
+          })
           .select()
           .single()
 
