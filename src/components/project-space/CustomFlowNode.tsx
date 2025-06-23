@@ -6,7 +6,6 @@ import { NodeContextualToolbar } from './NodeContextualToolbar'
 import { FlowNode } from '../../store/projectSpaceStore'
 
 const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
-  const [showToolbar, setShowToolbar] = useState(false)
   
   // Get the appropriate icon based on node type
   const getNodeIcon = () => {
@@ -41,11 +40,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   }
 
   return (
-    <div 
-      className="relative"
-      onMouseEnter={() => setShowToolbar(true)}
-      onMouseLeave={() => setShowToolbar(false)}
-    >
+    <div className="relative">
       {/* Input Handle */}
       <Handle
         type="target"
@@ -85,7 +80,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       
       {/* Contextual Toolbar */}
       <AnimatePresence>
-        {showToolbar && (
+        {selected && data.activeNodeId === id && (
           <NodeContextualToolbar
             node={{ id, data, position: { x: 0, y: 0 }, type: 'default' }}
             nodeData={data as FlowNode}

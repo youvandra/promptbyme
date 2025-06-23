@@ -60,6 +60,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false)
   const [showProjectSettings, setShowProjectSettings] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
+  const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
@@ -133,6 +134,7 @@ export const ProjectSpacePage: React.FC = () => {
          label: node.title,
          content: node.content,
          nodeData: node,
+        activeNodeId: activeNodeId,
          sourceHandlePosition,
          targetHandlePosition
        },
@@ -159,7 +161,7 @@ export const ProjectSpacePage: React.FC = () => {
          type: MarkerType.ArrowClosed,
        },
      }))
-     setEdges(flowEdges)
+}, [selectedProject?.nodes, setNodes, activeNodeId])
    } else {
      setEdges([])
    }
@@ -169,7 +171,7 @@ export const ProjectSpacePage: React.FC = () => {
  const InputNode = ({ data }: NodeProps) => (
   <div className="px-4 py-3 shadow-md rounded-lg bg-purple-600/30 border border-purple-500/30 w-[250px] h-[150px] hover:bg-purple-600/40 hover:border-purple-500/40 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-white mb-3">{data.label}</div>
-     {activeNodeId === data.nodeData.id && (
+     {data.activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
          node={data.nodeData}
          nodeData={data.nodeData}
@@ -199,7 +201,7 @@ export const ProjectSpacePage: React.FC = () => {
  const PromptNode = ({ data }: NodeProps) => (
   <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/30 border border-blue-500/30 w-[250px] h-[150px] hover:bg-blue-600/40 hover:border-blue-500/40 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-white mb-3">{data.label}</div>
-     {activeNodeId === data.nodeData.id && (
+     {data.activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
          node={data.nodeData}
          nodeData={data.nodeData}
@@ -229,7 +231,7 @@ export const ProjectSpacePage: React.FC = () => {
  const ConditionNode = ({ data }: NodeProps) => (
   <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/30 border border-yellow-500/30 w-[250px] h-[150px] hover:bg-yellow-600/40 hover:border-yellow-500/40 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-yellow mb-3">{data.label}</div>
-     {activeNodeId === data.nodeData.id && (
+     {data.activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
          node={data.nodeData}
          nodeData={data.nodeData}
@@ -259,7 +261,7 @@ export const ProjectSpacePage: React.FC = () => {
  const OutputNode = ({ data }: NodeProps) => (
   <div className="px-4 py-3 shadow-md rounded-lg bg-green-600/30 border border-green-500/30 w-[250px] h-[150px] hover:bg-green-600/40 hover:border-green-500/40 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-white mb-3">{data.label}</div>
-     {activeNodeId === data.nodeData.id && (
+     {data.activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
          node={data.nodeData}
          nodeData={data.nodeData}
@@ -297,6 +299,7 @@ export const ProjectSpacePage: React.FC = () => {
   const handleNodeDelete = async (nodeId: string) => {
     try {
       await deleteNode(nodeId)
+     setActiveNodeId(null)
       setActiveNodeId(null)
       setToast({ message: 'Node deleted successfully', type: 'success' })
     } catch (error) {
@@ -308,10 +311,12 @@ export const ProjectSpacePage: React.FC = () => {
  // Handle node click
  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
   setActiveNodeId(node.id)
+  setActiveNodeId(node.id)
  }, [])
 
   // Handle background click to deselect node
   const onPaneClick = useCallback(() => {
+   setActiveNodeId(null)
    setActiveNodeId(null)
   }, [])
 
