@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Menu, Zap } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { PromptEditor } from '../../components/prompts/PromptEditor'
 import { AuthModal } from '../../components/auth/AuthModal'
 import { Toast } from '../../components/ui/Toast'
@@ -14,6 +15,7 @@ import { useToast } from '../../hooks/useToast'
 export const HomePage: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const navigate = useNavigate()
   const { toast, showToast, hideToast } = useToast()
   
   const { user, loading: authLoading, initialize } = useAuthStore()
@@ -56,8 +58,9 @@ export const HomePage: React.FC = () => {
         folder_id: folderId || null,
       }
 
-      await createPrompt(promptData)
-      showToast('Prompt saved successfully', 'success')
+      const newPrompt = await createPrompt(promptData)
+      // Navigate to gallery and pass the new prompt ID to open it
+      navigate('/gallery', { state: { promptIdToOpen: newPrompt.id } })
     } catch (error) {
       showToast('Failed to save prompt', 'error')
     }
