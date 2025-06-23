@@ -61,6 +61,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showNodeDetails, setShowNodeDetails] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
+  const [connectingNodeId, setConnectingNodeId] = useState<string | null>(null)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [selectedNodeForToolbar, setSelectedNodeForToolbar] = useState<FlowNode | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -74,6 +75,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [isCreatingProject, setIsCreatingProject] = useState(false)
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const reactFlowInstance = useReactFlow()
   const [newProjectName, setNewProjectName] = useState('')
   
   const [showCreateProject, setShowCreateProject] = useState(false)
@@ -203,6 +205,32 @@ useEffect(() => {
   }
 }, [selectedProject?.connections, setEdges]);
 
+  // Handle starting a connection from a node
+  const handleStartConnect = (nodeId: string) => {
+    setConnectingNodeId(nodeId)
+    setToast({ 
+      message: 'Click on another node to create a connection', 
+      type: 'success' 
+    })
+  }
+
+  // Handle completing a connection
+  const handleCompleteConnection = (targetNodeId: string) => {
+    if (connectingNodeId && connectingNodeId !== targetNodeId && selectedProject) {
+      createConnection(
+        selectedProject.id,
+        connectingNodeId,
+        targetNodeId
+      ).then(() => {
+        setToast({ message: 'Connection created successfully', type: 'success' })
+      }).catch(error => {
+        console.error('Failed to create connection:', error)
+        setToast({ message: 'Failed to create connection', type: 'error' })
+      }).finally(() => {
+        setConnectingNodeId(null)
+      })
+    }
+  }
 
   const handleNodeDelete = async (nodeId: string) => {
     try {
@@ -219,6 +247,12 @@ useEffect(() => {
  // Handle node click
  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
   setActiveNodeId(node.id)
+
+  // If we're in connecting mode, complete the connection
+  if (connectingNodeId && connectingNodeId !== node.id) {
+    handleCompleteConnection(node.id)
+    return
+  }
   
   // Find the corresponding flow node for the toolbar
   if (selectedProject?.nodes) {
@@ -227,12 +261,13 @@ useEffect(() => {
       setSelectedNodeForToolbar(flowNode);
     }
   }
- }, [])
+ }, [connectingNodeId, selectedProject?.nodes])
 
   // Handle background click to deselect node
   const onPaneClick = useCallback(() => {
    setActiveNodeId(null)
    setSelectedNodeForToolbar(null)
+  setConnectingNodeId(null)
   }, [])
 
  // Handle edge click
@@ -650,23 +685,38 @@ useEffect(() => {
                  </ReactFlow>
                 ) : (
                   <div className="h-full flex items-center justify-center">
-                    <div className="text-center">
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs ${connectingNodeId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={!!connectingNodeId}
                       <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
                         <Layers size={32} className="text-indigo-400" />
                       </div>
                       <h2 className="text-xl font-semibold text-white mb-2">
                         No Project Selected
                       </h2>
-                      <p className="text-zinc-400 mb-6">
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 text-xs ${connectingNodeId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={!!connectingNodeId}
                         Select an existing project or create a new one to get started.
                       </p>
                       <button
                         onClick={() => setShowCreateProject(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 mx-auto"
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs ${connectingNodeId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 text-xs ${connectingNodeId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 text-xs ${connectingNodeId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={!!connectingNodeId}
                       >
                         <Plus size={16} />
                         <span>Create Project</span>
                       </button>
+                      
+                      {connectingNodeId && (
+                        <button
+                          onClick={() => setConnectingNodeId(null)}
+                          className="flex items-center gap-1 px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-300 rounded-lg transition-all duration-200 text-xs"
+                        >
+                          <X size={12} />
+                          <span>Cancel Connection</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -696,14 +746,17 @@ useEffect(() => {
             onEdit={(nodeId) => {
               const node = selectedProject?.nodes?.find(n => n.id === nodeId);
               if (node) {
+                setConnectingNodeId(null);
                 setSelectedNode(node);
                 setShowNodeEditor(true);
               }
             }}
             onDelete={handleNodeDelete}
+            onStartConnect={handleStartConnect}
             onViewDetails={(nodeId) => {
               const node = selectedProject?.nodes?.find(n => n.id === nodeId);
               if (node) {
+                setConnectingNodeId(null);
                 setSelectedNode(node);
                 setShowNodeDetails(true);
               }
@@ -711,6 +764,7 @@ useEffect(() => {
             onClose={() => {
               setSelectedNodeForToolbar(null);
               setActiveNodeId(null);
+              setConnectingNodeId(null);
             }}
           />
         )}
@@ -720,6 +774,7 @@ useEffect(() => {
       <NodeEditorModal
         isOpen={showNodeEditor}
         onClose={() => {
+          setConnectingNodeId(null);
           setShowNodeEditor(false)
           setSelectedNode(null)
         }}
@@ -731,6 +786,7 @@ useEffect(() => {
       <NodeDetailsModal
         isOpen={showNodeDetails}
         onClose={() => {
+          setConnectingNodeId(null);
           setShowNodeDetails(false)
           setSelectedNode(null)
         }}
@@ -748,6 +804,10 @@ useEffect(() => {
       <PromptImportModal
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
+        onSelectPrompt={(prompt) => {
+          setConnectingNodeId(null);
+          handlePromptSelected(prompt);
+        }}
         onSelectPrompt={handlePromptSelected}
       />
     

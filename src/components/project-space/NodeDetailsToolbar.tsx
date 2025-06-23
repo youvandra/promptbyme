@@ -2,7 +2,8 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { 
   Trash2, 
-  Edit3, 
+  Edit3,
+  Link,
   Info, 
   X
 } from 'lucide-react'
@@ -13,6 +14,7 @@ interface NodeDetailsToolbarProps {
   onEdit: (nodeId: string) => void
   onDelete: (nodeId: string) => void
   onViewDetails: (nodeId: string) => void
+  onStartConnect?: (nodeId: string) => void
   onClose: () => void
 }
 
@@ -21,6 +23,7 @@ export const NodeDetailsToolbar: React.FC<NodeDetailsToolbarProps> = ({
   onEdit,
   onDelete,
   onViewDetails,
+  onStartConnect,
   onClose
 }) => {
   if (!selectedNode) return null
@@ -73,7 +76,7 @@ export const NodeDetailsToolbar: React.FC<NodeDetailsToolbarProps> = ({
           <button
             onClick={() => onViewDetails(selectedNode.id)}
             className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-            title="View details"
+            title="View node details"
           >
             <Info size={18} />
           </button>
@@ -85,6 +88,16 @@ export const NodeDetailsToolbar: React.FC<NodeDetailsToolbarProps> = ({
           >
             <Edit3 size={18} />
           </button>
+          
+          {onStartConnect && (
+            <button
+              onClick={() => onStartConnect(selectedNode.id)}
+              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+              title="Connect to another node"
+            >
+              <Link size={18} />
+            </button>
+          )}
           
           <button
             onClick={handleDelete}
