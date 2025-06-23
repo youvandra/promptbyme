@@ -727,7 +727,6 @@ useEffect(() => {
         )}
       </AnimatePresence>
 
-
       {/* Node Editor Modal */}
       <NodeEditorModal
         isOpen={showNodeEditor}
