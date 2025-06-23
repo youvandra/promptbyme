@@ -77,7 +77,7 @@ export const DashboardPage: React.FC = () => {
       setToast({ message: 'Project created successfully', type: 'success' })
       
       // Navigate to the new project
-      navigate(`/project/${project.id}`)
+      navigate(`/project-space`)
     } catch (error) {
       console.error('Failed to create project:', error)
       setToast({ message: 'Failed to create project', type: 'error' })
