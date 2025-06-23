@@ -155,20 +155,6 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
               <div className="text-xs text-zinc-500">
                 Node ID: {node.id}
               </div>
-              {onEdit && (
-                <motion.button
-                  onClick={() => {
-                    onEdit(node.id)
-                    onClose()
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-white/20 text-white rounded-lg transition-all duration-200 text-sm"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Edit3 size={14} />
-                  <span>Edit Node</span>
-                </motion.button>
-              )}
             </div>
           </div>
         </motion.div>
