@@ -45,11 +45,13 @@ import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsTo
 import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
+import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectSpaceStore, FlowNode } from '../../store/projectSpaceStore'
+import { InputNode, PromptNode, ConditionNode, OutputNode } from '../../components/project-space/CustomNodeComponents'
 
 export const ProjectSpacePage: React.FC = () => {
   const navigate = useNavigate()
@@ -60,6 +62,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showNodeEditor, setShowNodeEditor] = useState(false)
   const [showNodeDetails, setShowNodeDetails] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [showMembersModal, setShowMembersModal] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [selectedNodeForToolbar, setSelectedNodeForToolbar] = useState<FlowNode | null>(null)
@@ -75,6 +78,7 @@ export const ProjectSpacePage: React.FC = () => {
  const [nodes, setNodes, onNodesChange] = useNodesState([])
  const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [newProjectName, setNewProjectName] = useState('')
+  
   const [showCreateProject, setShowCreateProject] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
   
@@ -95,7 +99,25 @@ export const ProjectSpacePage: React.FC = () => {
     createConnection,
     deleteConnection,
     inviteProjectMember
-  } = useProjectSpaceStore()
+  } = useProjectSpaceStore() 
+
+  // Define node types outside of the component render
+  const nodeTypes = React.useMemo(() => ({
+    input: InputNode,
+    prompt: PromptNode,
+    condition: ConditionNode,
+    output: OutputNode
+  }), [])
+
+  // Define edge options outside of the component render
+  const defaultEdgeOptions = React.useMemo(() => ({
+    type: 'straight',
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+    },
+    animated: true,
+    style: { strokeWidth: 2 }
+  }), [])
 
   // Load projects on mount
   useEffect(() => {
@@ -139,6 +161,21 @@ export const ProjectSpacePage: React.FC = () => {
         activeNodeId: activeNodeId,
          sourceHandlePosition,
          targetHandlePosition
+         onEdit: (nodeId: string) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeEditor(true)
+           }
+         },
+         onDelete: handleNodeDelete,
+         onViewDetails: (nodeId: string) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeDetails(true)
+           }
+         }
        },
        // Add source and target handles
        sourcePosition: sourceHandlePosition,
@@ -148,7 +185,7 @@ export const ProjectSpacePage: React.FC = () => {
    } else {
      setNodes([])
    }
- }, [selectedProject?.nodes, setNodes])
+ }, [selectedProject?.nodes, setNodes, activeNodeId])
 
  // Convert flow connections to ReactFlow edges
 useEffect(() => {
@@ -169,135 +206,6 @@ useEffect(() => {
   }
 }, [selectedProject?.connections, setEdges]);
 
-
- // Custom node components
- const InputNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-purple-600/30 border border-purple-500/30 w-[250px] h-[150px] hover:bg-purple-600/40 hover:border-purple-500/40 transition-all duration-200 flex flex-col">
-    <div className="font-bold text-sm text-white mb-3">{data.label}</div>
-     {data.activeNodeId === data.nodeData.id && (
-       <NodeContextualToolbar
-         node={data.nodeData}
-         nodeData={data.nodeData}
-         onEdit={(nodeId) => {
-           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
-           if (node) {
-             setSelectedNode(node)
-             setShowNodeEditor(true)
-           }
-         }}
-         onDelete={handleNodeDelete}
-         onViewDetails={(nodeId) => {
-           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
-           if (node) {
-             setSelectedNode(node)
-             setShowNodeDetails(true)
-           }
-         }}
-       />
-     )}
-     {data.content && (
-      <div className="text-xs text-white bg-purple-800/20 p-3 rounded border border-purple-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
-     )}
-   </div>
- )
-
- const PromptNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/30 border border-blue-500/30 w-[250px] h-[150px] hover:bg-blue-600/40 hover:border-blue-500/40 transition-all duration-200 flex flex-col">
-    <div className="font-bold text-sm text-white mb-3">{data.label}</div>
-     {data.activeNodeId === data.nodeData.id && (
-       <NodeContextualToolbar
-         node={data.nodeData}
-         nodeData={data.nodeData}
-         onEdit={(nodeId) => {
-           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
-           if (node) {
-             setSelectedNode(node)
-             setShowNodeEditor(true)
-           }
-         }}
-         onDelete={handleNodeDelete}
-         onViewDetails={(nodeId) => {
-           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
-           if (node) {
-             setSelectedNode(node)
-             setShowNodeDetails(true)
-           }
-         }}
-       />
-     )}
-     {data.content && (
-      <div className="text-xs text-white bg-blue-800/20 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
-     )}
-   </div>
- )
-
- const ConditionNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/30 border border-yellow-500/30 w-[250px] h-[150px] hover:bg-yellow-600/40 hover:border-yellow-500/40 transition-all duration-200 flex flex-col">
-    <div className="font-bold text-sm text-yellow mb-3">{data.label}</div>
-     {data.activeNodeId === data.nodeData.id && (
-       <NodeContextualToolbar
-         node={data.nodeData}
-         nodeData={data.nodeData}
-         onEdit={(nodeId) => {
-           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
-           if (node) {
-             setSelectedNode(node)
-             setShowNodeEditor(true)
-           }
-         }}
-         onDelete={handleNodeDelete}
-         onViewDetails={(nodeId) => {
-           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
-           if (node) {
-             setSelectedNode(node)
-             setShowNodeDetails(true)
-           }
-         }}
-       />
-     )}
-     {data.content && (
-      <div className="text-xs text-white bg-yellow-800/20 p-3 rounded border border-yellow-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
-     )}
-   </div>
- )
-
- const OutputNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-green-600/30 border border-green-500/30 w-[250px] h-[150px] hover:bg-green-600/40 hover:border-green-500/40 transition-all duration-200 flex flex-col">
-    <div className="font-bold text-sm text-white mb-3">{data.label}</div>
-     {data.activeNodeId === data.nodeData.id && (
-       <NodeContextualToolbar
-         node={data.nodeData}
-         nodeData={data.nodeData}
-         onEdit={(nodeId) => {
-           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
-           if (node) {
-             setSelectedNode(node)
-             setShowNodeEditor(true)
-           }
-         }}
-         onDelete={handleNodeDelete}
-         onViewDetails={(nodeId) => {
-           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
-           if (node) {
-             setSelectedNode(node)
-             setShowNodeDetails(true)
-           }
-         }}
-       />
-     )}
-     {data.content && (
-      <div className="text-xs text-white bg-green-800/20 p-3 rounded border border-green-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
-     )}
-   </div>
- )
-
- // Node type mapping
- const nodeTypes: NodeTypes = {
-   input: InputNode,
-   prompt: PromptNode,
-   condition: ConditionNode,
-   output: OutputNode
- }
 
   const handleNodeDelete = async (nodeId: string) => {
     try {
@@ -647,6 +555,7 @@ useEffect(() => {
                       {selectedProject && (
                         <TeamMembersDisplay 
                           onClick={() => setShowMembersModal(true)}
+                          onClick={() => setShowMembersModal(true)}
                           projectId={selectedProject.id}
                           currentUserRole={currentUserRole}
                         />
@@ -685,14 +594,7 @@ useEffect(() => {
                    nodeTypes={nodeTypes}
                    fitView
                   connectionLineType={ConnectionLineType.Straight}
-                   defaultEdgeOptions={{
-                    type: 'straight',
-                     markerEnd: {
-                       type: MarkerType.ArrowClosed,
-                     }, 
-                     animated: true,
-                     style: { strokeWidth: 2 }
-                   }}
+                   defaultEdgeOptions={defaultEdgeOptions}
                    className="bg-zinc-900/30"
                  >
                    <Background color="#6366f1" gap={16} size={1} />
@@ -778,6 +680,12 @@ useEffect(() => {
       </div>
 
       {/* Project Members Modal */}
+      <ProjectMembersModal
+        isOpen={showMembersModal}
+        onClose={() => setShowMembersModal(false)}
+        projectId={selectedProject?.id || ''}
+        currentUserRole={currentUserRole}
+      />
       <ProjectMembersModal
         isOpen={showMembersModal}
         onClose={() => setShowMembersModal(false)}
