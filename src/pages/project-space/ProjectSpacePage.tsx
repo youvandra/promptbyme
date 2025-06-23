@@ -730,7 +730,21 @@ useEffect(() => {
       {/* Text for non-editors when node selected */}
       {(selectedNodeForToolbar || selectedNode) &&
         currentUserRole === 'viewer' && (
-          setShowNodeDetails(true)
+        <NodeDetailsModal
+          isOpen={showNodeDetails}
+          onClose={() => {
+            setShowNodeDetails(false)
+            setSelectedNode(null)
+          }}
+          node={selectedNode}
+          onEdit={(nodeId) => {
+            const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+            if (node) {
+              setSelectedNode(node)
+              setShowNodeEditor(true)
+            }
+          }}
+        />
       )}
 
 
