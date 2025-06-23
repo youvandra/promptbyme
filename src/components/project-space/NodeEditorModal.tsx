@@ -8,7 +8,6 @@ interface NodeEditorModalProps {
   onClose: () => void
   node: FlowNode | null
   onSave: (nodeId: string, updates: Partial<FlowNode>) => Promise<void>
-  currentUserRole?: string | null
 }
 
 const NODE_TYPE_CONFIG = {
@@ -43,7 +42,6 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
   onClose,
   node,
   onSave
-  currentUserRole = null
 }) => {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -77,86 +75,6 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
 
   const nodeConfig = NODE_TYPE_CONFIG[node.type as keyof typeof NODE_TYPE_CONFIG]
   const Icon = nodeConfig.icon
-  
-  // Check if user is a viewer (read-only)
-  const isReadOnly = currentUserRole === 'viewer'
-  
-  if (isReadOnly) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-        
-        <motion.div 
-          className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          transition={{ duration: 0.2 }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-zinc-800/50 flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <div className={`p-2.5 ${nodeConfig.color} rounded-lg shadow-lg`}>
-                <Icon size={20} className="text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-white">
-                  View {nodeConfig.label} Node
-                </h2>
-                <p className="text-sm text-zinc-400">
-                  You have view-only access to this project
-                </p>
-              </div>
-            </div>
-            
-            <button
-              onClick={onClose}
-              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {/* Title */}
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-3">
-                Node Title
-              </label>
-              <div className="w-full bg-zinc-800/30 border border-zinc-700/30 rounded-xl px-4 py-3 text-white">
-                {node.title}
-              </div>
-            </div>
-
-            {/* Content */}
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-3">
-                Content
-              </label>
-              <div className="w-full min-h-[300px] bg-zinc-800/30 border border-zinc-700/30 rounded-xl px-4 py-4 text-white font-mono text-sm leading-relaxed whitespace-pre-wrap">
-                {node.content || "No content"}
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between p-6 border-t border-zinc-800/50 flex-shrink-0">
-            <div className="text-sm text-zinc-500">
-              Last updated: {new Date(node.updated_at).toLocaleDateString()}
-            </div>
-            
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    )
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

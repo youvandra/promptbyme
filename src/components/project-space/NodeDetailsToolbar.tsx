@@ -16,7 +16,6 @@ interface NodeDetailsToolbarProps {
   onViewDetails: (nodeId: string) => void
   onConnect?: (nodeId: string) => void
   onClose: () => void
-  currentUserRole?: string | null
 }
 
 export const NodeDetailsToolbar: React.FC<NodeDetailsToolbarProps> = ({
@@ -25,8 +24,7 @@ export const NodeDetailsToolbar: React.FC<NodeDetailsToolbarProps> = ({
   onDelete,
   onViewDetails,
   onConnect,
-  onClose,
-  currentUserRole = null
+  onClose
 }) => {
   if (!selectedNode) return null
 
@@ -83,7 +81,7 @@ export const NodeDetailsToolbar: React.FC<NodeDetailsToolbarProps> = ({
             <Info size={18} />
           </button>
           
-          {onConnect && currentUserRole !== 'viewer' && (
+          {onConnect && (
             <button
               onClick={() => onConnect(selectedNode.id)}
               className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
@@ -93,25 +91,21 @@ export const NodeDetailsToolbar: React.FC<NodeDetailsToolbarProps> = ({
             </button>
           )}
           
-          {currentUserRole !== 'viewer' && (
-            <button
-              onClick={() => onEdit(selectedNode.id)}
-              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-              title="Edit node"
-            >
-              <Edit3 size={18} />
-            </button>
-          )}
+          <button
+            onClick={() => onEdit(selectedNode.id)}
+            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+            title="Edit node"
+          >
+            <Edit3 size={18} />
+          </button>
           
-          {currentUserRole !== 'viewer' && (
-            <button
-              onClick={handleDelete}
-              className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-              title="Delete node"
-            >
-              <Trash2 size={18} />
-            </button>
-          )}
+          <button
+            onClick={handleDelete}
+            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+            title="Delete node"
+          >
+            <Trash2 size={18} />
+          </button>
           
           <div className="h-8 w-px bg-zinc-800/50 mx-2"></div>
           
