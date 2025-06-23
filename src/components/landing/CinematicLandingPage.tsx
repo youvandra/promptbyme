@@ -620,15 +620,15 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         {
                           title: "Content Production",
                           items: [
-                            { name: "Content ideas", color: "indigo" },
+                            { name: "Content ideas", color: "emerald" },
                             { name: "Content script", color: "emerald" },
-                            { name: "Generate Caption", color: "zinc" },
+                            { name: "Generate Caption", color: "indigo" },
                           ],
                         },
                         {
                           title: "Audience Engagement",
                           items: [
-                            { name: "CTA for audience reply", color: "emerald" },
+                            { name: "CTA for audience reply", color: "zinc" },
                           ],
                         },
                         {
