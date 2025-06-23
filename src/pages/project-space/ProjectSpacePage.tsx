@@ -63,6 +63,8 @@ export const ProjectSpacePage: React.FC = () => {
   const [showMembersModal, setShowMembersModal] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [selectedNodeForToolbar, setSelectedNodeForToolbar] = useState<FlowNode | null>(null)
+  const [isConnectingNodes, setIsConnectingNodes] = useState(false)
+  const [sourceNodeId, setSourceNodeId] = useState<string | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
@@ -115,6 +117,13 @@ export const ProjectSpacePage: React.FC = () => {
     animated: true,
     style: { strokeWidth: 2 }
   }), [])
+
+  // Connection line style
+  const connectionLineStyle = {
+    stroke: '#6366f1',
+    strokeWidth: 2,
+    strokeDasharray: '5,5'
+  }
 
   // Load projects on mount
   useEffect(() => {
@@ -216,24 +225,64 @@ useEffect(() => {
     }
   }
 
- // Handle node click
- const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
-  setActiveNodeId(node.id)
-  
-  // Find the corresponding flow node for the toolbar
-  if (selectedProject?.nodes) {
-    const flowNode = selectedProject.nodes.find(n => n.id === node.id);
-    if (flowNode) {
-      setSelectedNodeForToolbar(flowNode);
+  // Handle connecting nodes
+  const handleConnectStart = (nodeId: string) => {
+    setIsConnectingNodes(true)
+    setSourceNodeId(nodeId)
+  }
+
+  // Handle node connection
+  const handleConnectNodes = (targetNodeId: string) => {
+    if (isConnectingNodes && sourceNodeId && targetNodeId && sourceNodeId !== targetNodeId) {
+      if (selectedProject) {
+        createConnection(
+          selectedProject.id,
+          sourceNodeId,
+          targetNodeId
+        ).then(() => {
+          setToast({ message: 'Nodes connected successfully', type: 'success' })
+        }).catch(error => {
+          console.error('Failed to connect nodes:', error)
+          setToast({ message: 'Failed to connect nodes', type: 'error' })
+        }).finally(() => {
+          setIsConnectingNodes(false)
+          setSourceNodeId(null)
+        })
+      }
+    } else {
+      setIsConnectingNodes(false)
+      setSourceNodeId(null)
     }
   }
- }, [])
+
+ // Handle node click
+ const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+  if (isConnectingNodes) {
+    handleConnectNodes(node.id)
+  } else {
+    setActiveNodeId(node.id)
+  
+    // Find the corresponding flow node for the toolbar
+    if (selectedProject?.nodes) {
+      const flowNode = selectedProject.nodes.find(n => n.id === node.id);
+      if (flowNode) {
+        setSelectedNodeForToolbar(flowNode);
+      }
+    }
+  }
+ }, [isConnectingNodes, sourceNodeId, selectedProject, createConnection])
 
   // Handle background click to deselect node
   const onPaneClick = useCallback(() => {
-   setActiveNodeId(null)
-   setSelectedNodeForToolbar(null)
-  }, [])
+    if (isConnectingNodes) {
+      setIsConnectingNodes(false)
+      setSourceNodeId(null)
+      setToast({ message: 'Connection cancelled', type: 'error' })
+    } else {
+      setActiveNodeId(null)
+      setSelectedNodeForToolbar(null)
+    }
+  }, [isConnectingNodes])
 
  // Handle edge click
  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
@@ -548,6 +597,7 @@ useEffect(() => {
                    nodeTypes={nodeTypes}
                    fitView
                   connectionLineType={ConnectionLineType.Straight}
+                  connectionLineStyle={isConnectingNodes ? connectionLineStyle : undefined}
                    defaultEdgeOptions={defaultEdgeOptions}
                    className="bg-zinc-900/30"
                  >
@@ -569,39 +619,51 @@ useEffect(() => {
                      <div className="flex flex-wrap items-center gap-2">
                        <button
                          onClick={() => handleAddNode('input')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs"
+                         className={`flex items-center gap-1 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs ${isConnectingNodes ? 'opacity-50 cursor-not-allowed' : ''}`}
+                         disabled={isConnectingNodes}
                        >
                          <Plus size={12} />
                          <span>Input</span>
                        </button>
                        <button
                          onClick={() => handleAddNode('prompt')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 text-xs"
+                         className={`flex items-center gap-1 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 text-xs ${isConnectingNodes ? 'opacity-50 cursor-not-allowed' : ''}`}
+                         disabled={isConnectingNodes}
                        >
                          <Plus size={12} />
                          <span>Prompt</span>
                        </button>
                        <button
                          onClick={() => handleImportPrompt()}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs"
+                         className={`flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs ${isConnectingNodes ? 'opacity-50 cursor-not-allowed' : ''}`}
+                         disabled={isConnectingNodes}
                        >
                          <Plus size={12} />
                          <span>Import</span>
                        </button>
                        <button
                          onClick={() => handleAddNode('condition')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 text-xs"
+                         className={`flex items-center gap-1 px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 text-xs ${isConnectingNodes ? 'opacity-50 cursor-not-allowed' : ''}`}
+                         disabled={isConnectingNodes}
                        >
                          <Plus size={12} />
                          <span>Condition</span>
                        </button>
                        <button
                          onClick={() => handleAddNode('output')}
-                         className="flex items-center gap-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 text-xs"
+                         className={`flex items-center gap-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 text-xs ${isConnectingNodes ? 'opacity-50 cursor-not-allowed' : ''}`}
+                         disabled={isConnectingNodes}
                        >
                          <Plus size={12} />
                          <span>Output</span>
                        </button>
+                       
+                       {isConnectingNodes && (
+                         <div className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/40 border border-indigo-500/50 text-indigo-300 rounded-lg text-xs animate-pulse">
+                           <Link size={12} />
+                           <span>Select target node...</span>
+                         </div>
+                       )}
                      </div>
                    </Panel>
                  </ReactFlow>
@@ -660,14 +722,17 @@ useEffect(() => {
             onDelete={handleNodeDelete}
             onViewDetails={(nodeId) => {
               const node = selectedProject?.nodes?.find(n => n.id === nodeId);
-              if (node) {
+              if (node && !isConnectingNodes) {
                 setSelectedNode(node);
                 setShowNodeDetails(true);
               }
             }}
+            onConnect={handleConnectStart}
             onClose={() => {
               setSelectedNodeForToolbar(null);
               setActiveNodeId(null);
+              setIsConnectingNodes(false);
+              setSourceNodeId(null);
             }}
           />
         )}
