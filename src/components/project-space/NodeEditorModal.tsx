@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { X, Save, Type, GitBranch, Target, Wand2, Download, Upload } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { FlowNode } from '../../store/projectSpaceStore'
-import { highlightVariables, extractVariables } from '../../utils/promptUtils'
 import { PromptImportModal } from './PromptImportModal'
-import { useProjectSpaceStore } from '../../store/projectSpaceStore'
+import { highlightVariables, extractVariables } from '../../utils/promptUtils'
 
 interface NodeEditorModalProps {
   isOpen: boolean
@@ -52,9 +51,6 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
   const [showImportModal, setShowImportModal] = useState(false)
   const [isNewNode, setIsNewNode] = useState(false)
   const { createNode } = useProjectSpaceStore()
-  
-  // Extract variables from content
-  const detectedVariables = content ? extractVariables(content) : []
 
   useEffect(() => {
     if (node && isOpen) {
@@ -69,6 +65,9 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
       setIsNewNode(false)
     }
   }, [node, isOpen])
+
+  // Extract variables from content
+  const detectedVariables = content ? extractVariables(content) : []
 
   const handleSave = async () => {
     if (!node || !title.trim()) return
@@ -120,9 +119,6 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
     if (node) {
       node.imported_prompt_id = prompt.id
     }
-    setShowImportModal(false)
-  }
-
   if (!isOpen || !node) return null
 
   const nodeConfig = NODE_TYPE_CONFIG[node.type]
