@@ -36,6 +36,7 @@ export const DashboardPage: React.FC = () => {
   const [showProjectMenu, setShowProjectMenu] = useState<string | null>(null)
   
   const { user, loading: authLoading } = useAuthStore()
+  const navigate = useNavigate()
   const { 
     projects,
     loading,
@@ -91,6 +92,10 @@ export const DashboardPage: React.FC = () => {
       console.error('Failed to delete project:', error)
       setToast({ message: 'Failed to delete project', type: 'error' })
     }
+  }
+
+  const handleProjectSettings = (projectId: string) => {
+    navigate(`/project/${projectId}`, { state: { openSettings: true } })
   }
 
   const handleOpenProject = async (projectId: string) => {
