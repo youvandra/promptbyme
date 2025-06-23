@@ -635,7 +635,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                           title: "Sponsored Endorsement Draft",
                           items: [
                             { name: "Brand brief", color: "indigo" },
-                            { name: "Soft-selling story", color: "indigo" },
+                            { name: "Soft-selling story", color: "zinc" },
                           ],
                         },
                       ]
