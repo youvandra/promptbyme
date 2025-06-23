@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Edit3, GitBranch, Target, Upload, Trash2, Maximize2 } from 'lucide-react'
+import { Edit3, GitBranch, Target, Upload, Trash2, Maximize2, Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FlowNode } from '../../store/projectSpaceStore'
 
@@ -10,7 +10,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const getNodeIcon = () => {
     switch (data.type) {
       case 'input':
-        return <Upload size={16} className="text-purple-400" />
+        return <Zap size={16} className="text-purple-400" />
       case 'prompt':
         return <Edit3 size={16} className="text-blue-400" />
       case 'condition':
@@ -44,7 +44,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <Handle
         type="target"
         position={Position.Top}
-        className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-pointer"
+        className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-pointer !opacity-100"
       />
       
       {/* Node Content */}
@@ -54,13 +54,13 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         }`}
         animate={{
           boxShadow: selected ? '0 0 15px rgba(255, 255, 255, 0.2)' : '0 0 5px rgba(0, 0, 0, 0.2)'
-        }}
+        }} 
         transition={{ duration: 0.2 }}
       >
         <div className="flex items-center gap-2 mb-2">
           {getNodeIcon()}
-          <div className="text-white font-medium text-sm truncate">
-            {data.title}
+          <div className="text-white font-medium text-sm truncate flex-1">
+            {data.label || data.title}
           </div>
         </div>
         
@@ -111,8 +111,8 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       {/* Output Handle (bottom) */}
       <Handle
         type="source"
-        position={Position.Bottom}
-        className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-pointer"
+        position={Position.Bottom} 
+        className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-pointer !opacity-100"
       />
     </div>
   )

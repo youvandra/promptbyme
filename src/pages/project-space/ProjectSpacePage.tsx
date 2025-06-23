@@ -113,16 +113,16 @@ export const ProjectSpacePage: React.FC = () => {
 
   // Define edge options outside of the component render
   const defaultEdgeOptions = React.useMemo(() => ({
-    type: 'smoothstep',
+    type: 'default',
     markerEnd: { type: MarkerType.ArrowClosed },
-    animated: true,
-    style: { stroke: '#6366f1', strokeWidth: 4 }
+    animated: true, 
+    style: { stroke: '#6366f1', strokeWidth: 3 }
   }), [])
 
   // Connection line style
   const connectionLineStyle = {
     stroke: '#6366f1',
-    strokeWidth: 4,
+    strokeWidth: 3,
     strokeDasharray: '5,5',
   }
 
@@ -153,6 +153,25 @@ export const ProjectSpacePage: React.FC = () => {
  useEffect(() => {
    if (selectedProject?.nodes) {
      const flowNodes = selectedProject.nodes.map(node => {       
+       // Define node color based on type
+       let nodeColor;
+       switch (node.type) {
+         case 'input':
+           nodeColor = '#8b5cf6'; // purple
+           break;
+         case 'prompt':
+           nodeColor = '#3b82f6'; // blue
+           break;
+         case 'condition':
+           nodeColor = '#eab308'; // yellow
+           break;
+         case 'output':
+           nodeColor = '#22c55e'; // green
+           break;
+         default:
+           nodeColor = '#6366f1'; // indigo
+       }
+       
        return {
        id: node.id,
        type: node.type,
@@ -161,6 +180,7 @@ export const ProjectSpacePage: React.FC = () => {
          label: node.title,
          content: node.content,
          nodeData: node,
+         type: node.type,
           activeNodeId: activeNodeId,
          onEdit: (nodeId: string) => {
            const node = selectedProject?.nodes?.find(n => n.id === nodeId)
@@ -177,6 +197,11 @@ export const ProjectSpacePage: React.FC = () => {
              setShowNodeDetails(true)
            }
          }
+       },
+       style: {
+         background: `${nodeColor}20`,
+         borderColor: `${nodeColor}50`,
+         borderWidth: 1
        }
        // No need to specify sourcePosition and targetPosition here
      }})
@@ -193,11 +218,11 @@ useEffect(() => {
       return {
         id: connection.id,
         source: connection.source_node_id, 
-        target: connection.target_node_id,
-        type: 'smoothstep',
+        target: connection.target_node_id, 
+        type: 'default',
         animated: true, 
-        markerEnd: { type: MarkerType.ArrowClosed },
-        style: { stroke: '#6366f1', strokeWidth: 4, className: 'font-bold' }
+        markerEnd: { type: MarkerType.ArrowClosed }, 
+        style: { stroke: '#6366f1', strokeWidth: 3 }
       };
     });
     setEdges(flowEdges);
@@ -586,8 +611,8 @@ useEffect(() => {
                    onEdgeClick={onEdgeClick}
                    onNodeDragStop={onNodeDragStop}
                    nodeTypes={nodeTypes}
-                   fitView
-                   connectionLineType={ConnectionLineType.SmoothStep}
+                   fitView 
+                   connectionLineType={ConnectionLineType.Bezier}
                    connectionLineStyle={connectionLineStyle}
                    defaultEdgeOptions={defaultEdgeOptions}
                    elementsSelectable={true}
