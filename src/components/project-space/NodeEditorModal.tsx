@@ -128,8 +128,6 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
   const nodeConfig = NODE_TYPE_CONFIG[node.type]
   const Icon = nodeConfig.icon
 
-  // Extract variables from content
-  const detectedVariables = extractVariables(content)
 
   return (
     <>
