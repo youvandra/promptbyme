@@ -363,14 +363,29 @@ html {
 
 /* Ensure node handles are visible */
 .react-flow__handle {
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  width: 8px;
-  height: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 255, 255, 1);
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
 }
 
 .react-flow__handle:hover {
   background: white;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.8);
+}
+
+/* Make edges more visible */
+.react-flow__edge {
+  filter: drop-shadow(0 0 3px rgba(99, 102, 241, 0.5));
+}
+
+.react-flow__edge.selected {
+  filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.8));
+}
+
+.react-flow__edge-path {
+  stroke-linecap: round;
 }
 /* React Flow Node Customization */
 .react-flow__node {
@@ -382,12 +397,27 @@ html {
 
 /* Ensure node handles are visible */
 .react-flow__handle {
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  width: 8px;
-  height: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 255, 255, 1);
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
 }
 
 .react-flow__handle:hover {
   background: white;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.8);
+}
+
+/* Make edges more visible */
+.react-flow__edge {
+  filter: drop-shadow(0 0 3px rgba(99, 102, 241, 0.5));
+}
+
+.react-flow__edge.selected {
+  filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.8));
+}
+
+.react-flow__edge-path {
+  stroke-linecap: round;
 }
