@@ -372,3 +372,22 @@ html {
 .react-flow__handle:hover {
   background: white;
 }
+/* React Flow Node Customization */
+.react-flow__node {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure node handles are visible */
+.react-flow__handle {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  width: 8px;
+  height: 8px;
+}
+
+.react-flow__handle:hover {
+  background: white;
+}

@@ -92,8 +92,6 @@ interface ProjectSpaceState {
   // Connection operations
   createConnection: (projectId: string, sourceNodeId: string, targetNodeId: string) => Promise<FlowConnection>
   deleteConnection: (connectionId: string) => Promise<void>
-  createConnection: (projectId: string, sourceNodeId: string, targetNodeId: string) => Promise<FlowConnection>
-  deleteConnection: (connectionId: string) => Promise<void>
   
   // Team management operations
   fetchProjectMembers: (projectId: string) => Promise<void>
@@ -552,64 +550,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
       }
     },
 
-    createConnection: async (projectId: string, sourceNodeId: string, targetNodeId: string) => {
-      try {
-        const { data: connection, error } = await supabase
-          .from('flow_connections')
-          .insert([{
-            project_id: projectId,
-            source_node_id: sourceNodeId,
-            target_node_id: targetNodeId
-          }])
-          .select()
-          .single()
-
-        if (error) throw error
-
-        // Update selected project if it matches
-        const { selectedProject } = get()
-        if (selectedProject?.id === projectId) {
-          set({
-            selectedProject: {
-              ...selectedProject,
-              connections: [...(selectedProject.connections || []), connection]
-            }
-          })
-        }
-        
-        return connection
-      } catch (error) {
-        console.error('Error creating connection:', error)
-        throw error
-      }
-    },
-
-    deleteConnection: async (connectionId: string) => {
-      try {
-        const { error } = await supabase
-          .from('flow_connections')
-          .delete()
-          .eq('id', connectionId)
-
-        if (error) throw error
-
-        // Update selected project
-        const { selectedProject } = get()
-        if (selectedProject?.connections) {
-          const updatedConnections = selectedProject.connections.filter(c => c.id !== connectionId)
-          
-          set({
-            selectedProject: {
-              ...selectedProject,
-              connections: updatedConnections
-            }
-          })
-        }
-      } catch (error) {
-        console.error('Error deleting connection:', error)
-        throw error
-      }
-    },
     createConnection: async (projectId: string, sourceNodeId: string, targetNodeId: string) => {
       try {
         const { data: connection, error } = await supabase
