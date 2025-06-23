@@ -449,9 +449,6 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
                                 {member.display_name}
                               </p>
                               <p className="text-xs text-zinc-500 truncate">{member.email}</p>
-                              <p className="text-xs text-orange-400 mt-1">
-                                Invited by {member.invited_by || 'Unknown'}
-                              </p>
                             </div>
                           </div>
                           
