@@ -617,14 +617,29 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                   >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                       {[
-                        { title: "Content Production",   items: [
-                          { name: "Content ideas", color: "indigo" },
-                          { name: "Content script", color: "emerald" },
-                          { name: "Generate Caption", color: "zinc" }
-                        ] },
-                        { title: "Audience Engagement", items: ["CTA for audience reply"], color: "emerald" }
-                        { title: "Sponsored Endorsement Draft", items: ["Brand brief", "Soft-selling story"], color: "indigo" },
-                      ].map((column, columnIndex) => (
+                        {
+                          title: "Content Production",
+                          items: [
+                            { name: "Content ideas", color: "indigo" },
+                            { name: "Content script", color: "emerald" },
+                            { name: "Generate Caption", color: "zinc" },
+                          ],
+                        },
+                        {
+                          title: "Audience Engagement",
+                          items: [
+                            { name: "CTA for audience reply", color: "emerald" },
+                          ],
+                        },
+                        {
+                          title: "Sponsored Endorsement Draft",
+                          items: [
+                            { name: "Brand brief", color: "indigo" },
+                            { name: "Soft-selling story", color: "indigo" },
+                          ],
+                        },
+                      ]
+                      .map((column, columnIndex) => (
                         <motion.div 
                           key={columnIndex} 
                           className="space-y-3 md:space-y-4"
