@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle } from 'lucide-react'
+import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
@@ -260,7 +260,7 @@ export const ProfilePage: React.FC = () => {
 
   const handleCopyProfileLink = () => {
     if (!userProfile?.display_name) return
-    const profileUrl = `${window.location.origin}/${userProfile.display_name}`
+    const profileUrl = `${window.location.origin}/${userProfile.display_name}/`
     copyToClipboard(profileUrl)
   }
 
@@ -494,13 +494,16 @@ export const ProfilePage: React.FC = () => {
                                 <h4 className="font-medium text-white text-sm mb-1 flex items-center gap-2">
                                   Public Profile
                                   {formData.isPublicProfile && (
-                                    <button
-                                      onClick={handleCopyProfileLink}
-                                      className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors"
-                                      title="Copy profile link"
-                                    >
-                                      {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
-                                    </button>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-zinc-500">promptby.me/{formData.displayName}/</span>
+                                      <button
+                                        onClick={handleCopyProfileLink}
+                                        className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors"
+                                        title="Copy profile link"
+                                      >
+                                        {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
+                                      </button>
+                                    </div>
                                   )}
                                 </h4>
                                 <p className="text-xs text-zinc-400">Allow others to see your public prompts and profile</p>
@@ -605,7 +608,7 @@ export const ProfilePage: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-medium text-white text-sm">Public Profile</h4>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 mt-1">
                             <p className="text-xs text-zinc-400">
                               {userProfile?.is_public_profile !== false 
                                 ? 'Others can view your public prompts and profile' 
@@ -613,14 +616,20 @@ export const ProfilePage: React.FC = () => {
                               }
                             </p>
                             {userProfile?.is_public_profile !== false && userProfile?.display_name && (
-                              <button
-                                onClick={handleCopyProfileLink}
-                                className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors flex items-center gap-1"
-                                title="Copy profile link"
-                              >
-                                {copied ? <CheckCircle size={12} /> : <LinkIcon size={12} />}
-                                <span className="text-xs">{copied ? 'Copied!' : 'Copy link'}</span>
-                              </button>
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-1 px-2 py-1 bg-zinc-800/50 rounded-lg">
+                                  <Globe size={12} className="text-indigo-400" />
+                                  <span className="text-xs text-zinc-300">promptby.me/{userProfile.display_name}/</span>
+                                </div>
+                                <button
+                                  onClick={handleCopyProfileLink}
+                                  className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors flex items-center gap-1"
+                                  title="Copy profile link"
+                                >
+                                  {copied ? <CheckCircle size={12} /> : <Copy size={12} />}
+                                  <span className="text-xs">{copied ? 'Copied!' : 'Copy'}</span>
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
