@@ -112,8 +112,8 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
       content: "flow"
     },
     {
-      title: "Track your progress",
-      subtitle: "Move prompts through your workflow",
+      title: "Run your flow",
+      subtitle: "Trigger the entire prompt pipeline",
       content: "kanban"
     },
     {
