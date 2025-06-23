@@ -72,8 +72,8 @@ export const ProjectSpacePage: React.FC = () => {
   const [projectVisibilityInput, setProjectVisibilityInput] = useState<'private' | 'team' | 'public'>('private')
   const [isSaving, setIsSaving] = useState(false)
   const [isCreatingProject, setIsCreatingProject] = useState(false)
- const [nodes, setNodes, onNodesChange] = useNodesState([])
- const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [nodes, setNodes, onNodesChange] = useNodesState([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [newProjectName, setNewProjectName] = useState('')
   
   const [showCreateProject, setShowCreateProject] = useState(false)
