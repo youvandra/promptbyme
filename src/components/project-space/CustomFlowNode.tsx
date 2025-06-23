@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
 import { Edit3, GitBranch, Target, Upload } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { NodeContextualToolbar } from './NodeContextualToolbar'
 import { FlowNode } from '../../store/projectSpaceStore'
 
 const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
@@ -41,7 +40,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
   return (
     <div className="relative">
-      {/* Input Handle */}
+      {/* Input Handle (top) */}
       <Handle
         type="target"
         position={Position.Top}
@@ -54,7 +53,6 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           selected ? 'ring-2 ring-white/50' : ''
         }`}
         animate={{
-          scale: selected ? 1.05 : 1,
           boxShadow: selected ? '0 0 15px rgba(255, 255, 255, 0.2)' : '0 0 5px rgba(0, 0, 0, 0.2)'
         }}
         transition={{ duration: 0.2 }}
@@ -71,25 +69,12 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         </div>
       </motion.div>
       
-      {/* Output Handle */}
+      {/* Output Handle (bottom) */}
       <Handle
         type="source"
         position={Position.Bottom}
         className="w-3 h-3 bg-zinc-700 border-2 border-white"
       />
-      
-      {/* Contextual Toolbar */}
-      <AnimatePresence>
-        {selected && data.activeNodeId === id && (
-          <NodeContextualToolbar
-            node={{ id, data, position: { x: 0, y: 0 }, type: 'default' }}
-            nodeData={data as FlowNode}
-            onEdit={data.onEdit}
-            onDelete={data.onDelete}
-            onViewDetails={data.onViewDetails}
-          />
-        )}
-      </AnimatePresence>
     </div>
   )
 }

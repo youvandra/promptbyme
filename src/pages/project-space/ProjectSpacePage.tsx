@@ -42,6 +42,7 @@ import { NodeEditorModal } from '../../components/project-space/NodeEditorModal'
 import { NodeDetailsModal } from '../../components/project-space/NodeDetailsModal'
 import { PromptImportModal } from '../../components/project-space/PromptImportModal'
 import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar'
+import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar'
 import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { Toast } from '../../components/ui/Toast'
@@ -60,6 +61,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showNodeDetails, setShowNodeDetails] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
+  const [selectedNodeForToolbar, setSelectedNodeForToolbar] = useState<FlowNode | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
@@ -311,13 +313,20 @@ useEffect(() => {
  // Handle node click
  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
   setActiveNodeId(node.id)
-  setActiveNodeId(node.id)
+  
+  // Find the corresponding flow node for the toolbar
+  if (selectedProject?.nodes) {
+    const flowNode = selectedProject.nodes.find(n => n.id === node.id);
+    if (flowNode) {
+      setSelectedNodeForToolbar(flowNode);
+    }
+  }
  }, [])
 
   // Handle background click to deselect node
   const onPaneClick = useCallback(() => {
    setActiveNodeId(null)
-   setActiveNodeId(null)
+   setSelectedNodeForToolbar(null)
   }, [])
 
  // Handle edge click
@@ -668,14 +677,7 @@ useEffect(() => {
                    onEdgesChange={onEdgesChange}
                    onConnect={onConnect}
                    onPaneClick={onPaneClick}
-                   onNodeClick={(event, node) => {
-                     // Find the corresponding flow node
-                     const flowNode = selectedProject?.nodes?.find(n => n.id === node.id);
-                     if (flowNode) {
-                       setSelectedNode(flowNode);
-                     }
-                     onNodeClick(event, node);
-                   }}
+                   onNodeClick={onNodeClick}
                    onEdgeClick={onEdgeClick}
                    onNodeDragStop={onNodeDragStop}
                    nodeTypes={nodeTypes}
@@ -772,6 +774,34 @@ useEffect(() => {
           </div>
         </div>
       </div>
+
+      {/* Node Details Toolbar */}
+      <AnimatePresence>
+        {selectedNodeForToolbar && (
+          <NodeDetailsToolbar
+            selectedNode={selectedNodeForToolbar}
+            onEdit={(nodeId) => {
+              const node = selectedProject?.nodes?.find(n => n.id === nodeId);
+              if (node) {
+                setSelectedNode(node);
+                setShowNodeEditor(true);
+              }
+            }}
+            onDelete={handleNodeDelete}
+            onViewDetails={(nodeId) => {
+              const node = selectedProject?.nodes?.find(n => n.id === nodeId);
+              if (node) {
+                setSelectedNode(node);
+                setShowNodeDetails(true);
+              }
+            }}
+            onClose={() => {
+              setSelectedNodeForToolbar(null);
+              setActiveNodeId(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Node Details Toolbar */}
       <AnimatePresence>

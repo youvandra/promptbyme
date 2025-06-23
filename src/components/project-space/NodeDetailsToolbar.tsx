@@ -3,9 +3,7 @@ import { motion } from 'framer-motion'
 import { 
   Trash2, 
   Edit3, 
-  Copy, 
   Info, 
-  ArrowUpRight,
   X
 } from 'lucide-react'
 import { FlowNode } from '../../store/projectSpaceStore'
