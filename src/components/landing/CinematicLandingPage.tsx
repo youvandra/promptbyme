@@ -617,9 +617,9 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                   >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                       {[
-                        { title: "Backlog", items: ["API Design", "Error Handling"], color: "zinc" },
-                        { title: "In Progress", items: ["User Dashboard"], color: "indigo" },
-                        { title: "Done", items: ["Landing Page", "Auth Flow"], color: "emerald" }
+                        { title: "Content Production", items: ["Content ideas", "Content script", "Generate Caption"], color: "zinc" },
+                        { title: "Sponsored Endorsement Draft", items: ["Brand brief", "Soft-selling story"], color: "indigo" },
+                        { title: "Audience Engagement", items: ["CTA for audience reply"], color: "emerald" }
                       ].map((column, columnIndex) => (
                         <motion.div 
                           key={columnIndex} 
