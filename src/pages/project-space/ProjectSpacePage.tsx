@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import ReactFlow, {
   Background,
-  NodeMouseHandler,
   Controls,
   MiniMap,
   Panel,
@@ -14,8 +13,9 @@ import ReactFlow, {
   Node,
   NodeTypes,
   NodeProps,
-  MarkerType,
-  ConnectionLineType
+  MarkerType, 
+  ConnectionLineType,
+  Position
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { 
@@ -120,16 +120,26 @@ export const ProjectSpacePage: React.FC = () => {
  // Convert flow nodes to ReactFlow nodes
  useEffect(() => {
    if (selectedProject?.nodes) {
-     const flowNodes = selectedProject.nodes.map(node => ({
+     const flowNodes = selectedProject.nodes.map(node => {
+       // Define source and target handles based on node type
+       const sourceHandlePosition = node.type === 'condition' ? Position.Bottom : Position.Right;
+       const targetHandlePosition = node.type === 'output' ? Position.Left : Position.Top;
+       
+       return {
        id: node.id,
        type: node.type,
        position: { x: node.position.x, y: node.position.y },
        data: { 
          label: node.title,
          content: node.content,
-         nodeData: node
-       }
-     }))
+         nodeData: node,
+         sourceHandlePosition,
+         targetHandlePosition
+       },
+       // Add source and target handles
+       sourcePosition: sourceHandlePosition,
+       targetPosition: targetHandlePosition
+     }})
      setNodes(flowNodes)
    } else {
      setNodes([])
@@ -819,8 +829,9 @@ export const ProjectSpacePage: React.FC = () => {
                      type: 'smoothstep',
                      markerEnd: {
                        type: MarkerType.ArrowClosed,
-                     },
+                     }, 
                      animated: true,
+                     style: { strokeWidth: 2 }
                    }}
                    className="bg-zinc-900/30"
                  >

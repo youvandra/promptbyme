@@ -2,12 +2,10 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { 
   Trash2, 
-  Maximize2, 
+  Maximize2,
   Edit3, 
   Copy, 
-  Link, 
-  ArrowUpRight,
-  Unlink
+  Link
 } from 'lucide-react'
 import { FlowNode } from '../../store/projectSpaceStore'
 import { Node, useReactFlow } from 'reactflow'
@@ -17,7 +15,7 @@ interface NodeContextualToolbarProps {
   nodeData: FlowNode
   onEdit: (nodeId: string) => void
   onDelete: (nodeId: string) => void
-  onViewDetails: (nodeId: string) => void
+  onViewDetails: (nodeId: string) => void 
 }
 
 export const NodeContextualToolbar: React.FC<NodeContextualToolbarProps> = ({
@@ -27,7 +25,7 @@ export const NodeContextualToolbar: React.FC<NodeContextualToolbarProps> = ({
   onDelete,
   onViewDetails
 }) => {
-  const { setEdges, getEdges } = useReactFlow()
+  const { getEdges, setEdges } = useReactFlow()
   
   // Function to handle node deletion with confirmation
   const handleDelete = (e: React.MouseEvent) => {
@@ -49,23 +47,6 @@ export const NodeContextualToolbar: React.FC<NodeContextualToolbarProps> = ({
     onViewDetails(node.id)
   }
   
-  // Function to handle duplicating a node (to be implemented)
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    // This would be implemented in the parent component
-    console.log('Duplicate node:', node.id)
-  }
-  
-  // Function to remove all connections to/from this node
-  const handleDisconnect = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    const edges = getEdges()
-    const filteredEdges = edges.filter(
-      edge => edge.source !== node.id && edge.target !== node.id
-    )
-    setEdges(filteredEdges)
-  }
-  
   // Function to start connection mode (to be implemented)
   const handleConnect = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -75,7 +56,7 @@ export const NodeContextualToolbar: React.FC<NodeContextualToolbarProps> = ({
 
   return (
     <motion.div
-      className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700/50 rounded-lg shadow-xl z-50 flex items-center"
+      className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700/50 rounded-lg shadow-xl z-50 flex items-center" 
       initial={{ opacity: 0, y: 10, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.9 }}
@@ -99,31 +80,21 @@ export const NodeContextualToolbar: React.FC<NodeContextualToolbarProps> = ({
         </button>
         
         <button
-          onClick={handleConnect}
+          onClick={(e) => {
+            e.stopPropagation()
+            handleConnect()
+          }}
           className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
           title="Connect to another node"
-        >
-          <Link size={16} />
-        </button>
-        
-        <button
-          onClick={handleDisconnect}
-          className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-          title="Remove all connections"
-        >
-          <Unlink size={16} />
-        </button>
-        
-        <button
-          onClick={handleDuplicate}
-          className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-          title="Duplicate node"
         >
           <Copy size={16} />
         </button>
         
         <button
-          onClick={handleDelete}
+          onClick={(e) => {
+            e.stopPropagation()
+            handleDelete(e)
+          }}
           className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
           title="Delete node"
         >
