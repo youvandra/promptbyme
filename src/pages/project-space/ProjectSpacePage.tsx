@@ -153,7 +153,7 @@ useEffect(() => {
       id: connection.id,
       source: connection.source_node_id,
       target: connection.target_node_id,
-      type: 'smoothstep',
+      type: 'straight',
       animated: true,
       markerEnd: {
         type: MarkerType.ArrowClosed,
@@ -672,9 +672,9 @@ useEffect(() => {
                    onNodeDragStop={onNodeDragStop}
                    nodeTypes={nodeTypes}
                    fitView
-                   connectionLineType={ConnectionLineType.SmoothStep}
+                  connectionLineType={ConnectionLineType.Straight}
                    defaultEdgeOptions={{
-                     type: 'smoothstep',
+                    type: 'straight',
                      markerEnd: {
                        type: MarkerType.ArrowClosed,
                      }, 
