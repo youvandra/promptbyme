@@ -674,15 +674,17 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                                 whileHover={{ scale: 1.02, y: -2 }}
                               >
                                 <div className="flex items-center justify-between">
-                                  <span className="text-white text-xs md:text-sm font-medium">{item}</span>
-                                  <motion.div 
-                                    className={`w-2 h-2 rounded-full ${
-                                      column.color === 'emerald' ? 'bg-emerald-400' :
-                                      column.color === 'indigo' ? 'bg-indigo-400' : 'bg-zinc-400'
-                                    }`}
-                                    animate={{ scale: [1, 1.2, 1] }}
-                                    transition={{ duration: 2, repeat: Infinity, delay: itemIndex * 0.5 }}
-                                  />
+                                <span className="text-white text-xs md:text-sm font-medium">{item.name}</span>
+                                <motion.div 
+                                  className={`w-2 h-2 rounded-full ${
+                                    item.color === 'emerald' ? 'bg-emerald-400' :
+                                    item.color === 'indigo' ? 'bg-indigo-400' :
+                                    'bg-zinc-400'
+                                  }`}
+                                  animate={{ scale: [1, 1.2, 1] }}
+                                  transition={{ duration: 2, repeat: Infinity, delay: itemIndex * 0.5 }}
+                                />
+
                                 </div>
                               </motion.div>
                             ))}
