@@ -163,7 +163,7 @@ export const ProjectSpacePage: React.FC = () => {
  )
 
  const PromptNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/20 border border-blue-500/30 w-[250px] h-[250px] hover:bg-blue-600/30 hover:border-blue-500/50 transition-all duration-200 flex flex-col">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/20 border border-blue-500/30 w-[250px] h-[150px] hover:bg-blue-600/30 hover:border-blue-500/50 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-blue-300 mb-3">{data.label}</div>
      {data.content && (
       <div className="text-xs text-blue-200 bg-black/20 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1">{data.content}</div>
@@ -172,7 +172,7 @@ export const ProjectSpacePage: React.FC = () => {
  )
 
  const ConditionNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/20 border border-yellow-500/30 w-[250px] h-[250px] hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-200 flex flex-col">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/20 border border-yellow-500/30 w-[250px] h-[150px] hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-yellow-300 mb-3">{data.label}</div>
      {data.content && (
       <div className="text-xs text-yellow-200 bg-black/20 p-3 rounded border border-yellow-500/20 overflow-y-auto flex-1">{data.content}</div>
@@ -181,7 +181,7 @@ export const ProjectSpacePage: React.FC = () => {
  )
 
  const OutputNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-green-600/20 border border-green-500/30 w-[250px] h-[250px] hover:bg-green-600/30 hover:border-green-500/50 transition-all duration-200 flex flex-col">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-green-600/20 border border-green-500/30 w-[250px] h-[150px] hover:bg-green-600/30 hover:border-green-500/50 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-green-300 mb-3">{data.label}</div>
      {data.content && (
       <div className="text-xs text-green-200 bg-black/20 p-3 rounded border border-green-500/20 overflow-y-auto flex-1">{data.content}</div>
