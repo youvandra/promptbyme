@@ -114,13 +114,13 @@ export const ProjectSpacePage: React.FC = () => {
     type: 'straight',
     markerEnd: { type: MarkerType.ArrowClosed },
     animated: true,
-    style: { stroke: '#6366f1', strokeWidth: 2 }
+    style: { stroke: '#6366f1', strokeWidth: 4 }
   }), [])
 
   // Connection line style
   const connectionLineStyle = {
     stroke: '#6366f1',
-    strokeWidth: 2,
+    strokeWidth: 4,
     strokeDasharray: '5,5',
   }
 
@@ -201,9 +201,9 @@ useEffect(() => {
         source: connection.source_node_id,
         target: connection.target_node_id,
         type: 'straight',
-        animated: true,
+        animated: true, 
         markerEnd: { type: MarkerType.ArrowClosed },
-        style: { stroke: '#6366f1', strokeWidth: 3 }
+        style: { stroke: '#6366f1', strokeWidth: 4, className: 'font-bold' }
       };
     });
     setEdges(flowEdges);
