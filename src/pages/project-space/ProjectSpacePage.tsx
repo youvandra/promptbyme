@@ -45,7 +45,6 @@ import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsTo
 import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
-import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
