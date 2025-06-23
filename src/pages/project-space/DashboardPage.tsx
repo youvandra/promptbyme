@@ -14,7 +14,9 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  ArrowRight
+  ArrowRight,
+  X,
+  Save
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Toast } from '../../components/ui/Toast'
