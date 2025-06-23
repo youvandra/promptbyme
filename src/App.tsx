@@ -6,14 +6,12 @@ import { GalleryPage } from './pages/gallery/GalleryPage'
 import { ProfilePage } from './pages/profile/ProfilePage'
 import { PublicProfilePage } from './pages/public-profile/PublicProfilePage'
 import { PlaygroundPage } from './pages/playground/PlaygroundPage'
-import { InvitationNotification } from './components/invitations/InvitationNotification'
 import { ProjectSpacePage } from './pages/project-space/ProjectSpacePage'
 import { DashboardPage } from './pages/project-space/DashboardPage'
 
 function App() {
   return (
     <Router>
-      <InvitationNotification />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
