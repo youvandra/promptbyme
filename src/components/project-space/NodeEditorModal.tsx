@@ -4,7 +4,6 @@ import { motion } from 'framer-motion'
 import { FlowNode } from '../../store/projectSpaceStore'
 import { highlightVariables, extractVariables } from '../../utils/promptUtils'
 import { PromptImportModal } from './PromptImportModal'
-import { extractVariables, highlightVariables } from '../../utils/promptUtils'
 import { useProjectSpaceStore } from '../../store/projectSpaceStore'
 
 interface NodeEditorModalProps {
