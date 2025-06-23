@@ -214,6 +214,15 @@ useEffect(() => {
 
 
   const handleNodeDelete = async (nodeId: string) => {
+    // Check if user has edit permissions
+    if (currentUserRole === 'viewer') {
+      setToast({ 
+        message: 'You do not have permission to delete nodes. Viewers can only view the project.', 
+        type: 'error' 
+      })
+      return
+    }
+    
     try {
       await deleteNode(nodeId)
      setActiveNodeId(null)
@@ -227,12 +236,30 @@ useEffect(() => {
 
   // Handle connecting nodes
   const handleConnectStart = (nodeId: string) => {
+    // Check if user has edit permissions
+    if (currentUserRole === 'viewer') {
+      setToast({ 
+        message: 'You do not have permission to connect nodes. Viewers can only view the project.', 
+        type: 'error' 
+      })
+      return
+    }
+    
     setIsConnectingNodes(true)
     setSourceNodeId(nodeId)
   }
 
   // Handle node connection
   const handleConnectNodes = (targetNodeId: string) => {
+    // Check if user has edit permissions
+    if (currentUserRole === 'viewer') {
+      setToast({ 
+        message: 'You do not have permission to connect nodes. Viewers can only view the project.', 
+        type: 'error' 
+      })
+      return
+    }
+    
     if (isConnectingNodes && sourceNodeId && targetNodeId && sourceNodeId !== targetNodeId) {
       if (selectedProject) {
         createConnection(
@@ -286,6 +313,15 @@ useEffect(() => {
 
  // Handle edge click
  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
+   // Check if user has edit permissions
+   if (currentUserRole === 'viewer') {
+     setToast({ 
+       message: 'You do not have permission to delete connections. Viewers can only view the project.', 
+       type: 'error' 
+     })
+     return
+   }
+   
    if (window.confirm('Do you want to remove this connection?')) {
      deleteConnection(edge.id)
    }
@@ -293,6 +329,15 @@ useEffect(() => {
 
  // Handle connection
  const onConnect = useCallback((connection: Connection) => {
+   // Check if user has edit permissions
+   if (currentUserRole === 'viewer') {
+     setToast({ 
+       message: 'You do not have permission to create connections. Viewers can only view the project.', 
+       type: 'error' 
+     })
+     return
+   }
+   
    if (selectedProject && connection.source && connection.target) {
      // Create the connection in the database
      createConnection(
@@ -310,6 +355,15 @@ useEffect(() => {
 
  // Handle node drag
  const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
+   // Check if user has edit permissions
+   if (currentUserRole === 'viewer') {
+     setToast({ 
+       message: 'You do not have permission to move nodes. Viewers can only view the project.', 
+       type: 'error' 
+     })
+     return
+   }
+   
    if (node.position) {
      moveNode(node.id, node.position)
    }
@@ -335,6 +389,15 @@ useEffect(() => {
 
   const handleAddNode = async (type: FlowNode['type']) => {
     if (!selectedProject || !canvasRef.current) return
+    
+    // Check if user has edit permissions
+    if (currentUserRole === 'viewer') {
+      setToast({ 
+        message: 'You do not have permission to add nodes. Viewers can only view the project.', 
+        type: 'error' 
+      })
+      return
+    }
     
     // Calculate top-center position of the canvas
     const canvasRect = canvasRef.current.getBoundingClientRect()
@@ -370,6 +433,16 @@ useEffect(() => {
 
   const handleImportPrompt = () => {
     if (!selectedProject) return
+    
+    // Check if user has edit permissions
+    if (currentUserRole === 'viewer') {
+      setToast({ 
+        message: 'You do not have permission to import prompts. Viewers can only view the project.', 
+        type: 'error' 
+      })
+      return
+    }
+    
     setShowImportModal(true)
   }
 
@@ -612,8 +685,10 @@ useEffect(() => {
                      <div className="flex flex-wrap items-center gap-2">
                        <button
                          onClick={() => handleAddNode('input')}
-                         className={`flex items-center gap-1 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs ${isConnectingNodes ? 'opacity-50 cursor-not-allowed' : ''}`}
-                         disabled={isConnectingNodes}
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-lg transition-all duration-200 text-xs ${
+                          isConnectingNodes || currentUserRole === 'viewer' ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={isConnectingNodes || currentUserRole === 'viewer'}
                        >
                          <Plus size={12} />
                          <span>Input</span>
@@ -628,24 +703,30 @@ useEffect(() => {
                        </button>
                        <button
                          onClick={() => handleImportPrompt()}
-                         className={`flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs ${isConnectingNodes ? 'opacity-50 cursor-not-allowed' : ''}`}
-                         disabled={isConnectingNodes}
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 rounded-lg transition-all duration-200 text-xs ${
+                          isConnectingNodes || currentUserRole === 'viewer' ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={isConnectingNodes || currentUserRole === 'viewer'}
                        >
                          <Plus size={12} />
                          <span>Import</span>
                        </button>
                        <button
                          onClick={() => handleAddNode('condition')}
-                         className={`flex items-center gap-1 px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 text-xs ${isConnectingNodes ? 'opacity-50 cursor-not-allowed' : ''}`}
-                         disabled={isConnectingNodes}
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 text-yellow-300 rounded-lg transition-all duration-200 text-xs ${
+                          isConnectingNodes || currentUserRole === 'viewer' ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={isConnectingNodes || currentUserRole === 'viewer'}
                        >
                          <Plus size={12} />
                          <span>Condition</span>
                        </button>
                        <button
                          onClick={() => handleAddNode('output')}
-                         className={`flex items-center gap-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 text-xs ${isConnectingNodes ? 'opacity-50 cursor-not-allowed' : ''}`}
-                         disabled={isConnectingNodes}
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-300 rounded-lg transition-all duration-200 text-xs ${
+                          isConnectingNodes || currentUserRole === 'viewer' ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={isConnectingNodes || currentUserRole === 'viewer'}
                        >
                          <Plus size={12} />
                          <span>Output</span>
@@ -657,6 +738,13 @@ useEffect(() => {
                            <span>Select target node...</span>
                          </div>
                        )}
+                      
+                      {currentUserRole === 'viewer' && (
+                        <div className="flex items-center gap-1 px-3 py-1.5 bg-amber-600/20 border border-amber-500/30 text-amber-300 rounded-lg text-xs">
+                          <AlertCircle size={12} className="text-amber-300" />
+                          <span>View-only mode</span>
+                        </div>
+                      )}
                      </div>
                    </Panel>
                  </ReactFlow>
@@ -681,8 +769,10 @@ useEffect(() => {
                       </button>
                     </div>
                   </div>
-                )}
-              </div>
+                        className={`flex items-center gap-1 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 rounded-lg transition-all duration-200 text-xs ${
+                          isConnectingNodes || currentUserRole === 'viewer' ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                        disabled={isConnectingNodes || currentUserRole === 'viewer'}
             </div>
           </div>
         </div>
@@ -727,6 +817,7 @@ useEffect(() => {
               setIsConnectingNodes(false);
               setSourceNodeId(null);
             }}
+            currentUserRole={currentUserRole}
           />
         )}
       </AnimatePresence>
@@ -740,6 +831,7 @@ useEffect(() => {
         }}
         node={selectedNode}
         onSave={handleNodeSave}
+        currentUserRole={currentUserRole}
       />
 
       {/* Node Details Modal */}

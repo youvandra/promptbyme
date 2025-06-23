@@ -313,7 +313,7 @@ export const DashboardPage: React.FC = () => {
                                 className="absolute top-full right-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 min-w-[160px]"
                               >
                                 <div className="py-1">
-                                  {user && project.user_id === user.id ? (
+                                  {user && project.user_id === user.id && (
                                     <>
                                       <button
                                         onClick={(e) => {
@@ -338,10 +338,6 @@ export const DashboardPage: React.FC = () => {
                                         <span>Delete</span>
                                       </button>
                                     </>
-                                  ) : (
-                                    <div className="absolute inset-0 bg-zinc-900/80 backdrop-blur-md flex items-center justify-center text-xs text-zinc-400 italic z-10">
-                                      You aren't the project owner.
-                                    </div>
                                   )}
                                 </div>
                               </motion.div>
