@@ -157,7 +157,7 @@ export const ProjectSpacePage: React.FC = () => {
 
  // Custom node components
  const InputNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-purple-600/30 border border-purple-500/30 w-[250px] h-[150px] hover:bg-purple-600/40 hover:border-purple-500/40 transition-all duration-200 flex flex-col overflow-hidden">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-purple-600/30 border border-purple-500/30 w-[250px] h-[150px] hover:bg-purple-600/40 hover:border-purple-500/40 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-white mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
@@ -202,13 +202,13 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-white bg-purple-800/20 p-3 rounded border border-purple-500/20 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
+      <div className="text-xs text-white bg-purple-800/20 p-3 rounded border border-purple-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
      )}
    </div>
  )
 
  const PromptNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/30 border border-blue-500/30 w-[250px] h-[150px] hover:bg-blue-600/40 hover:border-blue-500/40 transition-all duration-200 flex flex-col overflow-hidden">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/30 border border-blue-500/30 w-[250px] h-[150px] hover:bg-blue-600/40 hover:border-blue-500/40 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-white mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
@@ -253,13 +253,13 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-white bg-blue-800/20 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
+      <div className="text-xs text-white bg-blue-800/20 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
      )}
    </div>
  )
 
  const ConditionNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/30 border border-yellow-500/30 w-[250px] h-[150px] hover:bg-yellow-600/40 hover:border-yellow-500/40 transition-all duration-200 flex flex-col overflow-hidden">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/30 border border-yellow-500/30 w-[250px] h-[150px] hover:bg-yellow-600/40 hover:border-yellow-500/40 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-yellow mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
@@ -304,13 +304,13 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-white bg-yellow-800/20 p-3 rounded border border-yellow-500/20 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
+      <div className="text-xs text-white bg-yellow-800/20 p-3 rounded border border-yellow-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
      )}
    </div>
  )
 
  const OutputNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-green-600/30 border border-green-500/30 w-[250px] h-[150px] hover:bg-green-600/40 hover:border-green-500/40 transition-all duration-200 flex flex-col overflow-hidden">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-green-600/30 border border-green-500/30 w-[250px] h-[150px] hover:bg-green-600/40 hover:border-green-500/40 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-white mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
@@ -355,7 +355,7 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-white bg-green-800/20 p-3 rounded border border-green-500/20 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
+      <div className="text-xs text-white bg-green-800/20 p-3 rounded border border-green-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
      )}
    </div>
  )
