@@ -568,19 +568,22 @@ export const ProfilePage: React.FC = () => {
                                 </div>
                               </div>
                             </div>
-                            {formData.isPublicProfile && (
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs text-zinc-500">promptby.me/{formData.displayName}/</span>
+                            {userProfile?.is_public_profile !== false && userProfile?.display_name && (
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-1 px-2 py-1 bg-zinc-800/50 rounded-lg">
+                                  <Globe size={12} className="text-indigo-400" />
+                                  <span className="text-xs text-zinc-300">promptby.me/{userProfile.display_name}/</span>
+                                </div>
                                 <button
                                   onClick={handleCopyProfileLink}
-                                  className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors"
+                                  className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors flex items-center gap-1"
                                   title="Copy profile link"
-                                 >
-                                   {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
-                                 </button>
-                                </div>
-                             )}
-                            
+                                >
+                                  {copied ? <CheckCircle size={12} /> : <Copy size={12} />}
+                                  <span className="text-xs">{copied ? 'Copied!' : 'Copy'}</span>
+                                </button>
+                              </div>
+                            )}
                             <div className="space-y-3">
                               {userProfile?.role && (
                                 <div>
@@ -615,22 +618,7 @@ export const ProfilePage: React.FC = () => {
                                 : 'Your profile and prompts are hidden from others'
                               }
                             </p>
-                            {userProfile?.is_public_profile !== false && userProfile?.display_name && (
-                              <div className="flex items-center gap-2 mt-1">
-                                <div className="flex items-center gap-1 px-2 py-1 bg-zinc-800/50 rounded-lg">
-                                  <Globe size={12} className="text-indigo-400" />
-                                  <span className="text-xs text-zinc-300">promptby.me/{userProfile.display_name}/</span>
-                                </div>
-                                <button
-                                  onClick={handleCopyProfileLink}
-                                  className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors flex items-center gap-1"
-                                  title="Copy profile link"
-                                >
-                                  {copied ? <CheckCircle size={12} /> : <Copy size={12} />}
-                                  <span className="text-xs">{copied ? 'Copied!' : 'Copy'}</span>
-                                </button>
-                              </div>
-                            )}
+
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
