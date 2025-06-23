@@ -7,23 +7,59 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
   try {
-    // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders })
+    }
+
+    // Check if required environment variables are available
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing environment variables:', {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!supabaseServiceKey
+      })
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Server configuration error: Missing required environment variables'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
         }
-      }
-    )
+      )
+    }
+
+    // Create Supabase client with error handling
+    let supabaseClient
+    try {
+      supabaseClient = createClient(
+        supabaseUrl,
+        supabaseServiceKey,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      )
+    } catch (clientError) {
+      console.error('Failed to create Supabase client:', clientError)
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Server configuration error: Failed to initialize database client'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      )
+    }
 
     // Get the authorization header
     const authHeader = req.headers.get('Authorization')
@@ -42,13 +78,30 @@ Deno.serve(async (req) => {
 
     // Verify the user's JWT token
     const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
-    
-    if (authError || !user) {
+    let user
+    try {
+      const { data: { user: authUser }, error: authError } = await supabaseClient.auth.getUser(token)
+      
+      if (authError || !authUser) {
+        console.error('Auth error:', authError)
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Invalid authentication token'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 401,
+          }
+        )
+      }
+      user = authUser
+    } catch (authError) {
+      console.error('Authentication failed:', authError)
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Invalid authentication token'
+          error: 'Authentication failed'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -60,25 +113,26 @@ Deno.serve(async (req) => {
     // Get project_id from either query params (GET) or request body (POST)
     let project_id
     
-    if (req.method === 'GET') {
-      const url = new URL(req.url)
-      project_id = url.searchParams.get('project_id')
-    } else if (req.method === 'POST') {
-      try {
+    try {
+      if (req.method === 'GET') {
+        const url = new URL(req.url)
+        project_id = url.searchParams.get('project_id')
+      } else if (req.method === 'POST') {
         const body = await req.json()
         project_id = body.project_id
-      } catch (e) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'Invalid JSON in request body'
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
-          }
-        )
       }
+    } catch (parseError) {
+      console.error('Error parsing request:', parseError)
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid request format'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
     }
     
     if (!project_id) {
@@ -102,6 +156,7 @@ Deno.serve(async (req) => {
       .single()
 
     if (projectError) {
+      console.error('Project fetch error:', projectError)
       return new Response(
         JSON.stringify({
           success: false,
@@ -251,12 +306,12 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error in get-project-members function:', error)
+    console.error('Unexpected error in get-project-members function:', error)
     
     return new Response(
       JSON.stringify({
         success: false,
-        error: (error && error.message) || 'An unexpected error occurred'
+        error: 'An unexpected error occurred: ' + (error?.message || 'Unknown error')
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
