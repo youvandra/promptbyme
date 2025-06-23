@@ -35,7 +35,7 @@ export const NodeContextualToolbar: React.FC<NodeContextualToolbarProps> = ({
   // Function to handle node deletion with confirmation
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (window.confirm(`Are you sure you want to delete this ${nodeData.type} node?`)) {
+    if (window.confirm(`HI you sure you want to delete this ${nodeData.type} node?`)) {
       onDelete(node.id)
     }
   }
