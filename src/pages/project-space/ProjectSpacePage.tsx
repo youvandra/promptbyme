@@ -696,13 +696,7 @@ useEffect(() => {
         projectId={selectedProject?.id || ''}
         currentUserRole={currentUserRole}
       />
-
-      <ProjectMembersModal
-        isOpen={showMembersModal}
-        onClose={() => setShowMembersModal(false)}
-        projectId={selectedProject?.id || ''}
-        currentUserRole={currentUserRole}
-      />
+      
       <AnimatePresence>
         {(selectedNodeForToolbar || selectedNode) && (
           <NodeDetailsToolbar
