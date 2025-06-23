@@ -608,6 +608,7 @@ export const ProfilePage: React.FC = () => {
                   <div className="space-y-4">
                       {/* Public Profile Setting (Read-only when not editing) */}
                       <div className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl border border-zinc-700/30">
+                        
                         <div className="flex items-center justify-between">
                           <div>
                             <h4 className="font-medium text-white text-sm">Public Profile</h4>
@@ -621,6 +622,7 @@ export const ProfilePage: React.FC = () => {
   
                             </div>
                           </div>
+                          
                           <div className="flex items-center gap-2">
                             <div className={`w-2 h-2 rounded-full ${
                               userProfile?.is_public_profile !== false ? 'bg-emerald-400' : 'bg-red-400'
@@ -632,6 +634,7 @@ export const ProfilePage: React.FC = () => {
                             </span>
                           </div>
                         </div>
+                      </div>
                     </div>
 
                     <div className="border-t border-zinc-700/50 pt-4">
@@ -649,6 +652,7 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
 
       {/* Toast */}
       {toast && (
