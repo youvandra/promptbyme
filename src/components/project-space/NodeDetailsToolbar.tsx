@@ -50,7 +50,7 @@ export const NodeDetailsToolbar: React.FC<NodeDetailsToolbarProps> = ({
 
   return (
     <motion.div
-      className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-800/50 rounded-xl shadow-xl z-50"
+      className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-800/50 rounded-xl shadow-xl z-50 max-w-[90vw]"
       initial={{ opacity: 0, y: 20, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.9 }}
@@ -58,8 +58,8 @@ export const NodeDetailsToolbar: React.FC<NodeDetailsToolbarProps> = ({
     >
       <div className="flex items-center p-1">
         {/* Node info */}
-        <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${getNodeColor()}`}>
-          <span className="font-medium text-sm">{selectedNode.title}</span>
+        <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${getNodeColor()} overflow-hidden`}>
+          <span className="font-medium text-sm truncate max-w-[200px]">{selectedNode.title}</span>
           <span className="text-xs px-2 py-0.5 bg-zinc-800/50 rounded-full">
             {selectedNode.type}
           </span>

@@ -775,10 +775,11 @@ useEffect(() => {
       </div>
 
       {/* Node Details Toolbar */}
+      {/* Node Details Toolbar */}
       <AnimatePresence>
-        {selectedNodeForToolbar && (
+        {(selectedNodeForToolbar || selectedNode) && (
           <NodeDetailsToolbar
-            selectedNode={selectedNodeForToolbar}
+            selectedNode={selectedNodeForToolbar || selectedNode}
             onEdit={(nodeId) => {
               const node = selectedProject?.nodes?.find(n => n.id === nodeId);
               if (node) {
@@ -796,26 +797,6 @@ useEffect(() => {
             }}
             onClose={() => {
               setSelectedNodeForToolbar(null);
-              setActiveNodeId(null);
-            }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Node Details Toolbar */}
-      <AnimatePresence>
-        {selectedNode && (
-          <NodeDetailsToolbar
-            selectedNode={selectedNode}
-            onEdit={(nodeId) => {
-              setShowNodeEditor(true);
-            }}
-            onDelete={handleNodeDelete}
-            onViewDetails={(nodeId) => {
-              setShowNodeDetails(true);
-            }}
-            onClose={() => {
-              setSelectedNode(null);
               setActiveNodeId(null);
             }}
           />
