@@ -350,24 +350,7 @@ export const DashboardPage: React.FC = () => {
                       )}
                       
                       {/* Project Stats */}
-                      <div className="mt-auto">
-                        <div className="flex items-center justify-between text-xs text-zinc-500 mb-4">
-                          <div className="flex items-center gap-1">
-                            <Calendar size={12} />
-                            <span>{formatDate(project.created_at)}</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1">
-                              <Layers size={12} />
-                              <span>{project.node_count || 0} nodes</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users size={12} />
-                              <span>{project.member_count || 1} members</span>
-                            </div>
-                          </div>
-                        </div>
-                        
+                      <div className="mt-auto">          
                         {/* Open Project Button */}
                         <button
                           onClick={() => handleOpenProject(project.id)}
