@@ -44,6 +44,7 @@ import { PromptImportModal } from '../../components/project-space/PromptImportMo
 import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar'
 import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
+import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -59,6 +60,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showNodeEditor, setShowNodeEditor] = useState(false)
   const [showNodeDetails, setShowNodeDetails] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [showMembersModal, setShowMembersModal] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [selectedNodeForToolbar, setSelectedNodeForToolbar] = useState<FlowNode | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -644,6 +646,7 @@ useEffect(() => {
                       {/* Team Members Display */}
                       {selectedProject && (
                         <TeamMembersDisplay 
+                          onClick={() => setShowMembersModal(true)}
                           projectId={selectedProject.id}
                           currentUserRole={currentUserRole}
                         />
@@ -773,6 +776,14 @@ useEffect(() => {
           </div>
         </div>
       </div>
+
+      {/* Project Members Modal */}
+      <ProjectMembersModal
+        isOpen={showMembersModal}
+        onClose={() => setShowMembersModal(false)}
+        projectId={selectedProject?.id || ''}
+        currentUserRole={currentUserRole}
+      />
 
       {/* Node Details Toolbar */}
       {/* Node Details Toolbar */}

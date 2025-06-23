@@ -4,11 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useProjectSpaceStore, ProjectMember } from '../../store/projectSpaceStore'
 
 interface TeamMembersDisplayProps {
+  onClick: () => void
   projectId: string
   currentUserRole: string | null
 }
 
 export const TeamMembersDisplay: React.FC<TeamMembersDisplayProps> = ({
+  onClick,
   projectId,
   currentUserRole
 }) => {
@@ -179,7 +181,7 @@ export const TeamMembersDisplay: React.FC<TeamMembersDisplayProps> = ({
       {/* Member count and dropdown */}
       <div className="relative">
         <button
-          onClick={() => setExpandedMember(expandedMember ? null : 'list')}
+          onClick={onClick}
           className="flex items-center gap-1 px-2 py-1 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
         >
           <Users size={14} />
@@ -190,138 +192,6 @@ export const TeamMembersDisplay: React.FC<TeamMembersDisplayProps> = ({
           <MoreVertical size={12} />
         </button>
 
-        {/* Members dropdown */}
-        <AnimatePresence>
-          {expandedMember === 'list' && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute top-full right-0 mt-2 w-80 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto"
-            >
-              <div className="p-4">
-                <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
-                  <Users size={16} />
-                  Project Members ({projectMembers.length})
-                </h3>
-                
-                <div className="space-y-3">
-                  {/* Accepted Members */}
-                  {acceptedMembers.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between p-2 bg-zinc-800/30 rounded-lg">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        {member.avatar_url ? (
-                          <img
-                            src={member.avatar_url}
-                            alt={member.display_name}
-                            className="w-8 h-8 rounded-full"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-semibold">
-                            {getInitials(member.display_name)}
-                          </div>
-                        )}
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-white truncate">
-                              {member.display_name}
-                              {member.is_current_user && (
-                                <span className="text-xs text-indigo-400 ml-1">(You)</span>
-                              )}
-                            </p>
-                          </div>
-                          <p className="text-xs text-zinc-500 truncate">{member.email}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <div className={`px-2 py-1 rounded text-xs border ${getRoleColor(member.role)}`}>
-                          {member.role}
-                        </div>
-                        
-                        {/* Admin actions */}
-                        {currentUserRole === 'admin' && !member.is_current_user && (
-                          <div className="flex items-center gap-1">
-                            {/* Role change dropdown */}
-                            <select
-                              value={member.role}
-                              onChange={(e) => handleRoleUpdate(member.user_id, e.target.value as ProjectMember['role'])}
-                              disabled={actionLoading === member.user_id}
-                              className="text-xs bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-white"
-                            >
-                              <option value="viewer">Viewer</option>
-                              <option value="editor">Editor</option>
-                              <option value="admin">Admin</option>
-                            </select>
-                            
-                            {/* Remove member */}
-                            <button
-                              onClick={() => handleRemoveMember(member.user_id)}
-                              disabled={actionLoading === member.user_id}
-                              className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors disabled:opacity-50"
-                              title="Remove member"
-                            >
-                              <UserMinus size={12} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {/* Pending Members */}
-                  {pendingMembers.length > 0 && (
-                    <>
-                      <div className="border-t border-zinc-700 pt-3 mt-3">
-                        <h4 className="text-xs font-medium text-orange-400 mb-2">
-                          Pending Invitations ({pendingMembers.length})
-                        </h4>
-                      </div>
-                      
-                      {pendingMembers.map((member) => (
-                        <div key={member.id} className="flex items-center justify-between p-2 bg-orange-500/5 border border-orange-500/20 rounded-lg">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400 text-xs font-semibold">
-                              {getInitials(member.display_name)}
-                            </div>
-                            
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-white truncate">
-                                {member.display_name}
-                              </p>
-                              <p className="text-xs text-zinc-500 truncate">{member.email}</p>
-                              <p className="text-xs text-orange-400">
-                                Invited by {member.invited_by}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <div className="px-2 py-1 rounded text-xs border border-orange-500/30 text-orange-400 bg-orange-500/10">
-                              {member.role}
-                            </div>
-                            
-                            {currentUserRole === 'admin' && (
-                              <button
-                                onClick={() => handleRemoveMember(member.user_id)}
-                                disabled={actionLoading === member.user_id}
-                                className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors disabled:opacity-50"
-                                title="Cancel invitation"
-                              >
-                                <UserMinus size={12} />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   )
