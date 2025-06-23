@@ -282,7 +282,7 @@ export const DashboardPage: React.FC = () => {
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setShowProjectMenu(null);
-                                      // Open project settings (to be implemented)
+                                      handleProjectSettings(project.id);
                                     }}
                                     className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
                                   >
