@@ -158,7 +158,7 @@ export const ProjectSpacePage: React.FC = () => {
          nodeData: node,
         activeNodeId: activeNodeId,
          sourceHandlePosition,
-         targetHandlePosition
+         targetHandlePosition,
          onEdit: (nodeId: string) => {
            const node = selectedProject?.nodes?.find(n => n.id === nodeId)
            if (node) {
