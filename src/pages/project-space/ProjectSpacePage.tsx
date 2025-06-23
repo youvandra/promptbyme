@@ -218,7 +218,7 @@ export const ProjectSpacePage: React.FC = () => {
 
  const ConditionNode = ({ data }: NodeProps) => (
   <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/30 border border-yellow-500/30 w-[250px] h-[150px] hover:bg-yellow-600/40 hover:border-yellow-500/40 transition-all duration-200 flex flex-col overflow-hidden">
-    <div className="font-bold text-sm text-white mb-3">{data.label}</div>
+    <div className="font-bold text-sm text-yellow mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
          node={data.nodeData}
