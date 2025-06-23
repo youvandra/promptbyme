@@ -292,4 +292,3 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
       />
     </>
   )
-}
