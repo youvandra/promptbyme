@@ -157,7 +157,7 @@ export const ProjectSpacePage: React.FC = () => {
 
  // Custom node components
  const InputNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-purple-600/20 border border-purple-500/30 w-[250px] h-[150px] hover:bg-purple-600/30 hover:border-purple-500/50 transition-all duration-200 flex flex-col overflow-hidden">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-purple-600 border border-purple-600 w-[250px] h-[150px] hover:bg-purple-700 hover:border-purple-700 transition-all duration-200 flex flex-col overflow-hidden">
     <div className="font-bold text-sm text-purple-300 mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
@@ -181,13 +181,13 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-purple-200 bg-zinc-900 p-3 rounded border border-purple-500/20 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
+      <div className="text-xs text-purple-200 bg-zinc-900 p-3 rounded border border-purple-600 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
      )}
    </div>
  )
 
  const PromptNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/20 border border-blue-500/30 w-[250px] h-[150px] hover:bg-blue-600/30 hover:border-blue-500/50 transition-all duration-200 flex flex-col overflow-hidden">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600 border border-blue-600 w-[250px] h-[150px] hover:bg-blue-700 hover:border-blue-700 transition-all duration-200 flex flex-col overflow-hidden">
     <div className="font-bold text-sm text-blue-300 mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
@@ -211,13 +211,13 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-blue-200 bg-zinc-900 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
+      <div className="text-xs text-blue-200 bg-zinc-900 p-3 rounded border border-blue-600 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
      )}
    </div>
  )
 
  const ConditionNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/20 border border-yellow-500/30 w-[250px] h-[150px] hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-200 flex flex-col overflow-hidden">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600 border border-yellow-600 w-[250px] h-[150px] hover:bg-yellow-700 hover:border-yellow-700 transition-all duration-200 flex flex-col overflow-hidden">
     <div className="font-bold text-sm text-yellow-300 mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
@@ -241,13 +241,13 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-yellow-200 bg-zinc-900 p-3 rounded border border-yellow-500/20 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
+      <div className="text-xs text-yellow-200 bg-zinc-900 p-3 rounded border border-yellow-600 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
      )}
    </div>
  )
 
  const OutputNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-green-600/20 border border-green-500/30 w-[250px] h-[150px] hover:bg-green-600/30 hover:border-green-500/50 transition-all duration-200 flex flex-col overflow-hidden">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-green-600 border border-green-600 w-[250px] h-[150px] hover:bg-green-700 hover:border-green-700 transition-all duration-200 flex flex-col overflow-hidden">
     <div className="font-bold text-sm text-green-300 mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
@@ -271,7 +271,7 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-green-200 bg-zinc-900 p-3 rounded border border-green-500/20 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
+      <div className="text-xs text-green-200 bg-zinc-900 p-3 rounded border border-green-600 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
      )}
    </div>
  )
