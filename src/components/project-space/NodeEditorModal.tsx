@@ -223,7 +223,8 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
               <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 backdrop-blur-sm">
                 <h4 className="text-sm font-medium text-indigo-300 mb-2 flex items-center gap-2">
                   <Wand2 size={16} />
-                  Variables detected: {detectedVariables.join(', ')}
+                  <span>Variables detected: </span>
+                  <span className="text-indigo-400 font-medium">{detectedVariables.join(', ')}</span>
                 </h4>
                 <div 
                   className="text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap"

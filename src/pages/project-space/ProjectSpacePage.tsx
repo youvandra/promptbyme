@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import ReactFlow, {
   Background,
+  NodeMouseHandler,
   Controls,
   MiniMap,
   Panel,
@@ -41,6 +42,7 @@ import { NodeEditorModal } from '../../components/project-space/NodeEditorModal'
 import { NodeDetailsModal } from '../../components/project-space/NodeDetailsModal'
 import { PromptImportModal } from '../../components/project-space/PromptImportModal'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
+import { NodeContextualToolbar } from '../../components/project-space/NodeContextualToolbar'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -59,6 +61,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showProjectSettings, setShowProjectSettings] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
+  const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('viewer')
   const [isInviting, setIsInviting] = useState(false)
   const [projectNameInput, setProjectNameInput] = useState('')
@@ -156,6 +159,27 @@ export const ProjectSpacePage: React.FC = () => {
  const InputNode = ({ data }: NodeProps) => (
   <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/20 border border-blue-500/30 w-[250px] h-[150px] hover:bg-blue-600/30 hover:border-blue-500/50 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-blue-300 mb-3">{data.label}</div>
+     {activeNodeId === data.nodeData.id && (
+       <NodeContextualToolbar
+         node={data.nodeData}
+         nodeData={data.nodeData}
+         onEdit={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeEditor(true)
+           }
+         }}
+         onDelete={handleNodeDelete}
+         onViewDetails={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeDetails(true)
+           }
+         }}
+       />
+     )}
      {data.content && (
       <div className="text-xs text-blue-200 bg-zinc-900/50 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1">{data.content}</div>
      )}
@@ -165,6 +189,27 @@ export const ProjectSpacePage: React.FC = () => {
  const PromptNode = ({ data }: NodeProps) => (
   <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/20 border border-blue-500/30 w-[250px] h-[150px] hover:bg-blue-600/30 hover:border-blue-500/50 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-blue-300 mb-3">{data.label}</div>
+     {activeNodeId === data.nodeData.id && (
+       <NodeContextualToolbar
+         node={data.nodeData}
+         nodeData={data.nodeData}
+         onEdit={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeEditor(true)
+           }
+         }}
+         onDelete={handleNodeDelete}
+         onViewDetails={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeDetails(true)
+           }
+         }}
+       />
+     )}
      {data.content && (
       <div className="text-xs text-blue-200 bg-zinc-900/50 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1">{data.content}</div>
      )}
@@ -174,6 +219,27 @@ export const ProjectSpacePage: React.FC = () => {
  const ConditionNode = ({ data }: NodeProps) => (
   <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/20 border border-yellow-500/30 w-[250px] h-[150px] hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-yellow-300 mb-3">{data.label}</div>
+     {activeNodeId === data.nodeData.id && (
+       <NodeContextualToolbar
+         node={data.nodeData}
+         nodeData={data.nodeData}
+         onEdit={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeEditor(true)
+           }
+         }}
+         onDelete={handleNodeDelete}
+         onViewDetails={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeDetails(true)
+           }
+         }}
+       />
+     )}
      {data.content && (
       <div className="text-xs text-yellow-200 bg-zinc-900/50 p-3 rounded border border-yellow-500/20 overflow-y-auto flex-1">{data.content}</div>
      )}
@@ -183,6 +249,27 @@ export const ProjectSpacePage: React.FC = () => {
  const OutputNode = ({ data }: NodeProps) => (
   <div className="px-4 py-3 shadow-md rounded-lg bg-green-600/20 border border-green-500/30 w-[250px] h-[150px] hover:bg-green-600/30 hover:border-green-500/50 transition-all duration-200 flex flex-col">
     <div className="font-bold text-sm text-green-300 mb-3">{data.label}</div>
+     {activeNodeId === data.nodeData.id && (
+       <NodeContextualToolbar
+         node={data.nodeData}
+         nodeData={data.nodeData}
+         onEdit={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeEditor(true)
+           }
+         }}
+         onDelete={handleNodeDelete}
+         onViewDetails={(nodeId) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeDetails(true)
+           }
+         }}
+       />
+     )}
      {data.content && (
       <div className="text-xs text-green-200 bg-zinc-900/50 p-3 rounded border border-green-500/20 overflow-y-auto flex-1">{data.content}</div>
      )}
@@ -197,14 +284,27 @@ export const ProjectSpacePage: React.FC = () => {
    output: OutputNode
  }
 
+  const handleNodeDelete = async (nodeId: string) => {
+    try {
+      await deleteNode(nodeId)
+      setActiveNodeId(null)
+      setToast({ message: 'Node deleted successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to delete node:', error)
+      setToast({ message: 'Failed to delete node', type: 'error' })
+    }
+  }
+
  // Handle node click
  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
    const flowNode = selectedProject?.nodes?.find(n => n.id === node.id)
-   if (flowNode) {
-     setSelectedNode(flowNode)
-     setShowNodeDetails(true)
-   }
+   setActiveNodeId(node.id)
  }, [selectedProject?.nodes])
+
+  // Handle background click to deselect node
+  const onPaneClick = useCallback(() => {
+    setActiveNodeId(null)
+  }, [])
 
  // Handle edge click
  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
@@ -633,6 +733,7 @@ export const ProjectSpacePage: React.FC = () => {
                    onNodesChange={onNodesChange}
                    onEdgesChange={onEdgesChange}
                    onConnect={onConnect}
+                   onPaneClick={onPaneClick}
                    onNodeClick={onNodeClick}
                    onEdgeClick={onEdgeClick}
                    onNodeDragStop={onNodeDragStop}
