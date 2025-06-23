@@ -598,38 +598,6 @@ useEffect(() => {
                                     <div className="border-t border-zinc-800 my-2"></div>
                                   </>
                                 )}
-                                
-                                <div className="p-2">
-                                  <div className="text-xs font-medium text-zinc-500 mb-2 px-2">
-                                    Create New Project
-                                  </div>
-                                  <div className="space-y-2">
-                                    <input
-                                      type="text"
-                                      value={newProjectName}
-                                      onChange={(e) => setNewProjectName(e.target.value)}
-                                      placeholder="Project name"
-                                      className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 text-sm"
-                                    />
-                                    <button
-                                      onClick={handleCreateProject}
-                                      disabled={!newProjectName.trim() || isCreatingProject}
-                                      className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-lg transition-all duration-200 text-sm"
-                                    >
-                                      {isCreatingProject ? (
-                                        <>
-                                          <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                          <span>Creating...</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Plus size={14} />
-                                          <span>Create Project</span>
-                                        </>
-                                      )}
-                                    </button>
-                                  </div>
-                                </div>
                               </div>
                             </motion.div>
                           )}
