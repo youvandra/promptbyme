@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   Home,
   User, 
@@ -26,6 +26,7 @@ interface SideNavbarProps {
 
 export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation()
+  const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
   const { 
     userInvitations, 
@@ -43,7 +44,8 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
     setIsSigningOut(true)
     try {
       await signOut()
-      onToggle() // Close sidebar after sign out
+      onToggle()
+      navigate("/")
     } catch (error) {
       console.error('Sign out error:', error)
     } finally {
@@ -103,6 +105,12 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
     setActionLoading(projectId)
     try {
       await manageInvitation(projectId, action)
+      
+      // If accepted, navigate to the project space page
+      if (action === 'accept') {
+        setShowNotifications(false)
+        navigate('/project-space')
+      }
     } catch (error) {
       console.error(`Failed to ${action} invitation:`, error)
     } finally {

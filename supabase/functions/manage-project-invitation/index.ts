@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
     // Find the pending invitation
     const { data: invitation, error: invitationError } = await supabaseClient
       .from('project_members')
-      .select('id, status')
+      .select('id, status, project_id')
       .eq('project_id', project_id)
       .eq('user_id', user.id)
       .eq('status', 'pending')
@@ -145,11 +145,29 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Add entry to audit log if accepted
+    if (action === 'accept') {
+      try {
+        await supabaseClient
+          .from('team_audit_log')
+          .insert({
+            project_id: project_id,
+            user_id: user.id,
+            action: 'joined_project',
+            details: { invitation_id: invitation.id }
+          })
+      } catch (logError) {
+        console.error('Failed to log action:', logError)
+        // Don't fail the request if logging fails
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         message: `Invitation ${action}ed successfully`,
-        status: newStatus
+        status: newStatus,
+        project_id: invitation.project_id
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -163,7 +181,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'An unexpected error occurred'
+        error: (error && error.message) || 'An unexpected error occurred'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

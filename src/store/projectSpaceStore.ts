@@ -8,7 +8,7 @@ export interface FlowNode {
   type: 'input' | 'prompt' | 'condition' | 'output'
   title: string
   content: string
-  position: { x: number; y: number }
+  position: { x: number; y: number } // For React Flow
   imported_prompt_id?: string | null
   metadata?: {
     tags?: string[]
@@ -323,7 +323,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
         
         // Set default content for different node types if no prompt is imported
-        if (!promptId) {
+        if (!defaultContent) {
           switch (type) {
             case 'input':
               defaultContent = 'Define your input parameters here...'
@@ -342,7 +342,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         
         const { data: node, error } = await supabase
           .from('flow_nodes')
-          .insert([{
+          .insert({
             project_id: projectId,
             type,
             title: nodeTitle,
@@ -355,7 +355,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
               variables: [],
               estimatedTokens: 0
             }
-          }])
+          })
           .select()
           .single()
 
@@ -381,63 +381,6 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         return transformedNode
       } catch (error) {
         console.error('Error creating node:', error)
-        throw error
-      }
-    },
-
-    duplicateNode: async (nodeId: string, offset: { x: number, y: number } = { x: 50, y: 50 }) => {
-      try {
-        // Get the original node
-        const { data: originalNode, error: fetchError } = await supabase
-          .from('flow_nodes')
-          .select('*')
-          .eq('id', nodeId)
-          .single()
-
-        if (fetchError || !originalNode) {
-          throw new Error('Failed to fetch original node')
-        }
-
-        // Create a new node with the same properties but at an offset position
-        const { data: newNode, error: createError } = await supabase
-          .from('flow_nodes')
-          .insert([{
-            project_id: originalNode.project_id,
-            type: originalNode.type,
-            title: `Copy of ${originalNode.title}`,
-            content: originalNode.content,
-            position_x: originalNode.position_x + offset.x,
-            position_y: originalNode.position_y + offset.y,
-            imported_prompt_id: originalNode.imported_prompt_id,
-            metadata: originalNode.metadata
-          }])
-          .select()
-          .single()
-
-        if (createError) {
-          throw createError
-        }
-
-        // Transform node to include position object
-        const transformedNode: FlowNode = {
-          ...newNode,
-          position: { x: newNode.position_x, y: newNode.position_y }
-        }
-
-        // Update selected project if it contains this node
-        const { selectedProject } = get()
-        if (selectedProject?.id === originalNode.project_id) {
-          set({
-            selectedProject: {
-              ...selectedProject,
-              nodes: [...(selectedProject.nodes || []), transformedNode]
-            }
-          })
-        }
-
-        return transformedNode
-      } catch (error) {
-        console.error('Error duplicating node:', error)
         throw error
       }
     },
@@ -546,6 +489,63 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
       } catch (error) {
         console.error('Error moving node:', error)
+        throw error
+      }
+    },
+
+    duplicateNode: async (nodeId: string, offset: { x: number, y: number } = { x: 50, y: 50 }) => {
+      try {
+        // Get the original node
+        const { data: originalNode, error: fetchError } = await supabase
+          .from('flow_nodes')
+          .select('*')
+          .eq('id', nodeId)
+          .single()
+
+        if (fetchError || !originalNode) {
+          throw new Error('Failed to fetch original node')
+        }
+
+        // Create a new node with the same properties but at an offset position
+        const { data: newNode, error: createError } = await supabase
+          .from('flow_nodes')
+          .insert([{
+            project_id: originalNode.project_id,
+            type: originalNode.type,
+            title: `Copy of ${originalNode.title}`,
+            content: originalNode.content,
+            position_x: originalNode.position_x + offset.x,
+            position_y: originalNode.position_y + offset.y,
+            imported_prompt_id: originalNode.imported_prompt_id,
+            metadata: originalNode.metadata
+          }])
+          .select()
+          .single()
+
+        if (createError) {
+          throw createError
+        }
+
+        // Transform node to include position object
+        const transformedNode: FlowNode = {
+          ...newNode,
+          position: { x: newNode.position_x, y: newNode.position_y }
+        }
+
+        // Update selected project if it contains this node
+        const { selectedProject } = get()
+        if (selectedProject?.id === originalNode.project_id) {
+          set({
+            selectedProject: {
+              ...selectedProject,
+              nodes: [...(selectedProject.nodes || []), transformedNode]
+            }
+          })
+        }
+
+        return transformedNode
+      } catch (error) {
+        console.error('Error duplicating node:', error)
         throw error
       }
     },
@@ -749,7 +749,17 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         
         // If accepted, refresh projects list
         if (action === 'accept') {
+         // Fetch the projects to ensure the newly accepted project is included
           await get().fetchProjects()
+          
+          // Find the newly accepted project
+          const { projects } = get()
+          const acceptedProject = projects.find(p => p.id === projectId)
+          
+          // If found, select it to make it the active project
+          if (acceptedProject) {
+            await get().selectProject(acceptedProject)
+          }
         }
       } catch (error) {
         console.error(`Error ${action}ing invitation:`, error)

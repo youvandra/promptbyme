@@ -7,12 +7,12 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
   try {
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders })
+    }
+
     // Check if required environment variables are available
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -34,21 +34,21 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Create Supabase client
-    const supabaseClient = createClient(
-      supabaseUrl,
-      supabaseServiceKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
+    // Create Supabase client with error handling
+    let supabaseClient
+    try {
+      supabaseClient = createClient(
+        supabaseUrl,
+        supabaseServiceKey,
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
         }
-      }
-    )
-
-    // Verify the client was created successfully
-    if (!supabaseClient) {
-      console.error('Failed to create Supabase client')
+      )
+    } catch (clientError) {
+      console.error('Failed to create Supabase client:', clientError)
       return new Response(
         JSON.stringify({
           success: false,
@@ -78,13 +78,30 @@ Deno.serve(async (req) => {
 
     // Verify the user's JWT token
     const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
-    
-    if (authError || !user) {
+    let user
+    try {
+      const { data: { user: authUser }, error: authError } = await supabaseClient.auth.getUser(token)
+      
+      if (authError || !authUser) {
+        console.error('Auth error:', authError)
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Invalid authentication token'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 401,
+          }
+        )
+      }
+      user = authUser
+    } catch (authError) {
+      console.error('Authentication failed:', authError)
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Invalid authentication token'
+          error: 'Authentication failed'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -171,12 +188,12 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error in get-user-invitations function:', error)
+    console.error('Unexpected error in get-user-invitations function:', error)
     
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || 'An unexpected error occurred'
+        error: 'An unexpected error occurred: ' + (error?.message || 'Unknown error')
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

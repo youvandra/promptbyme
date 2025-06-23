@@ -352,3 +352,72 @@ html {
 .depth-layer-3 { z-index: 30; }
 .depth-layer-4 { z-index: 40; }
 .depth-layer-5 { z-index: 50; }
+
+/* React Flow Node Customization */
+.react-flow__node {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure node handles are visible */
+.react-flow__handle {
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 255, 255, 1);
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
+}
+
+.react-flow__handle:hover {
+  background: white;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.8);
+}
+
+/* Make edges more visible */
+.react-flow__edge {
+  filter: drop-shadow(0 0 3px rgba(99, 102, 241, 0.5));
+}
+
+.react-flow__edge.selected {
+  filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.8));
+}
+
+.react-flow__edge-path {
+  stroke-linecap: round;
+}
+/* React Flow Node Customization */
+.react-flow__node {
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Ensure node handles are visible */
+.react-flow__handle {
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 255, 255, 1);
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
+}
+
+.react-flow__handle:hover {
+  background: white;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.8);
+}
+
+/* Make edges more visible */
+.react-flow__edge {
+  filter: drop-shadow(0 0 3px rgba(99, 102, 241, 0.5));
+}
+
+.react-flow__edge.selected {
+  filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.8));
+}
+
+.react-flow__edge-path {
+  stroke-linecap: round;
+}

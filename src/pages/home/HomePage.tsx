@@ -12,6 +12,7 @@ import { useFolderStore } from '../../store/folderStore'
 import { useToast } from '../../hooks/useToast'
 
 export const HomePage: React.FC = () => {
+  const [promptEditorKey, setPromptEditorKey] = useState(0)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { toast, showToast, hideToast } = useToast()
@@ -58,6 +59,7 @@ export const HomePage: React.FC = () => {
 
       await createPrompt(promptData)
       showToast('Prompt saved successfully', 'success')
+      setPromptEditorKey(prevKey => prevKey + 1) // Increment key to reset the form
     } catch (error) {
       showToast('Failed to save prompt', 'error')
     }
@@ -146,6 +148,7 @@ export const HomePage: React.FC = () => {
 
                 {/* Prompt Editor */}
                 <PromptEditor
+                  key={promptEditorKey}
                   onSave={handleCreatePrompt}
                   onCreateVersion={handleCreateVersion}
                 />
