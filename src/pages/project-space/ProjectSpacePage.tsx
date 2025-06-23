@@ -287,11 +287,11 @@ export const ProjectSpacePage: React.FC = () => {
   const handleAddNode = async (type: FlowNode['type']) => {
     if (!selectedProject || !canvasRef.current) return
     
-    // Calculate center position of the canvas
+    // Calculate top-center position of the canvas
     const canvasRect = canvasRef.current.getBoundingClientRect()
     const position = {
       x: canvasRect.width / 2,
-      y: canvasRect.height / 2
+      y: 100 // Fixed Y position near the top
     }
     
     try {
@@ -323,11 +323,11 @@ export const ProjectSpacePage: React.FC = () => {
   const handlePromptSelected = async (prompt: any) => {
     if (!selectedProject || !canvasRef.current) return
     
-    // Calculate center position of the canvas
+    // Calculate top-center position of the canvas
     const canvasRect = canvasRef.current.getBoundingClientRect()
     const position = {
       x: canvasRect.width / 2,
-      y: canvasRect.height / 2
+      y: 100 // Fixed Y position near the top
     }
     
     try {
