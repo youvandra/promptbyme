@@ -46,7 +46,7 @@ export const NodeDetailsToolbar: React.FC<NodeDetailsToolbarProps> = ({
 
   // Function to handle node deletion with confirmation
   const handleDelete = () => {
-    if (window.confirm(`Are you sure you want to delete this ${selectedNode.type} node?`)) {
+    if (window.confirm(`(nodedetails) Are you sure you want to delete this ${selectedNode.type} node?`)) {
       onDelete(selectedNode.id)
     }
   }
