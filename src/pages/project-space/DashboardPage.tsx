@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   Menu, 
-  Plus, 
+  Plus,
+  UserPlus,
   Layers, 
   Settings, 
   Users, 
@@ -154,6 +155,10 @@ export const DashboardPage: React.FC = () => {
     project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (project.description && project.description.toLowerCase().includes(searchQuery.toLowerCase()))
   )
+  
+  // Separate projects into "My Projects" and "Shared with Me"
+  const myProjects = filteredProjects.filter(project => project.user_id === user?.id)
+  const sharedProjects = filteredProjects.filter(project => project.user_id !== user?.id)
 
   if (authLoading || loading) {
     return (
@@ -244,7 +249,7 @@ export const DashboardPage: React.FC = () => {
               </div>
 
               {/* Search Bar */}
-              <div className="mb-8">
+              <div className="mb-6">
                 <div className="relative">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
                   <input
@@ -257,141 +262,223 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Projects Grid */}
-              {filteredProjects.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredProjects.map((project) => (
-                    <motion.div
-                      key={project.id}
-                      className="group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full"
-                      whileHover={{ y: -5 }}
-                    >
-                      {/* Project Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1">
-                            {project.name}
-                          </h3>
-                          <div className="flex items-center gap-2 text-sm">
-                            {project.visibility === 'private' ? (
-                              <div className="flex items-center gap-1 text-amber-400">
-                                <EyeOff size={14} />
-                                <span>Private</span>
-                              </div>
-                            ) : project.visibility === 'team' ? (
-                              <div className="flex items-center gap-1 text-blue-400">
-                                <Users size={14} />
-                                <span>Team</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1 text-emerald-400">
-                                <Globe size={14} />
-                                <span>Public</span>
-                              </div>
-                            )}
+              {/* My Projects Section */}
+              <div className="mb-10">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                    <Layers size={20} className="text-indigo-400" />
+                    My Projects
+                  </h2>
+                </div>
+                
+                {myProjects.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {myProjects.map((project) => (
+                      <motion.div
+                        key={project.id}
+                        className="group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full"
+                        whileHover={{ y: -5 }}
+                      >
+                        {/* Project Header */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1">
+                              {project.name}
+                            </h3>
+                            <div className="flex items-center gap-2 text-sm">
+                              {project.visibility === 'private' ? (
+                                <div className="flex items-center gap-1 text-amber-400">
+                                  <EyeOff size={14} />
+                                  <span>Private</span>
+                                </div>
+                              ) : project.visibility === 'team' ? (
+                                <div className="flex items-center gap-1 text-blue-400">
+                                  <Users size={14} />
+                                  <span>Team</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-emerald-400">
+                                  <Globe size={14} />
+                                  <span>Public</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Project Menu */}
+                          <div className="relative">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowProjectMenu(showProjectMenu === project.id ? null : project.id);
+                              }}
+                              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+                            
+                            <AnimatePresence>
+                              {showProjectMenu === project.id && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                  className="absolute top-full right-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 min-w-[160px]"
+                                >
+                                  <div className="py-1">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowProjectMenu(null);
+                                        handleProjectSettings(project);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
+                                    >
+                                      <Settings size={14} />
+                                      <span>Settings</span>
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowProjectMenu(null);
+                                        handleDeleteProject(project.id);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left text-sm"
+                                    >
+                                      <Trash2 size={14} />
+                                      <span>Delete</span>
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
                         </div>
                         
-                        {/* Project Menu */}
-                        <div className="relative">
+                        {/* Project Description */}
+                        {project.description && (
+                          <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
+                            {project.description}
+                          </p>
+                        )}
+                        
+                        <div className="mt-auto">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowProjectMenu(showProjectMenu === project.id ? null : project.id);
-                            }}
-                            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                            onClick={() => handleOpenProject(project.id)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-lg transition-all duration-200 text-sm"
                           >
-                            <MoreVertical size={16} />
+                            <span>Open Project</span>
+                            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
                           </button>
-                          
-                          <AnimatePresence>
-                            {showProjectMenu === project.id && (
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                className="absolute top-full right-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 min-w-[160px]"
-                              >
-                                <div className="py-1">
-                                  {user && project.user_id === user.id ? (
-                                    <>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setShowProjectMenu(null);
-                                          handleProjectSettings(project);
-                                        }}
-                                        className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
-                                      >
-                                        <Settings size={14} />
-                                        <span>Settings</span>
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setShowProjectMenu(null);
-                                          handleDeleteProject(project.id);
-                                        }}
-                                        className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left text-sm"
-                                      >
-                                        <Trash2 size={14} />
-                                        <span>Delete</span>
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <div className="absolute inset-0 bg-zinc-900/80 backdrop-blur-md flex items-center justify-center text-xs text-zinc-400 italic z-10">
-                                      You aren't the project owner.
-                                    </div>
-                                  )}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
                         </div>
-                      </div>
-                      
-                      {/* Project Description */}
-                      {project.description && (
-                        <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
-                          {project.description}
-                        </p>
-                      )}
-                      
-                      <div className="mt-auto">
-                        <button
-                          onClick={() => handleOpenProject(project.id)}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-lg transition-all duration-200 text-sm"
-                        >
-                          <span>Open Project</span>
-                          <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
-                    <Layers className="mx-auto text-zinc-500 mb-4" size={64} />
-                    <h3 className="text-xl font-semibold text-white mb-2">
-                      {searchQuery ? 'No matching projects' : 'No projects yet'}
-                    </h3>
-                    <p className="text-zinc-400 mb-6">
-                      {searchQuery 
-                        ? 'Try adjusting your search query'
-                        : 'Create your first project to get started'
-                      }
-                    </p>
-                    <button
-                      onClick={() => setShowCreateProject(true)}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
-                    >
-                      <Plus size={16} />
-                      <span>Create First Project</span>
-                    </button>
+                      </motion.div>
+                    ))}
                   </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
+                      <Layers className="mx-auto text-zinc-500 mb-4" size={48} />
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        {searchQuery ? 'No matching projects' : 'No projects yet'}
+                      </h3>
+                      <p className="text-zinc-400 mb-6">
+                        {searchQuery 
+                          ? 'Try adjusting your search query'
+                          : 'Create your first project to get started'
+                        }
+                      </p>
+                      <button
+                        onClick={() => setShowCreateProject(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                      >
+                        <Plus size={16} />
+                        <span>Create First Project</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Shared With Me Section */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                    <UserPlus size={20} className="text-indigo-400" />
+                    Shared With Me
+                  </h2>
                 </div>
-              )}
+                
+                {sharedProjects.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {sharedProjects.map((project) => (
+                      <motion.div
+                        key={project.id}
+                        className="group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full"
+                        whileHover={{ y: -5 }}
+                      >
+                        {/* Project Header */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1">
+                              {project.name}
+                            </h3>
+                            <div className="flex items-center gap-2 text-sm">
+                              {project.visibility === 'private' ? (
+                                <div className="flex items-center gap-1 text-amber-400">
+                                  <EyeOff size={14} />
+                                  <span>Private</span>
+                                </div>
+                              ) : project.visibility === 'team' ? (
+                                <div className="flex items-center gap-1 text-blue-400">
+                                  <Users size={14} />
+                                  <span>Team</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-emerald-400">
+                                  <Globe size={14} />
+                                  <span>Public</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Project Description */}
+                        {project.description && (
+                          <p className="text-zinc-400 text-sm mb-4 line-clamp-2">
+                            {project.description}
+                          </p>
+                        )}
+                        
+                        <div className="mt-auto">
+                          <button
+                            onClick={() => handleOpenProject(project.id)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-lg transition-all duration-200 text-sm"
+                          >
+                            <span>Open Project</span>
+                            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
+                      <UserPlus className="mx-auto text-zinc-500 mb-4" size={48} />
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        {searchQuery ? 'No matching shared projects' : 'No shared projects'}
+                      </h3>
+                      <p className="text-zinc-400 mb-6">
+                        {searchQuery 
+                          ? 'Try adjusting your search query'
+                          : 'Projects shared with you will appear here'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
