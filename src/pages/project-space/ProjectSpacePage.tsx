@@ -730,7 +730,7 @@ useEffect(() => {
       {/* Text for non-editors when node selected */}
       {(selectedNodeForToolbar || selectedNode) &&
         currentUserRole === 'viewer' && (
-          setShowNodeDetails(true);
+          setShowNodeDetails(true)
       )}
 
 
