@@ -44,6 +44,7 @@ import { PromptImportModal } from '../../components/project-space/PromptImportMo
 import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
+import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -61,6 +62,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showNodeDetails, setShowNodeDetails] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
+  const [showMembersModal, setShowMembersModal] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [selectedNodeForToolbar, setSelectedNodeForToolbar] = useState<FlowNode | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -75,6 +77,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [newProjectName, setNewProjectName] = useState('')
+  
   
   const [showCreateProject, setShowCreateProject] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -97,6 +100,24 @@ export const ProjectSpacePage: React.FC = () => {
     deleteConnection,
     inviteProjectMember
   } = useProjectSpaceStore() 
+
+  // Define node types outside of the component render
+  const nodeTypes = React.useMemo(() => ({
+    input: InputNode,
+    prompt: PromptNode,
+    condition: ConditionNode,
+    output: OutputNode
+  }), [])
+
+  // Define edge options outside of the component render
+  const defaultEdgeOptions = React.useMemo(() => ({
+    type: 'straight',
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+    },
+    animated: true,
+    style: { strokeWidth: 2 }
+  }), [])
 
   // Define node types outside of the component render
   const nodeTypes = React.useMemo(() => ({
@@ -155,9 +176,24 @@ export const ProjectSpacePage: React.FC = () => {
          label: node.title,
          content: node.content,
          nodeData: node,
-        activeNodeId: activeNodeId,
+         activeNodeId: activeNodeId,
          sourceHandlePosition,
          targetHandlePosition,
+         onEdit: (nodeId: string) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeEditor(true)
+           }
+         },
+         onDelete: handleNodeDelete,
+         onViewDetails: (nodeId: string) => {
+           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
+           if (node) {
+             setSelectedNode(node)
+             setShowNodeDetails(true)
+           }
+         }
          onEdit: (nodeId: string) => {
            const node = selectedProject?.nodes?.find(n => n.id === nodeId)
            if (node) {
@@ -553,6 +589,7 @@ useEffect(() => {
                         <TeamMembersDisplay 
                           onClick={() => setShowMembersModal(true)}
                           onClick={() => setShowMembersModal(true)}
+                          onClick={() => setShowMembersModal(true)}
                           projectId={selectedProject.id}
                           currentUserRole={currentUserRole}
                         />
@@ -592,13 +629,6 @@ useEffect(() => {
                    fitView
                   connectionLineType={ConnectionLineType.Straight}
                    defaultEdgeOptions={defaultEdgeOptions}
-                   className="bg-zinc-900/30"
-                 >
-                   <Background color="#6366f1" gap={16} size={1} />
-                   <Controls />
-                   <MiniMap 
-                     nodeColor={(node) => {
-                       switch (node.type) {
                          case 'input': return '#8b5cf6';
                          case 'prompt': return '#3b82f6';
                          case 'condition': return '#eab308';
@@ -675,6 +705,13 @@ useEffect(() => {
           </div>
         </div>
       </div>
+
+      <ProjectMembersModal
+        isOpen={showMembersModal}
+        onClose={() => setShowMembersModal(false)}
+        projectId={selectedProject?.id || ''}
+        currentUserRole={currentUserRole}
+      />
 
       <ProjectMembersModal
         isOpen={showMembersModal}
