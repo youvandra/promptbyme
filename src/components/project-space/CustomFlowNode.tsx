@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
 import { Edit3, GitBranch, Target, Upload } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { FlowNode } from '../../store/projectSpaceStore'
 
 const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
+  // Check if this node is the active node
+  const isActive = data.activeNodeId === id
   
   // Get the appropriate icon based on node type
   const getNodeIcon = () => {
@@ -44,7 +46,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <Handle
         type="target"
         position={Position.Top}
-        className="w-3 h-3 bg-zinc-700 border-2 border-white"
+        className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-crosshair"
       />
       
       {/* Node Content */}
@@ -73,7 +75,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <Handle
         type="source"
         position={Position.Bottom}
-        className="w-3 h-3 bg-zinc-700 border-2 border-white"
+        className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-crosshair"
       />
     </div>
   )
