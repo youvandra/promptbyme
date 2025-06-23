@@ -36,7 +36,6 @@ export const DashboardPage: React.FC = () => {
   const [showProjectMenu, setShowProjectMenu] = useState<string | null>(null)
   
   const { user, loading: authLoading } = useAuthStore()
-  const navigate = useNavigate()
   const { 
     projects,
     loading,
