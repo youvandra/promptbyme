@@ -15,10 +15,9 @@ import ReactFlow, {
   NodeProps,
   MarkerType, 
   ConnectionLineType,
-  Position
+  Position,
   MarkerType, 
   ConnectionLineType,
-  Position
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { 
