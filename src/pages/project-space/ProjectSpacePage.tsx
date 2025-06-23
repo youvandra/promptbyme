@@ -662,7 +662,7 @@ export const ProjectSpacePage: React.FC = () => {
                      }}
                      maskColor="rgba(0, 0, 0, 0.5)"
                    />
-                   <Panel position="top-left" className="bg-zinc-900/70 backdrop-blur-sm border border-zinc-800/50 rounded-lg p-2">
+                   <Panel position="top-center" className="bg-zinc-900/70 backdrop-blur-sm border border-zinc-800/50 rounded-lg p-2">
                      <div className="flex flex-wrap items-center gap-2">
                        <button
                          onClick={() => handleAddNode('input')}
