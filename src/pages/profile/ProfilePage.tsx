@@ -631,7 +631,6 @@ export const ProfilePage: React.FC = () => {
                       </span>
                     </div>
                   </div>
-
                     </div>
 
                     <div className="border-t border-zinc-700/50 pt-4">
