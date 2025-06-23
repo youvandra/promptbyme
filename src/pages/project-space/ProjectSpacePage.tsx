@@ -574,7 +574,7 @@ useEffect(() => {
                                 {projects.length > 0 && (
                                   <>
                                     <div className="text-xs font-medium text-zinc-500 mb-2 px-2">
-                                      Your Projects
+                                      Project
                                     </div>
                                     <div className="space-y-1 mb-3">
                                       {projects.map(project => (
