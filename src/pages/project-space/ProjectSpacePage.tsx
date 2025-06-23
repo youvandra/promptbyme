@@ -769,97 +769,76 @@ useEffect(() => {
                     </div>
                     
                     {/* Node Details Toolbar - Positioned beside node creation buttons */}
-                    {(selectedNodeForToolbar || selectedNode) && (
-                      <div className="mt-2 flex items-center justify-between bg-zinc-900/90 backdrop-blur-sm border border-zinc-800/50 rounded-lg p-2">
-                        <div className="flex items-center gap-2">
-                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-                            selectedNodeForToolbar?.type === 'input' ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' :
-                            selectedNodeForToolbar?.type === 'prompt' ? 'bg-blue-500/10 border-blue-500/30 text-blue-300' :
-                            selectedNodeForToolbar?.type === 'condition' ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300' :
+                    <div className="mt-2 flex items-center justify-between bg-zinc-900/90 backdrop-blur-sm border border-zinc-800/50 rounded-lg p-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                          (selectedNodeForToolbar || selectedNode) ? (
+                            (selectedNodeForToolbar?.type || selectedNode?.type) === 'input' ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' :
+                            (selectedNodeForToolbar?.type || selectedNode?.type) === 'prompt' ? 'bg-blue-500/10 border-blue-500/30 text-blue-300' :
+                            (selectedNodeForToolbar?.type || selectedNode?.type) === 'condition' ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300' :
                             'bg-green-500/10 border-green-500/30 text-green-300'
-                          } border overflow-hidden`}>
-                            <span className="font-medium text-sm truncate max-w-[200px]">
-                              {selectedNodeForToolbar?.title || selectedNode?.title}
-                            </span>
+                          ) : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400'
+                        } border overflow-hidden`}>
+                          <span className="font-medium text-sm truncate max-w-[200px]">
+                            {(selectedNodeForToolbar || selectedNode) ? 
+                              (selectedNodeForToolbar?.title || selectedNode?.title) : 
+                              "No node selected"}
+                          </span>
+                          {(selectedNodeForToolbar || selectedNode) && (
                             <span className="text-xs px-2 py-0.5 bg-zinc-800/50 rounded-full">
                               {selectedNodeForToolbar?.type || selectedNode?.type}
                             </span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center">
-                          <button
-                            onClick={() => {
-                              const nodeId = selectedNodeForToolbar?.id || selectedNode?.id;
-                              if (nodeId) {
-                                const node = selectedProject?.nodes?.find(n => n.id === nodeId);
-                                if (node) {
-                                  setSelectedNode(node);
-                                  setShowNodeDetails(true);
-                                }
-                              }
-                            }}
-                            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                            title="View details"
-                          >
-                            <Maximize2 size={16} />
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              const nodeId = selectedNodeForToolbar?.id || selectedNode?.id;
-                              if (nodeId) {
-                                const node = selectedProject?.nodes?.find(n => n.id === nodeId);
-                                if (node) {
-                                  setSelectedNode(node);
-                                  setShowNodeEditor(true);
-                                }
-                              }
-                            }}
-                            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                            title="Edit node"
-                          >
-                            <Edit3 size={16} />
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              const nodeId = selectedNodeForToolbar?.id || selectedNode?.id;
-                              if (nodeId && window.confirm(`Are you sure you want to delete this node?`)) {
-                                handleNodeDelete(nodeId);
-                              }
-                            }}
-                            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-                            title="Delete node"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                          
-                          <div className="h-8 w-px bg-zinc-800/50 mx-2"></div>
-                          
-                          <button
-                            onClick={() => {
-                              setSelectedNodeForToolbar(null);
-                              setActiveNodeId(null);
-                            }}
-                            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                            title="Close toolbar"
-                          >
-                            <X size={16} />
-                          </button>
+                          )}
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Node Details Toolbar */}
-      {/* Node Details Toolbar */}
+                      
+                      <div className="flex items-center">
+                        <button
+                          onClick={() => {
+                            const nodeId = selectedNodeForToolbar?.id || selectedNode?.id;
+                            if (nodeId) {
+                              const node = selectedProject?.nodes?.find(n => n.id === nodeId);
+                              if (node) {
+                                setSelectedNode(node);
+                                setShowNodeDetails(true);
+                              }
+                            }
+                          }}
+                          disabled={!(selectedNodeForToolbar || selectedNode)}
+                          className={`p-2 rounded-lg transition-all duration-200 ${
+                            (selectedNodeForToolbar || selectedNode) 
+                              ? 'text-zinc-400 hover:text-white hover:bg-zinc-800/50' 
+                              : 'text-zinc-600 cursor-not-allowed'
+                          }`}
+                          title="View details"
+                        >
+                          <Maximize2 size={16} />
+                        </button>
+                        
+                        <button
+                          onClick={() => {
+                            const nodeId = selectedNodeForToolbar?.id || selectedNode?.id;
+                            if (nodeId) {
+                              const node = selectedProject?.nodes?.find(n => n.id === nodeId);
+                              if (node) {
+                                setSelectedNode(node);
+                                setShowNodeEditor(true);
+                              }
+                            }
+                          }}
+                          disabled={!(selectedNodeForToolbar || selectedNode)}
+                          className={`p-2 rounded-lg transition-all duration-200 ${
+                            (selectedNodeForToolbar || selectedNode) 
+                              ? 'text-zinc-400 hover:text-white hover:bg-zinc-800/50' 
+                              : 'text-zinc-600 cursor-not-allowed'
+                          }`}
+                          title="Edit node"
+                        >
+                          <Edit3 size={16} />
+                        </button>
+                        
+                        <button
+                          onClick={() => {
       {/* Node Editor Modal */}
       <NodeEditorModal
         isOpen={showNodeEditor}
