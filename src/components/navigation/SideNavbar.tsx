@@ -27,6 +27,7 @@ interface SideNavbarProps {
 export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation()
   const navigate = useNavigate()
+  const navigate = useNavigate()
   const { user, signOut } = useAuthStore()
   const { 
     userInvitations, 
