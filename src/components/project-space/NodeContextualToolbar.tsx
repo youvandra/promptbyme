@@ -60,46 +60,5 @@ export const NodeContextualToolbar: React.FC<NodeContextualToolbarProps> = ({
   }
 
   return (
-    <motion.div
-      className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700/50 rounded-lg shadow-xl z-50 flex items-center" 
-      initial={{ opacity: 0, y: -10, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.9 }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className="flex items-center">
-        <button
-          onClick={(e) => handleClick(e, () => handleViewDetails(node.id))}
-          className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-          title="View details"
-        >
-          <Maximize2 size={16} />
-        </button>
-        
-        <button
-          onClick={(e) => handleClick(e, () => handleEdit(node.id))}
-          className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-          title="Edit node"
-        >
-          <Edit3 size={16} />
-        </button>
-        
-        <button
-          onClick={(e) => handleClick(e, handleConnect)}
-          className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-          title="Connect to another node"
-        >
-          <Copy size={16} />
-        </button>
-        
-        <button
-          onClick={handleDelete}
-          className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-          title="Delete node"
-        >
-          <Trash2 size={16} />
-        </button>
-      </div>
-    </motion.div>
   )
 }
