@@ -313,28 +313,33 @@ export const DashboardPage: React.FC = () => {
                                 className="absolute top-full right-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 min-w-[160px]"
                               >
                                 <div className="py-1">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setShowProjectMenu(null);
-                                      handleProjectSettings(project);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
-                                  >
-                                    <Settings size={14} />
-                                    <span>Settings</span>
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setShowProjectMenu(null);
-                                      handleDeleteProject(project.id);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left text-sm"
-                                  >
-                                    <Trash2 size={14} />
-                                    <span>Delete</span>
-                                  </button>
+                                  {/* Only show settings and delete buttons for project owners */}
+                                  {user && project.user_id === user.id && (
+                                    <>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setShowProjectMenu(null);
+                                          handleProjectSettings(project);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors text-left text-sm"
+                                      >
+                                        <Settings size={14} />
+                                        <span>Settings</span>
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setShowProjectMenu(null);
+                                          handleDeleteProject(project.id);
+                                        }}
+                                        className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left text-sm"
+                                      >
+                                        <Trash2 size={14} />
+                                        <span>Delete</span>
+                                      </button>
+                                    </>
+                                  )}
                                 </div>
                               </motion.div>
                             )}
