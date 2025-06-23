@@ -61,4 +61,3 @@ export const NodeContextualToolbar: React.FC<NodeContextualToolbarProps> = ({
 
   return (
   )
-}
