@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import ReactFlow, {
   Background,
   Controls,
-  MiniMap, 
+  MiniMap,
   Panel,
   useNodesState,
   useEdgesState,
@@ -13,7 +13,7 @@ import ReactFlow, {
   Node,
   NodeTypes,
   NodeProps,
-  MarkerType, 
+  MarkerType,
   ConnectionLineType,
   Position
 } from 'reactflow'
@@ -112,18 +112,16 @@ export const ProjectSpacePage: React.FC = () => {
   // Define edge options outside of the component render
   const defaultEdgeOptions = React.useMemo(() => ({
     type: 'straight',
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-    },
+    markerEnd: { type: MarkerType.ArrowClosed },
     animated: true,
-    style: { strokeWidth: 2 }
+    style: { stroke: '#6366f1', strokeWidth: 2 }
   }), [])
 
   // Connection line style
   const connectionLineStyle = {
     stroke: '#6366f1',
     strokeWidth: 2,
-    strokeDasharray: '5,5'
+    strokeDasharray: '5,5',
   }
 
   // Load projects on mount
@@ -197,17 +195,17 @@ export const ProjectSpacePage: React.FC = () => {
  // Convert flow connections to ReactFlow edges
 useEffect(() => {
   if (selectedProject?.connections) {
-    const flowEdges = selectedProject.connections.map(connection => ({
-      id: connection.id, 
-      source: connection.source_node_id, 
-      target: connection.target_node_id, 
-      type: 'straight', 
-      animated: true, 
-      markerEnd: { 
-        type: MarkerType.ArrowClosed 
-      }, 
-      style: { stroke: '#6366f1', strokeWidth: 2 }
-    }));
+    const flowEdges = selectedProject.connections.map(connection => {
+      return {
+        id: connection.id,
+        source: connection.source_node_id,
+        target: connection.target_node_id,
+        type: 'straight',
+        animated: true,
+        markerEnd: { type: MarkerType.ArrowClosed },
+        style: { stroke: '#6366f1', strokeWidth: 3 }
+      };
+    });
     setEdges(flowEdges);
   } else {
     setEdges([]);
@@ -296,28 +294,19 @@ useEffect(() => {
  // Handle connection
  const onConnect = useCallback((connection: Connection) => {
    if (selectedProject && connection.source && connection.target) {
+     // Create the connection in the database
      createConnection(
        selectedProject.id,
        connection.source,
        connection.target
-     ).then(newConnection => {
-       if (newConnection) {
-         setEdges(eds => addEdge({
-           ...connection,
-           id: newConnection.id,
-           type: 'smoothstep',
-           animated: true,
-           markerEnd: {
-             type: MarkerType.ArrowClosed,
-           },
-         }, eds))
-       }
-     }).catch(error => {
+     ).then(() => {
+       // Connection will be added via the useEffect that watches selectedProject.connections
+     }).catch((error) => {
        console.error('Failed to create connection:', error)
        setToast({ message: 'Failed to create connection', type: 'error' })
      })
    }
- }, [selectedProject, createConnection, setEdges])
+ }, [selectedProject, createConnection])
 
  // Handle node drag
  const onNodeDragStop = useCallback((event: React.MouseEvent, node: Node) => {
@@ -601,6 +590,8 @@ useEffect(() => {
                    connectionLineType={ConnectionLineType.Straight}
                    connectionLineStyle={connectionLineStyle}
                    defaultEdgeOptions={defaultEdgeOptions}
+                   elementsSelectable={true}
+                   selectNodesOnDrag={false}
                    className="bg-zinc-900/30"
                  >
                    <Background color="#6366f1" gap={16} size={1} />
