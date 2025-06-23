@@ -41,7 +41,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { NodeEditorModal } from '../../components/project-space/NodeEditorModal'
 import { NodeDetailsModal } from '../../components/project-space/NodeDetailsModal'
 import { PromptImportModal } from '../../components/project-space/PromptImportModal'
-import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar' 
+import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
 import { Toast } from '../../components/ui/Toast'
@@ -77,6 +77,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [newProjectName, setNewProjectName] = useState('')
   
   const [showCreateProject, setShowCreateProject] = useState(false)
+  const [showMembersModal, setShowMembersModal] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
   
   const { user, loading: authLoading } = useAuthStore()
@@ -552,6 +553,7 @@ useEffect(() => {
                       {selectedProject && (
                         <TeamMembersDisplay 
                           onClick={() => setShowMembersModal(true)}
+                          onClick={() => setShowMembersModal(true)}
                           projectId={selectedProject.id}
                           currentUserRole={currentUserRole}
                         />
@@ -681,6 +683,13 @@ useEffect(() => {
         projectId={selectedProject?.id || ''}
         currentUserRole={currentUserRole}
       />
+
+      <ProjectMembersModal
+        isOpen={showMembersModal}
+        onClose={() => setShowMembersModal(false)}
+        projectId={selectedProject?.id || ''}
+        currentUserRole={currentUserRole}
+      />
       <AnimatePresence>
         {(selectedNodeForToolbar || selectedNode) && (
           <NodeDetailsToolbar
@@ -742,7 +751,6 @@ useEffect(() => {
         onClose={() => setShowImportModal(false)}
         onSelectPrompt={handlePromptSelected}
       />
-
     
       {/* Invite Member Modal */}
       <AnimatePresence>

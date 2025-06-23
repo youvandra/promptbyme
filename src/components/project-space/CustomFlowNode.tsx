@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Edit3, GitBranch, Target, Upload } from 'lucide-react'
+import { Edit3, GitBranch, Target, Upload, Trash2, Maximize2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FlowNode } from '../../store/projectSpaceStore'
 
@@ -44,7 +44,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <Handle
         type="target"
         position={Position.Top}
-        className="w-3 h-3 bg-zinc-700 border-2 border-white"
+        className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-pointer"
       />
       
       {/* Node Content */}
@@ -67,6 +67,44 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         <div className="text-zinc-300 text-xs line-clamp-3 break-words">
           {data.content}
         </div>
+        
+        {/* Toolbar */}
+        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700/50 rounded-lg shadow-xl z-50 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (data.onViewDetails) data.onViewDetails(data.nodeData.id);
+            }}
+            className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+            title="View details"
+          >
+            <Maximize2 size={16} />
+          </button>
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (data.onEdit) data.onEdit(data.nodeData.id);
+            }}
+            className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+            title="Edit node"
+          >
+            <Edit3 size={16} />
+          </button>
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm(`Are you sure you want to delete this ${data.nodeData.type} node?`)) {
+                if (data.onDelete) data.onDelete(data.nodeData.id);
+              }
+            }}
+            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+            title="Delete node"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
 
       </motion.div>
       
@@ -74,7 +112,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <Handle
         type="source"
         position={Position.Bottom}
-        className="w-3 h-3 bg-zinc-700 border-2 border-white"
+        className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-pointer"
       />
     </div>
   )
