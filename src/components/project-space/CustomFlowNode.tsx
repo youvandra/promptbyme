@@ -69,20 +69,6 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           {data.content}
         </div>
 
-        {/* Always show the toolbar */}
-        <NodeContextualToolbar
-          node={data.nodeData}
-          nodeData={data.nodeData}
-          onEdit={(nodeId) => {
-            if (data.onEdit) data.onEdit(nodeId);
-          }}
-          onDelete={(nodeId) => {
-            if (data.onDelete) data.onDelete(nodeId);
-          }}
-          onViewDetails={(nodeId) => {
-            if (data.onViewDetails) data.onViewDetails(nodeId);
-          }}
-        />
       </motion.div>
       
       {/* Output Handle (bottom) */}
