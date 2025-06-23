@@ -148,23 +148,24 @@ export const ProjectSpacePage: React.FC = () => {
  }, [selectedProject?.nodes, setNodes])
 
  // Convert flow connections to ReactFlow edges
- useEffect(() => {
-   if (selectedProject?.connections) {
-     const flowEdges = selectedProject.connections.map(connection => ({
-       id: connection.id,
-       source: connection.source_node_id,
-       target: connection.target_node_id,
-       type: 'smoothstep',
-       animated: true,
-       markerEnd: {
-         type: MarkerType.ArrowClosed,
-       },
-     }))
-}, [selectedProject?.nodes, setNodes, activeNodeId])
-   } else {
-     setEdges([])
-   }
- }, [selectedProject?.connections, setEdges])
+useEffect(() => {
+  if (selectedProject?.connections) {
+    const flowEdges = selectedProject.connections.map(connection => ({
+      id: connection.id,
+      source: connection.source_node_id,
+      target: connection.target_node_id,
+      type: 'smoothstep',
+      animated: true,
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+      },
+    }));
+    setEdges(flowEdges); // <- jangan lupa ini
+  } else {
+    setEdges([]);
+  }
+}, [selectedProject?.connections, setEdges]);
+
 
  // Custom node components
  const InputNode = ({ data }: NodeProps) => (
