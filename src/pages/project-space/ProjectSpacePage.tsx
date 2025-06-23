@@ -187,7 +187,7 @@ export const ProjectSpacePage: React.FC = () => {
  )
 
  const PromptNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/20 border border-blue-500/30 w-[250px] h-[150px] hover:bg-blue-600/30 hover:border-blue-500/50 transition-all duration-200 flex flex-col">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-blue-600/20 border border-blue-500/30 w-[250px] h-[150px] hover:bg-blue-600/30 hover:border-blue-500/50 transition-all duration-200 flex flex-col overflow-hidden">
     <div className="font-bold text-sm text-blue-300 mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
@@ -211,13 +211,13 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-blue-200 bg-zinc-900/50 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1">{data.content}</div>
+      <div className="text-xs text-blue-200 bg-zinc-900/50 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
      )}
    </div>
  )
 
  const ConditionNode = ({ data }: NodeProps) => (
-  <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/20 border border-yellow-500/30 w-[250px] h-[150px] hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-200 flex flex-col">
+  <div className="px-4 py-3 shadow-md rounded-lg bg-yellow-600/20 border border-yellow-500/30 w-[250px] h-[150px] hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-200 flex flex-col overflow-hidden">
     <div className="font-bold text-sm text-yellow-300 mb-3">{data.label}</div>
      {activeNodeId === data.nodeData.id && (
        <NodeContextualToolbar
@@ -241,7 +241,7 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-yellow-200 bg-zinc-900/50 p-3 rounded border border-yellow-500/20 overflow-y-auto flex-1">{data.content}</div>
+      <div className="text-xs text-yellow-200 bg-zinc-900/50 p-3 rounded border border-yellow-500/20 overflow-y-auto flex-1 min-h-0 max-h-full">{data.content}</div>
      )}
    </div>
  )
