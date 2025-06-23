@@ -44,7 +44,8 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
     setIsSigningOut(true)
     try {
       await signOut()
-      onToggle() // Close sidebar after sign out
+      onToggle()
+      navigate("/")
     } catch (error) {
       console.error('Sign out error:', error)
     } finally {
