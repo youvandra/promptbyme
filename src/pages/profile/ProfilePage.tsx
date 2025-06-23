@@ -584,14 +584,6 @@ export const ProfilePage: React.FC = () => {
                                 </button>
                               </div>
                             )}
-                            <div className="space-y-3">
-                              {userProfile?.role && (
-                                <div>
-                                  <p className="text-xs text-zinc-500">Role</p>
-                                  <p className="text-white text-sm">{userProfile.role}</p>
-                                </div>
-                              )}
-                            </div>
                           </div>
                         </div>
                       )}
