@@ -791,7 +791,6 @@ useEffect(() => {
           setConnectingNodeId(null);
           handlePromptSelected(prompt);
         }}
-        onSelectPrompt={handlePromptSelected}
       />
     
       {/* Invite Member Modal */}
