@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { X, Save, Type, GitBranch, Target, Wand2, Download, Upload } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { FlowNode } from '../../store/projectSpaceStore'
+import { FlowNode, useProjectSpaceStore } from '../../store/projectSpaceStore'
 import { PromptImportModal } from './PromptImportModal'
 import { highlightVariables, extractVariables } from '../../utils/promptUtils'
 
