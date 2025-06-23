@@ -61,7 +61,6 @@ export const ProjectSpacePage: React.FC = () => {
   const [showNodeDetails, setShowNodeDetails] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
-  const [showMembersModal, setShowMembersModal] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [selectedNodeForToolbar, setSelectedNodeForToolbar] = useState<FlowNode | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
