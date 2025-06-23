@@ -625,7 +625,9 @@ useEffect(() => {
                           )}
                         </div>
                       )}
-                      
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
                       {/* Team Members Display */}
                       {selectedProject && (
                         <TeamMembersDisplay 
@@ -633,9 +635,6 @@ useEffect(() => {
                           currentUserRole={currentUserRole}
                         />
                       )}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
                       {/* Invite Member Button */}
                       {selectedProject && (currentUserRole === 'admin' || selectedProject.user_id === user.id) && (
                         <button
@@ -646,7 +645,6 @@ useEffect(() => {
                           <span>Invite</span>
                         </button>
                       )}
-                    
                     </div>
                   </div>
                 </div>
