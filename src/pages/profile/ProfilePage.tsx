@@ -654,7 +654,6 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Toast */}
       {toast && (
         <Toast
           message={toast.message}
