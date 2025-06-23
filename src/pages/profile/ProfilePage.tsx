@@ -485,15 +485,7 @@ export const ProfilePage: React.FC = () => {
                                 ))}
                               </select>
                             </div>
-                          </div>
-                          
-                          {/* Public Profile Toggle */}
-                          <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <h4 className="font-medium text-white text-sm mb-1 flex items-center gap-2">
-                                  Public Profile
-                                  {formData.isPublicProfile && (
+                                                              {formData.isPublicProfile && (
                                     <div className="flex items-center gap-1">
                                       <span className="text-xs text-zinc-500">promptby.me/{formData.displayName}/</span>
                                       <button
@@ -505,6 +497,14 @@ export const ProfilePage: React.FC = () => {
                                       </button>
                                     </div>
                                   )}
+                          </div>
+                          
+                          {/* Public Profile Toggle */}
+                          <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-medium text-white text-sm mb-1 flex items-center gap-2">
+                                  Public Profile
                                 </h4>
                                 <p className="text-xs text-zinc-400">Allow others to see your public prompts and profile</p>
                               </div>
