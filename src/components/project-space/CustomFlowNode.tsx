@@ -44,7 +44,6 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <Handle
         type="target"
         position={Position.Top}
-        x={data.type === 'input' ? 0.4 : 0.5}
         className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-pointer !opacity-100"
       />
       
@@ -112,8 +111,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       {/* Output Handle (bottom) */}
       <Handle
         type="source"
-        position={Position.Bottom}
-        x={data.type === 'output' ? 0.6 : 0.5}
+        position={Position.Bottom} 
         className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-pointer !opacity-100"
       />
     </div>
