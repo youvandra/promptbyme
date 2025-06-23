@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link, Copy, CheckCircle } from 'lucide-react'
+import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
@@ -618,7 +618,7 @@ export const ProfilePage: React.FC = () => {
                                 className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors flex items-center gap-1"
                                 title="Copy profile link"
                               >
-                                {copied ? <CheckCircle size={12} /> : <Link size={12} />}
+                                {copied ? <CheckCircle size={12} /> : <LinkIcon size={12} />}
                                 <span className="text-xs">{copied ? 'Copied!' : 'Copy link'}</span>
                               </button>
                             )}
