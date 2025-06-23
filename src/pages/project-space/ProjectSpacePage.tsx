@@ -111,7 +111,7 @@ export const ProjectSpacePage: React.FC = () => {
 
   // Define edge options outside of the component render
   const defaultEdgeOptions = React.useMemo(() => ({
-    type: 'straight',
+    type: 'smoothstep',
     markerEnd: { type: MarkerType.ArrowClosed },
     animated: true,
     style: { stroke: '#6366f1', strokeWidth: 4 }
@@ -200,7 +200,7 @@ useEffect(() => {
         id: connection.id,
         source: connection.source_node_id,
         target: connection.target_node_id,
-        type: 'straight',
+        type: 'smoothstep',
         animated: true, 
         markerEnd: { type: MarkerType.ArrowClosed },
         style: { stroke: '#6366f1', strokeWidth: 4, className: 'font-bold' }
