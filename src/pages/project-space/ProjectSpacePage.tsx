@@ -181,7 +181,7 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-blue-200 bg-zinc-900/50 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
+      <div className="text-xs text-blue-200 bg-zinc-900/50 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1">{data.content}</div>
      )}
    </div>
  )
@@ -211,7 +211,7 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-blue-200 bg-zinc-900/50 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
+      <div className="text-xs text-blue-200 bg-zinc-900/50 p-3 rounded border border-blue-500/20 overflow-y-auto flex-1">{data.content}</div>
      )}
    </div>
  )
@@ -241,7 +241,7 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-yellow-200 bg-zinc-900/50 p-3 rounded border border-yellow-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
+      <div className="text-xs text-yellow-200 bg-zinc-900/50 p-3 rounded border border-yellow-500/20 overflow-y-auto flex-1">{data.content}</div>
      )}
    </div>
  )
@@ -271,7 +271,7 @@ export const ProjectSpacePage: React.FC = () => {
        />
      )}
      {data.content && (
-      <div className="text-xs text-green-200 bg-zinc-900/50 p-3 rounded border border-green-500/20 overflow-y-auto flex-1 min-h-0">{data.content}</div>
+      <div className="text-xs text-green-200 bg-zinc-900/50 p-3 rounded border border-green-500/20 overflow-y-auto flex-1">{data.content}</div>
      )}
    </div>
  )
