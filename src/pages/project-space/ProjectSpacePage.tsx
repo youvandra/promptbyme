@@ -510,7 +510,6 @@ useEffect(() => {
                                               : 'text-zinc-300 hover:bg-zinc-800/50'
                                           }`}
                                         >
-                                          <Layers size={14} />
                                           <span className="text-sm truncate">{project.name}</span>
                                         </button>
                                       ))}
