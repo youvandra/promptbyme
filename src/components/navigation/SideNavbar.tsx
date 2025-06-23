@@ -394,8 +394,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                             <X size={14} />
                           </button>
                         </div>
-
-                        {/* Invitations list */}
+                        
                         <div className="max-h-80 overflow-y-auto">
                           {invitationsLoading ? (
                             <div className="p-4 text-center">
@@ -407,7 +406,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                           ) : userInvitations.length === 0 ? (
                             <div className="p-4 text-center text-zinc-500">
                               <Bell className="mx-auto mb-2 opacity-50" size={24} />
-                              <p className="text-sm">No pending invitations</p>
+                              <p className="text-sm">No pending Notifications</p>
                             </div>
                           ) : (
                             userInvitations.map((invitation) => (
