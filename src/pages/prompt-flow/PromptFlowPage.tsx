@@ -358,7 +358,7 @@ export const PromptFlowPage: React.FC = () => {
     
     // Generate a mock response based on the prompt type
     if (content.includes('social media post')) {
-      return 'Artificial intelligence is revolutionizing how we work and live! Today, we're exploring 5 ways AI is making our daily tasks easier and more efficient. From smart assistants to predictive text, these technologies are here to stay. #AIRevolution #TechTrends'
+      return 'Artificial intelligence is revolutionizing how we work and live! Today, we\'re exploring 5 ways AI is making our daily tasks easier and more efficient. From smart assistants to predictive text, these technologies are here to stay. #AIRevolution #TechTrends'
     } else if (content.includes('caption')) {
       return '✨ Embracing the future, one algorithm at a time ✨\n\n#AITechnology #FutureTech #Innovation #TechTrends #DigitalTransformation'
     } else if (content.includes('hashtags')) {
@@ -366,11 +366,11 @@ export const PromptFlowPage: React.FC = () => {
     } else if (content.includes('outline')) {
       return '1. Introduction to AI\n   - Definition and brief history\n   - Why AI matters today\n2. Current Applications\n   - Consumer applications\n   - Business solutions\n   - Healthcare innovations\n3. Future Trends\n   - Emerging technologies\n   - Ethical considerations\n   - Predictions for next 5 years\n4. Conclusion\n   - Summary of key points\n   - Call to action'
     } else if (content.includes('introduction')) {
-      return 'Artificial intelligence has moved from science fiction to an integral part of our daily lives. From the moment we wake up to check our personalized news feeds to the recommendations that influence our purchasing decisions, AI is quietly reshaping how we interact with technology and each other. In this post, we'll explore the current state of AI applications and peek into the exciting future that lies ahead.'
+      return 'Artificial intelligence has moved from science fiction to an integral part of our daily lives. From the moment we wake up to check our personalized news feeds to the recommendations that influence our purchasing decisions, AI is quietly reshaping how we interact with technology and each other. In this post, we\'ll explore the current state of AI applications and peek into the exciting future that lies ahead.'
     } else if (content.includes('main content')) {
       return 'The field of artificial intelligence has experienced unprecedented growth in recent years...\n\n[2500 words of detailed content would appear here]\n\n...leading us to reconsider the relationship between humans and machines.'
     } else if (content.includes('conclusion')) {
-      return 'As we've explored throughout this article, artificial intelligence is no longer a technology of the future—it's very much a technology of today. From the personalized experiences we enjoy online to the life-saving applications in healthcare, AI continues to demonstrate its value across industries and use cases. While challenges remain, particularly around ethics and responsible implementation, the trajectory is clear: AI will continue to become more integrated into our daily lives. The question isn't whether AI will transform your industry, but how quickly you'll adapt to the transformation. Are you ready to embrace the AI revolution?'
+      return 'As we\'ve explored throughout this article, artificial intelligence is no longer a technology of the future—it's very much a technology of today. From the personalized experiences we enjoy online to the life-saving applications in healthcare, AI continues to demonstrate its value across industries and use cases. While challenges remain, particularly around ethics and responsible implementation, the trajectory is clear: AI will continue to become more integrated into our daily lives. The question isn\'t whether AI will transform your industry, but how quickly you'll adapt to the transformation. Are you ready to embrace the AI revolution?'
     } else {
       return 'Generated content based on your prompt would appear here. This would typically include detailed, contextually relevant information that addresses all the parameters specified in your prompt.'
     }
