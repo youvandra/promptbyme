@@ -349,26 +349,7 @@ export const DashboardPage: React.FC = () => {
                         </p>
                       )}
                       
-                      {/* Project Stats */}
                       <div className="mt-auto">
-                        <div className="flex items-center justify-between text-xs text-zinc-500 mb-4">
-                          <div className="flex items-center gap-1">
-                            <Calendar size={12} />
-                            <span>{formatDate(project.created_at)}</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1">
-                              <Layers size={12} />
-                              <span>{project.node_count || 0} nodes</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Users size={12} />
-                              <span>{project.member_count || 1} members</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Open Project Button */}
                         <button
                           onClick={() => handleOpenProject(project.id)}
                           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-lg transition-all duration-200 text-sm"
