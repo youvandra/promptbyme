@@ -119,6 +119,8 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
     if (node) {
       node.imported_prompt_id = prompt.id
     }
+  }
+
   if (!isOpen || !node) return null
 
   const nodeConfig = NODE_TYPE_CONFIG[node.type]
@@ -291,4 +293,5 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
         onSelectPrompt={handleImportPrompt}
       />
     </>
-  )}}
+  )
+}
