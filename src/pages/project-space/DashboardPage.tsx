@@ -312,10 +312,11 @@ export const DashboardPage: React.FC = () => {
                                 exit={{ opacity: 0, scale: 0.95, y: -10 }}
                                 className="absolute top-full right-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 min-w-[160px]"
                               >
-                                <div className="py-1">
+                                
                                   {/* Only show settings and delete buttons for project owners */}
                                   {user && project.user_id === user.id && (
                                     <>
+                                      <div className="py-1">
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -338,9 +339,10 @@ export const DashboardPage: React.FC = () => {
                                         <Trash2 size={14} />
                                         <span>Delete</span>
                                       </button>
+                                      </div>
                                     </>
                                   )}
-                                </div>
+                               
                               </motion.div>
                             )}
                           </AnimatePresence>
