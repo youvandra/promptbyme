@@ -458,16 +458,6 @@ export const ProjectSpacePage: React.FC = () => {
     }
   }
 
-  const handleNodeDelete = async (nodeId: string) => {
-    try {
-      await deleteNode(nodeId)
-      setToast({ message: 'Node deleted successfully', type: 'success' })
-    } catch (error) {
-      console.error('Failed to delete node:', error)
-      setToast({ message: 'Failed to delete node', type: 'error' })
-    }
-  }
-
   const handleInviteMember = async () => {
     if (!selectedProject || !inviteEmail.trim() || !inviteRole) {
       setToast({ message: 'Please enter an email and select a role', type: 'error' })
