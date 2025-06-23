@@ -1,6 +1,6 @@
 Here's the fixed version with all missing closing brackets added:
 
-```jsx
+```javascript
                 )}
               </div>
             </div>
