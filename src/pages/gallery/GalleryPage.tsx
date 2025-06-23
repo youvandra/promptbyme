@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft, Menu, Eye, Lock, GitFork, Users, ChevronDown, FolderPlus } from 'lucide-react' 
-import { Link, useLocation } from 'react-router-dom'
+import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft, Menu, Eye, Lock, GitFork, Users, ChevronDown, FolderPlus } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { PromptCard } from '../../components/prompts/PromptCard'
 import { PromptModal } from '../../components/prompts/PromptModal'
 import { PromptVersionHistory } from '../../components/prompts/PromptVersionHistory'
@@ -15,7 +15,6 @@ import { useFolderStore } from '../../store/folderStore'
 // Memoized prompt card component to prevent unnecessary re-renders
 const MemoizedPromptCard = React.memo(PromptCard)
 export const GalleryPage: React.FC = () => {
-  const location = useLocation()
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isPageLoading, setIsPageLoading] = useState(true)
@@ -54,26 +53,13 @@ export const GalleryPage: React.FC = () => {
         fetchFolders()
       ]).finally(() => {
         setIsPageLoading(false)
-        
-        // Check if we have a promptIdToOpen from navigation state
-        if (location.state?.promptIdToOpen) {
-          const promptToOpen = prompts.find(p => p.id === location.state.promptIdToOpen)
-          if (promptToOpen) {
-            setSelectedPrompt(promptToOpen)
-            setShowModal(true)
-            setToast({ message: 'Prompt saved successfully', type: 'success' })
-          }
-          
-          // Clear the state to prevent reopening on refresh
-          window.history.replaceState({}, document.title)
-        }
       })
       
       // Set up real-time subscription
       const unsubscribe = subscribeToUserPrompts(user.id)
       return unsubscribe
     }
-  }, [user, fetchUserPrompts, fetchFolders, subscribeToUserPrompts, location.state, prompts])
+  }, [user, fetchUserPrompts, fetchFolders, subscribeToUserPrompts])
 
   // Close dropdowns when clicking outside
   useEffect(() => {

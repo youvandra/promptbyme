@@ -253,8 +253,6 @@ export const usePromptStore = create<PromptState>()(
       const { prompts, cache } = get()
       cache.set(data.id, data)
       set({ prompts: [data, ...prompts], cache: new Map(cache) })
-      
-      return data
     } catch (error) {
       console.error('Error creating prompt:', error)
       throw error
