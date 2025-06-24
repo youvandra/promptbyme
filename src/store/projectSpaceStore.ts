@@ -515,9 +515,13 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           .from('flow_nodes')
           .select('*')
           .eq('id', nodeId)
-          .single()
+          .maybeSingle()
 
-        if (fetchError || !originalNode) {
+        if (fetchError) {
+          throw fetchError
+        }
+        
+        if (!originalNode) {
           throw new Error('Failed to fetch original node')
         }
 
