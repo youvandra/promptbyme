@@ -131,24 +131,35 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
         if (ownedError) throw ownedError
 
-        // Get projects where user is a member
-        const { data: memberProjects, error: memberError } = await supabase
+        // First, get project IDs where user is a member
+        const { data: memberProjectIds, error: memberError } = await supabase
           .from('project_members')
-          .select(`
-            flow_projects (*)
-          `)
+          .select('project_id')
           .eq('user_id', user.id)
           .eq('status', 'accepted')
 
         if (memberError) throw memberError
 
+        // Then fetch the actual project data for those IDs
+        let memberProjects = []
+        if (memberProjectIds && memberProjectIds.length > 0) {
+          const projectIds = memberProjectIds.map(mp => mp.project_id)
+          const { data: projects, error: projectsError } = await supabase
+            .from('flow_projects')
+            .select('*')
+            .in('id', projectIds)
+
+          if (projectsError) throw projectsError
+          memberProjects = projects || []
+        }
+
         // Combine and deduplicate projects
         const allProjects = [...(ownedProjects || [])]
         
-        if (memberProjects) {
-          memberProjects.forEach(mp => {
-            if (mp.flow_projects && !allProjects.find(p => p.id === mp.flow_projects.id)) {
-              allProjects.push(mp.flow_projects)
+        if (memberProjects.length > 0) {
+          memberProjects.forEach(project => {
+            if (!allProjects.find(p => p.id === project.id)) {
+              allProjects.push(project)
             }
           })
         }
