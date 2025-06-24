@@ -154,7 +154,10 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       if (error) throw error
 
       const newFlow = { ...data, steps: [] }
-      set(state => ({ flows: [newFlow, ...state.flows] }))
+      set(state => ({ 
+        flows: [newFlow, ...state.flows],
+        selectedFlow: newFlow
+      }))
       return newFlow
     } catch (error) {
       console.error('Error creating flow:', error)

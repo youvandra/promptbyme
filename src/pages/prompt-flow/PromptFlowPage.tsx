@@ -108,7 +108,7 @@ export const PromptFlowPage: React.FC = () => {
         newFlowName.trim(),
         newFlowDescription.trim() || undefined
       )
-      await selectFlow(newFlow)
+      setSelectedFlow(newFlow)
       setShowCreateFlow(false)
       setNewFlowName('')
       setNewFlowDescription('')
