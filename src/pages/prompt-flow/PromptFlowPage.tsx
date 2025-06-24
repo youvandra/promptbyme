@@ -33,32 +33,19 @@ import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
-import { useFlowStore } from '../../store/flowStore'
+import { useFlowStore, type PromptFlow as StorePromptFlow, type FlowStep } from '../../store/flowStore'
 import { PromptSelectionModal } from '../../components/prompts/PromptSelectionModal'
 
-interface FlowPrompt {
-  id: string
-  title: string
-  content: string
-  order: number
+interface ExtendedFlowStep extends FlowStep {
   isExpanded?: boolean
-}
-
-interface PromptFlow {
-  id: string
-  name: string
-  description?: string
-  prompts: FlowPrompt[]
-  createdAt: string
-  updatedAt: string
 }
 
 export const PromptFlowPage: React.FC = () => {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [flows, setFlows] = useState<PromptFlow[]>([])
-  const [selectedFlow, setSelectedFlow] = useState<PromptFlow | null>(null)
+  const [flows, setFlows] = useState<StorePromptFlow[]>([])
+  const [selectedFlow, setSelectedFlow] = useState<StorePromptFlow | null>(null)
   const [showPromptModal, setShowPromptModal] = useState(false)
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
   const [editingPromptTitle, setEditingPromptTitle] = useState('')
@@ -74,7 +61,10 @@ export const PromptFlowPage: React.FC = () => {
     loading: flowsLoading,
     fetchFlows,
     selectFlow,
-    reorderStep
+    reorderStep,
+    addStep,
+    updateStep,
+    deleteStep
   } = useFlowStore()
 
   // Mock data for demonstration
@@ -113,83 +103,45 @@ export const PromptFlowPage: React.FC = () => {
   const handlePromptSelected = (prompt: any) => {
     if (!selectedFlow) return
     
-    const newPrompt: FlowPrompt = {
-      id: `prompt-${Date.now()}`,
-      title: prompt.title || 'Untitled Prompt',
-      content: prompt.content,
-      order: selectedFlow.prompts.length + 1,
-      isExpanded: false
+    try {
+      addStep(selectedFlow.id, prompt.id, prompt.title || 'Untitled Prompt')
+      setToast({ message: 'Prompt added to flow', type: 'success' })
+    } catch (error) {
+      console.error('Failed to add step:', error)
+      setToast({ message: 'Failed to add prompt to flow', type: 'error' })
     }
-    
-    const updatedFlow = {
-      ...selectedFlow,
-      prompts: [...selectedFlow.prompts, newPrompt],
-      updatedAt: new Date().toISOString()
-    }
-    
-    setSelectedFlow(updatedFlow)
-    setFlows(flows.map(f => f.id === selectedFlow.id ? updatedFlow : f))
-    setToast({ message: 'Prompt added to flow', type: 'success' })
   }
 
   const handleCreateNewPrompt = () => {
-    if (!selectedFlow) return
-    
-    const newPrompt: FlowPrompt = {
-      id: `prompt-${Date.now()}`,
-      title: 'New Prompt',
-      content: 'Enter your prompt content here...',
-      order: selectedFlow.prompts.length + 1,
-      isExpanded: false
-    }
-    
-    const updatedFlow = {
-      ...selectedFlow,
-      prompts: [...selectedFlow.prompts, newPrompt],
-      updatedAt: new Date().toISOString()
-    }
-    
-    setSelectedFlow(updatedFlow)
-    setFlows(flows.map(f => f.id === selectedFlow.id ? updatedFlow : f))
-    
-    // Start editing the new prompt
-    setEditingPromptId(newPrompt.id)
-    setEditingPromptTitle(newPrompt.title)
-    setEditingPromptContent(newPrompt.content)
-    
-    setToast({ message: 'New prompt created', type: 'success' })
+    // Open the prompt selection modal to choose an existing prompt
+    setShowPromptModal(true)
   }
 
   const handleEditPrompt = (promptId: string) => {
     if (!selectedFlow) return
     
-    const prompt = selectedFlow.prompts.find(p => p.id === promptId)
-    if (!prompt) return
+    const step = selectedFlow.steps?.find(s => s.id === promptId)
+    if (!step) return
     
     setEditingPromptId(promptId)
-    setEditingPromptTitle(prompt.title)
-    setEditingPromptContent(prompt.content)
+    setEditingPromptTitle(step.step_title)
+    setEditingPromptContent(step.prompt_content || '')
   }
 
   const handleSavePrompt = () => {
     if (!selectedFlow || !editingPromptId) return
     
-    const updatedPrompts = selectedFlow.prompts.map(prompt =>
-      prompt.id === editingPromptId
-        ? { ...prompt, title: editingPromptTitle, content: editingPromptContent }
-        : prompt
-    )
-    
-    const updatedFlow = {
-      ...selectedFlow,
-      prompts: updatedPrompts,
-      updatedAt: new Date().toISOString()
+    try {
+      updateStep(editingPromptId, {
+        step_title: editingPromptTitle,
+        prompt_content: editingPromptContent
+      })
+      setEditingPromptId(null)
+      setToast({ message: 'Prompt saved successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to update step:', error)
+      setToast({ message: 'Failed to save prompt', type: 'error' })
     }
-    
-    setSelectedFlow(updatedFlow)
-    setFlows(flows.map(f => f.id === selectedFlow.id ? updatedFlow : f))
-    setEditingPromptId(null)
-    setToast({ message: 'Prompt saved successfully', type: 'success' })
   }
 
   const handleCancelEdit = () => {
@@ -201,88 +153,66 @@ export const PromptFlowPage: React.FC = () => {
     
     if (!confirm('Are you sure you want to delete this prompt?')) return
     
-    const updatedPrompts = selectedFlow.prompts
-      .filter(p => p.id !== promptId)
-      .map((prompt, index) => ({ ...prompt, order: index + 1 }))
-    
-    const updatedFlow = {
-      ...selectedFlow,
-      prompts: updatedPrompts,
-      updatedAt: new Date().toISOString()
+    try {
+      deleteStep(promptId)
+      setToast({ message: 'Prompt deleted successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to delete step:', error)
+      setToast({ message: 'Failed to delete prompt', type: 'error' })
     }
-    
-    setSelectedFlow(updatedFlow)
-    setFlows(flows.map(f => f.id === selectedFlow.id ? updatedFlow : f))
-    setToast({ message: 'Prompt deleted successfully', type: 'success' })
   }
 
   const handleMovePrompt = async (promptId: string, direction: 'up' | 'down') => {
     if (!selectedFlow) return
     
-    const promptIndex = selectedFlow.prompts.findIndex(p => p.id === promptId)
+    const promptIndex = selectedFlow.steps?.findIndex(s => s.id === promptId) ?? -1
     if (promptIndex === -1) return
     
-    const newPrompts = [...selectedFlow.prompts]
+    const steps = selectedFlow.steps || []
+    let newIndex: number
     
     if (direction === 'up' && promptIndex > 0) {
-      // Swap with the previous prompt
-      const temp = newPrompts[promptIndex]
-      newPrompts[promptIndex] = { ...newPrompts[promptIndex - 1], order: promptIndex + 1 } 
-      newPrompts[promptIndex - 1] = { ...temp, order: promptIndex }
-    } else if (direction === 'down' && promptIndex < newPrompts.length - 1) {
-      // Swap with the next prompt
-      const temp = newPrompts[promptIndex]
-      newPrompts[promptIndex] = { ...newPrompts[promptIndex + 1], order: promptIndex + 1 }
-      newPrompts[promptIndex + 1] = { ...temp, order: promptIndex + 2 }
+      newIndex = promptIndex - 1
+    } else if (direction === 'down' && promptIndex < steps.length - 1) {
+      newIndex = promptIndex + 1
     } else {
       return // No change needed
     }
     
     try {
-      // Call the reorderStep function from the store
-      await reorderStep(promptId, direction === 'up' ? promptIndex - 1 : promptIndex + 1)
+      await reorderStep(promptId, newIndex)
     } catch (error) {
       console.error('Failed to reorder steps:', error)
       setToast({ message: 'Failed to reorder steps', type: 'error' })
-      return
     }
-    
-    const updatedFlow = {
-      ...selectedFlow,
-      prompts: newPrompts,
-      updatedAt: new Date().toISOString()
-    }
-    
-    setSelectedFlow(updatedFlow)
-    setFlows(flows.map(f => f.id === selectedFlow.id ? updatedFlow : f))
   }
 
   const handleTogglePromptExpansion = (promptId: string) => {
     if (!selectedFlow) return
     
-    const updatedPrompts = selectedFlow.prompts.map(prompt =>
-      prompt.id === promptId ? { ...prompt, isExpanded: !prompt.isExpanded } : prompt
+    const updatedSteps = selectedFlow.steps?.map(step =>
+      step.id === promptId ? { ...step, isExpanded: !(step as ExtendedFlowStep).isExpanded } : step
     )
     
     setSelectedFlow({
       ...selectedFlow,
-      prompts: updatedPrompts
+      steps: updatedSteps
     })
   }
 
   const handleRunFlow = () => {
-    if (!selectedFlow || selectedFlow.prompts.length === 0) return
+    if (!selectedFlow || !selectedFlow.steps || selectedFlow.steps.length === 0) return
     
     setIsRunningFlow(true)
     setFlowOutput(null)
     
     // Mock flow execution
     setTimeout(() => {
-      const output = selectedFlow.prompts.map((prompt, index) => {
-        return `Step ${index + 1}: ${prompt.title}\n${'-'.repeat(40)}\n[Mock output for: ${prompt.content.substring(0, 100)}...]\n\n`
+      const output = selectedFlow.steps?.map((step, index) => {
+        return `Step ${index + 1}: ${step.step_title}\n${'-'.repeat(40)}\n[Mock output for: ${(step.prompt_content || '').substring(0, 100)}...]\n\n`
       }).join('')
       
-      setFlowOutput(output)
+      setFlowOutput(output || '')
       setIsRunningFlow(false)
       setToast({ message: 'Flow executed successfully', type: 'success' })
     }, 2000)
@@ -410,7 +340,7 @@ export const PromptFlowPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-sm font-medium text-white truncate">{flow.name}</h3>
-                            <p className="text-xs text-zinc-400 truncate">{flow.prompts.length} prompt{flow.prompts.length !== 1 ? 's' : ''}</p>
+                            <p className="text-xs text-zinc-400 truncate">{flow.steps?.length || 0} prompt{(flow.steps?.length || 0) !== 1 ? 's' : ''}</p>
                           </div>
                         </div>
                       </div>
@@ -449,7 +379,7 @@ export const PromptFlowPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={handleRunFlow}
-                            disabled={isRunningFlow || selectedFlow.prompts.length === 0}
+                            disabled={isRunningFlow || !selectedFlow.steps || selectedFlow.steps.length === 0}
                             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg transition-all duration-200 text-sm"
                           >
                             {isRunningFlow ? (
@@ -489,7 +419,7 @@ export const PromptFlowPage: React.FC = () => {
                           
                           {/* Prompts */}
                           <div className="space-y-3">
-                            {selectedFlow.prompts.length === 0 ? (
+                            {!selectedFlow.steps || selectedFlow.steps.length === 0 ? (
                               <div className="text-center py-8 bg-zinc-800/20 rounded-lg border border-zinc-800/50">
                                 <p className="text-zinc-500 mb-2">No prompts in this flow</p>
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
@@ -503,8 +433,8 @@ export const PromptFlowPage: React.FC = () => {
                                 </div>
                               </div>
                             ) : (
-                              selectedFlow.prompts
-                                .sort((a, b) => a.order - b.order)
+                              selectedFlow.steps
+                                .sort((a, b) => a.order_index - b.order_index)
                                 .map((prompt) => (
                                   <div
                                     key={prompt.id}
@@ -552,17 +482,17 @@ export const PromptFlowPage: React.FC = () => {
                                       <div>
                                         <div className="flex items-center justify-between p-3 border-b border-zinc-700/30">
                                           <div className="flex items-center gap-2">
-                                            <div className="w-6 h-6 bg-indigo-600/30 rounded-full flex items-center justify-center text-indigo-400 text-xs font-medium" title={`Step ${prompt.order}`}>
-                                              {prompt.order}
+                                            <div className="w-6 h-6 bg-indigo-600/30 rounded-full flex items-center justify-center text-indigo-400 text-xs font-medium" title={`Step ${prompt.order_index}`}>
+                                              {prompt.order_index}
                                             </div>
-                                            <h3 className="text-sm font-medium text-white">{prompt.title}</h3>
+                                            <h3 className="text-sm font-medium text-white">{prompt.step_title}</h3>
                                           </div>
                                           <div className="flex items-center">
                                             <button
                                               onClick={() => handleTogglePromptExpansion(prompt.id)}
                                               className="p-1 text-zinc-400 hover:text-white transition-colors"
                                             >
-                                              {prompt.isExpanded ? (
+                                              {(prompt as ExtendedFlowStep).isExpanded ? (
                                                 <ChevronDown size={16} />
                                               ) : (
                                                 <ChevronRight size={16} />
@@ -605,7 +535,7 @@ export const PromptFlowPage: React.FC = () => {
                                                           setShowPromptMenu(null)
                                                           handleMovePrompt(prompt.id, 'up')
                                                         }}
-                                                        disabled={prompt.order === 1}
+                                                        disabled={prompt.order_index === 1}
                                                         className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
                                                       >
                                                         <ArrowUp size={14} />
@@ -617,7 +547,7 @@ export const PromptFlowPage: React.FC = () => {
                                                           setShowPromptMenu(null)
                                                           handleMovePrompt(prompt.id, 'down')
                                                         }}
-                                                        disabled={prompt.order === selectedFlow.prompts.length}
+                                                        disabled={prompt.order_index === (selectedFlow.steps?.length || 0)}
                                                         className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
                                                       >
                                                         <ArrowDown size={14} />
@@ -643,7 +573,7 @@ export const PromptFlowPage: React.FC = () => {
                                         </div>
                                         
                                         <AnimatePresence initial={false}>
-                                          {prompt.isExpanded && (
+                                          {(prompt as ExtendedFlowStep).isExpanded && (
                                             <motion.div
                                               initial={{ height: 0, opacity: 0 }}
                                               animate={{ height: 'auto', opacity: 1 }}
@@ -653,7 +583,7 @@ export const PromptFlowPage: React.FC = () => {
                                             >
                                               <div className="p-3 bg-zinc-800/50 border-t border-zinc-700/30">
                                                 <pre className="text-xs text-zinc-300 font-mono whitespace-pre-wrap">
-                                                  {prompt.content}
+                                                  {prompt.prompt_content || 'No content available'}
                                                 </pre>
                                               </div>
                                             </motion.div>
@@ -701,7 +631,7 @@ export const PromptFlowPage: React.FC = () => {
                               <p className="text-zinc-500 mb-4">Run the flow to see output here</p>
                               <button
                                 onClick={handleRunFlow}
-                                disabled={isRunningFlow || selectedFlow.prompts.length === 0}
+                                disabled={isRunningFlow || !selectedFlow.steps || selectedFlow.steps.length === 0}
                                 className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg transition-all duration-200 text-sm"
                               >
                                 {isRunningFlow ? (
