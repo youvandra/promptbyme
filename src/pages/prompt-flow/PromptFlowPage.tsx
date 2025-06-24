@@ -2,22 +2,9 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   Menu, 
-  Plus,
+  Plus, Trash2, ArrowUp, ArrowDown, Edit3, Save, Eye, EyeOff, Play,
+  Folder, Import, ChevronRight, ChevronDown, MoreVertical, X, Pencil,
   Check, 
-  Trash2,
-  ArrowUp, 
-  ArrowDown, 
-  Edit3, 
-  Save, 
-  Eye, 
-  EyeOff, 
-  Play,
-  Folder,
-  Import,
-  ChevronRight,
-  ChevronDown,
-  MoreVertical,
-  X,
   AlertCircle,
   Settings,
   Copy,
@@ -26,8 +13,7 @@ import {
   Download,
   MessageSquare,
   Bot,
-  Sparkles,
-  Pencil
+  Sparkles
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Toast } from '../../components/ui/Toast'
@@ -43,42 +29,37 @@ export const PromptFlowPage: React.FC = () => {
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [flows, setFlows] = useState<PromptFlow[]>([])
-  const [selectedFlow, setSelectedFlow] = useState<PromptFlow | null>(null)
   const [showCreateFlow, setShowCreateFlow] = useState(false)
-  const [newFlowName, setNewFlowName] = useState('') 
+  const [newFlowName, setNewFlowName] = useState('')
   const [newFlowDescription, setNewFlowDescription] = useState('')
+  const [isCreatingFlow, setIsCreatingFlow] = useState(false)
   const [showPromptModal, setShowPromptModal] = useState(false)
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
   const [editingPromptTitle, setEditingPromptTitle] = useState('')
   const [editingPromptContent, setEditingPromptContent] = useState('')
   const [showPromptMenu, setShowPromptMenu] = useState<string | null>(null)
-  const [isRunningFlow, setIsRunningFlow] = useState(false)
-  const [flowOutput, setFlowOutput] = useState<string | null>(null)
-  const [apiKey, setApiKey] = useState('')
-  const [model, setModel] = useState('gpt-3.5-turbo')
-  const [showApiSettings, setShowApiSettings] = useState(false)
-  const [apiProvider, setApiProvider] = useState<'openai' | 'anthropic' | 'google'>('openai')
-  const [flowResults, setFlowResults] = useState<any[] | null>(null)
-  const [flowError, setFlowError] = useState<string | null>(null)
-  const [isEditingFlowName, setIsEditingFlowName] = useState(false)
-  const [editingFlowName, setEditingFlowName] = useState('')
+  const [editingFlowName, setEditingFlowName] = useState(false)
+  const [newName, setNewName] = useState('')
   
   const { user, loading: authLoading } = useAuthStore()
+  const { prompts, fetchUserPrompts } = usePromptStore()
   const { 
-    flows: storeFlows, 
-    selectedFlow: storeSelectedFlow, 
+    flows, 
+    selectedFlow, 
+    loading: flowLoading, 
+    executing: isRunningFlow,
     fetchFlows, 
     createFlow, 
-    updateFlow, 
+    updateFlow,
+    deleteFlow,
     selectFlow,
     addStep,
     updateStep,
     deleteStep,
     reorderStep,
-    executeFlow
+    executeFlow,
+    clearOutputs
   } = useFlowStore()
-  const { fetchUserPrompts } = usePromptStore()
 
   useEffect(() => {
     if (user) {
@@ -87,44 +68,77 @@ export const PromptFlowPage: React.FC = () => {
     }
   }, [user, fetchUserPrompts, fetchFlows])
 
-  // Update local flows state when store flows change
-  useEffect(() => {
-    setFlows(storeFlows)
-  }, [storeFlows])
-  
-  // Update editingFlowName when selectedFlow changes
+  // Set initial flow name when editing
   useEffect(() => {
     if (selectedFlow) {
-      setEditingFlowName(selectedFlow.name)
+      setNewName(selectedFlow.name)
     }
   }, [selectedFlow])
 
-  // Load API key from localStorage
-  useEffect(() => {
-    const savedApiKey = localStorage.getItem('flow_api_key')
-    const savedModel = localStorage.getItem('flow_model')
-    const savedProvider = localStorage.getItem('flow_provider')
-    
-    if (savedApiKey) setApiKey(savedApiKey)
-    if (savedModel) setModel(savedModel)
-    if (savedProvider) setApiProvider(savedProvider as any)
-  }, [])
-
-  const handleCreateFlow = async () => {
+  const handleCreateFlow = () => {
     if (!newFlowName.trim()) return
     
-    // Create a new flow using the store
+    setIsCreatingFlow(true)
+
     createFlow(newFlowName.trim(), newFlowDescription.trim() || undefined)
-      .then((newFlow) => {
-        setSelectedFlow(newFlow)
+      .then(() => {
         setShowCreateFlow(false)
         setNewFlowName('')
         setNewFlowDescription('')
         setToast({ message: 'Flow created successfully', type: 'success' })
       })
-      .catch((error) => {
+      .catch(error => {
         console.error('Failed to create flow:', error)
-        setToast({ message: 'Failed to create flow: ' + error.message, type: 'error' })
+        setToast({ message: 'Failed to create flow', type: 'error' })
+      })
+      .finally(() => {
+        setIsCreatingFlow(false)
+      })
+  }
+
+  const handleRenameFlow = () => {
+    if (!selectedFlow || !newName.trim()) return
+
+    updateFlow(selectedFlow.id, { name: newName.trim() })
+      .then(() => {
+        setEditingFlowName(false)
+        setToast({ message: 'Flow renamed successfully', type: 'success' })
+      })
+      .catch(error => {
+        console.error('Failed to rename flow:', error)
+        setToast({ message: 'Failed to rename flow', type: 'error' })
+      })
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleRenameFlow()
+    } else if (e.key === 'Escape') {
+      setEditingFlowName(false)
+      if (selectedFlow) {
+        setNewName(selectedFlow.name)
+      }
+    }
+  }
+
+  const handleSelectFlow = (flowId: string) => {
+    selectFlow(flowId)
+      .catch(error => {
+        console.error('Failed to select flow:', error)
+        setToast({ message: 'Failed to select flow', type: 'error' })
+      })
+  }
+
+  const handleDeleteFlow = (flowId: string) => {
+    if (!confirm('Are you sure you want to delete this flow?')) return
+
+    deleteFlow(flowId)
+      .then(() => {
+        setToast({ message: 'Flow deleted successfully', type: 'success' })
+      })
+      .catch(error => {
+        console.error('Failed to delete flow:', error)
+        setToast({ message: 'Failed to delete flow', type: 'error' })
       })
   }
 
@@ -132,232 +146,170 @@ export const PromptFlowPage: React.FC = () => {
     setShowPromptModal(true)
   }
 
-  const handlePromptSelected = async (prompt: any) => {
+  const handlePromptSelected = (prompt: any) => {
     if (!selectedFlow) return
-    
-    // Add the selected prompt to the flow using the store
-    addStep(
-      selectedFlow.id,
-      prompt.id,
-      prompt.title || 'Untitled Prompt',
-      prompt.content
-    )
+
+    addStep(selectedFlow.id, prompt.id, prompt.title || 'Untitled Prompt', prompt.content)
       .then(() => {
         setToast({ message: 'Prompt added to flow', type: 'success' })
       })
-      .catch((error) => {
-        console.error('Failed to add prompt to flow:', error)
-        setToast({ message: 'Failed to add prompt: ' + error.message, type: 'error' })
+      .catch(error => {
+        console.error('Failed to add prompt:', error)
+        setToast({ message: 'Failed to add prompt', type: 'error' })
+      })
+      .finally(() => {
+        setShowPromptModal(false)
       })
   }
 
-  const handleCreateNewPrompt = async () => {
+  const handleCreateNewPrompt = () => {
     if (!selectedFlow) return
-    
-    // Check if user is authenticated
+
+    // Create a new empty prompt in the database first
+    const { createPrompt } = usePromptStore.getState()
+    const { user } = useAuthStore.getState()
+
     if (!user) {
-      setToast({ message: 'Please sign in to create prompts', type: 'error' })
+      setToast({ message: 'You must be logged in to create prompts', type: 'error' })
       return
     }
-    
-    try {
-      // First create a new prompt in the database
-      const { data: newPrompt, error } = await supabase
-        .from('prompts')
-        .insert([{
-          user_id: user.id,
-          title: 'New Prompt',
-          content: 'Enter your prompt content here...',
-          access: 'private'
-        }])
-        .select()
-        .single()
-        
-      if (error) throw error
-      
-      // Then add it to the flow
-      const step = await addStep(
-        selectedFlow.id,
-        newPrompt.id,
-        newPrompt.title || 'New Prompt'
-      )
-      
-      // Start editing the new prompt
-      setEditingPromptId(step.id)
-      setEditingPromptTitle(step.step_title)
-      setEditingPromptContent(step.prompt?.content || '')
-      
-      setToast({ message: 'New prompt created', type: 'success' })
-    } catch (error) {
-      console.error('Failed to create new prompt:', error)
-      setToast({ message: 'Failed to create new prompt', type: 'error' })
-    }
+
+    createPrompt({
+      user_id: user.id,
+      title: 'New Prompt',
+      content: '',
+      access: 'private',
+      tags: [],
+    })
+      .then((promptData) => {
+        // Now add this prompt to the flow
+        return addStep(selectedFlow.id, promptData.id, promptData.title || 'New Prompt', promptData.content)
+      })
+      .then(() => {
+        setToast({ message: 'New prompt created and added to flow', type: 'success' })
+      })
+      .catch(error => {
+        console.error('Failed to create new prompt:', error)
+        setToast({ message: 'Failed to create new prompt', type: 'error' })
+      })
   }
 
   const handleEditPrompt = (promptId: string) => {
     if (!selectedFlow) return
-    
-    const step = selectedFlow.steps?.find(s => s.id === promptId)
+
+    const step = selectedFlow.steps.find(p => p.id === promptId)
     if (!step) return
-    
-    const prompt = step.prompt
-    if (!prompt) return
-    
+
     setEditingPromptId(promptId)
     setEditingPromptTitle(step.step_title)
-    setEditingPromptContent(prompt.content)
+    setEditingPromptContent(step.prompt_content || '')
   }
 
-  const handleSavePrompt = async () => {
+  const handleSavePrompt = () => {
     if (!selectedFlow || !editingPromptId) return
-    
-    try {
-      // Find the step being edited
-      const step = selectedFlow.steps?.find(s => s.id === editingPromptId)
-      if (!step) throw new Error('Step not found')
-      
-      // Update the step title
-      await updateStep(editingPromptId, {
-        step_title: editingPromptTitle
+
+    // First update the prompt in the database
+    const step = selectedFlow.steps.find(p => p.id === editingPromptId)
+    if (!step) return
+
+    const { updatePrompt } = usePromptStore.getState()
+
+    // Update the step title in the flow
+    updateStep(editingPromptId, {
+      step_title: editingPromptTitle
+    })
+      .then(() => {
+        // Also update the prompt content in the prompts table
+        return updatePrompt(step.prompt_id, {
+          title: editingPromptTitle,
+          content: editingPromptContent
+        })
       })
-      
-      // Update the prompt content
-      const { error } = await supabase
-        .from('prompts')
-        .update({ content: editingPromptContent })
-        .eq('id', step.prompt_id)
-      
-      if (error) throw error
-      
-      // Refresh the flow to get updated data
-      if (selectedFlow) {
-        await selectFlow(selectedFlow)
-      }
-      
-      setEditingPromptId(null)
-      setToast({ message: 'Prompt saved successfully', type: 'success' })
-    } catch (error) {
-      console.error('Failed to save prompt:', error)
-      setToast({ message: 'Failed to save prompt', type: 'error' })
-    }
+      .then(() => {
+        setEditingPromptId(null)
+        setToast({ message: 'Prompt saved successfully', type: 'success' })
+      })
+      .catch(error => {
+        console.error('Failed to save prompt:', error)
+        setToast({ message: 'Failed to save prompt', type: 'error' })
+      })
   }
 
   const handleCancelEdit = () => {
     setEditingPromptId(null)
   }
 
-  const handleDeletePrompt = async (promptId: string) => {
+  const handleDeletePrompt = (promptId: string) => {
     if (!selectedFlow) return
-    
+
     if (!confirm('Are you sure you want to delete this prompt?')) return
-    
-    try {
-      await deleteStep(promptId)
-      setToast({ message: 'Prompt deleted successfully', type: 'success' })
-    } catch (error) {
-      console.error('Failed to delete prompt:', error)
-      setToast({ message: 'Failed to delete prompt', type: 'error' })
-    }
+
+    deleteStep(promptId)
+      .then(() => {
+        setToast({ message: 'Prompt deleted successfully', type: 'success' })
+      })
+      .catch(error => {
+        console.error('Failed to delete prompt:', error)
+        setToast({ message: 'Failed to delete prompt', type: 'error' })
+      })
   }
 
-  const handleMovePrompt = async (promptId: string, direction: 'up' | 'down') => {
+  const handleMovePrompt = (promptId: string, direction: 'up' | 'down') => {
     if (!selectedFlow) return
-    
-    try {
-      const step = selectedFlow.prompts.find(p => p.id === promptId)
-      if (!step) return
-      
-      const currentIndex = step.order
-      let newIndex = currentIndex
-      
-      if (direction === 'up' && currentIndex > 0) {
-        newIndex = currentIndex - 1
-      } else if (direction === 'down' && currentIndex < selectedFlow.prompts.length - 1) {
-        newIndex = currentIndex + 1
-      } else {
-        return // No change needed
-      }
-      
-      // Use the reorderStep function from the store
-      useFlowStore.getState().reorderStep(promptId, newIndex)
-        .then(() => {
-          // Success is handled by the store updating the state
-        })
-        .catch((error) => {
-          console.error('Failed to reorder steps:', error)
-          setToast({ message: 'Failed to reorder steps: ' + error.message, type: 'error' })
-        })
-    } catch (error) {
-      console.error('Failed to reorder steps:', error)
-      setToast({ message: 'Failed to reorder steps: ' + error.message, type: 'error' })
+
+    const step = selectedFlow.steps.find(s => s.id === promptId)
+    if (!step) return
+
+    const currentIndex = step.order_index
+    let newIndex = currentIndex
+
+    if (direction === 'up' && currentIndex > 0) {
+      newIndex = currentIndex - 1
+    } else if (direction === 'down' && currentIndex < selectedFlow.steps.length - 1) {
+      newIndex = currentIndex + 1
+    } else {
+      return // No change needed
     }
+
+    reorderStep(promptId, newIndex)
+      .catch(error => {
+        console.error('Failed to move prompt:', error)
+        setToast({ message: 'Failed to move prompt', type: 'error' })
+      })
   }
 
   const handleTogglePromptExpansion = (promptId: string) => {
     if (!selectedFlow) return
-    if (!selectedFlow.steps) return
-    
+
     const updatedSteps = selectedFlow.steps.map(step => 
       step.id === promptId ? { ...step, isExpanded: !step.isExpanded } : step
     )
-    
-    setSelectedFlow({
-      ...selectedFlow,
-      steps: updatedSteps
+
+    // Update local state only (no need to persist this to the database)
+    useFlowStore.setState({
+      selectedFlow: {
+        ...selectedFlow,
+        steps: updatedSteps
+      }
     })
   }
 
-  const handleSaveFlowName = () => {
-    if (!selectedFlow || !editingFlowName.trim()) return
-    
-    updateFlow(selectedFlow.id, { name: editingFlowName.trim() })
+  const handleRunFlow = () => {
+    if (!selectedFlow || selectedFlow.steps.length === 0) return
+
+    executeFlow(selectedFlow.id)
       .then(() => {
-        setToast({ message: 'Flow name updated', type: 'success' })
-        setIsEditingFlowName(false)
+        setToast({ message: 'Flow executed successfully', type: 'success' })
       })
-      .catch((error) => {
-        console.error('Failed to update flow name:', error)
-        setToast({ message: 'Failed to update flow name: ' + error.message, type: 'error' })
+      .catch(error => {
+        console.error('Failed to execute flow:', error)
+        setToast({ message: 'Failed to execute flow', type: 'error' })
       })
   }
 
-  const handleRunFlow = async () => {
-    if (!selectedFlow || !selectedFlow.steps || selectedFlow.steps.length === 0) return
-    if (!apiKey) {
-      setToast({ message: 'Please enter an API key', type: 'error' })
-      setShowApiSettings(true)
-      return
-    }
-    
-    setIsRunningFlow(true)
-    setFlowOutput(null)
-    setFlowResults(null)
-    setFlowError(null)
-    
-    try {
-      // Save API key to localStorage
-      localStorage.setItem('flow_api_key', apiKey)
-      localStorage.setItem('flow_model', model)
-      localStorage.setItem('flow_provider', apiProvider)
-      
-      // Execute the flow
-      const results = await executeFlow(selectedFlow.id, apiKey, model)
-      
-      // Format the output
-      const output = results.map((result, index) => {
-        return `Step ${index + 1}: ${result.step_title}\n${'-'.repeat(40)}\n${result}\n\n`
-      }).join('')
-      
-      setFlowResults(results)
-      setFlowOutput(output)
-      setIsRunningFlow(false)
-      setToast({ message: 'Flow executed successfully', type: 'success' })
-    } catch (error: any) {
-      console.error('Failed to run flow:', error)
-      setFlowError(error.message || 'Failed to run flow')
-      setIsRunningFlow(false)
-      setToast({ message: error.message || 'Failed to run flow', type: 'error' })
-    }
+  const handleClearOutputs = () => {
+    clearOutputs()
+    setToast({ message: 'Outputs cleared', type: 'success' })
   }
 
   const copyToClipboard = async (text: string) => {
@@ -370,7 +322,7 @@ export const PromptFlowPage: React.FC = () => {
   }
 
   // Loading state
-  if (authLoading) {
+  if (authLoading || flowLoading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="text-zinc-400">
@@ -458,7 +410,7 @@ export const PromptFlowPage: React.FC = () => {
                     {flows.map(flow => (
                       <div
                         key={flow.id}
-                        onClick={() => setSelectedFlow(flow)}
+                        onClick={() => handleSelectFlow(flow.id)}
                         className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
                           selectedFlow?.id === flow.id
                             ? 'bg-indigo-600/20 border border-indigo-500/30'
@@ -468,8 +420,18 @@ export const PromptFlowPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-sm font-medium text-white truncate">{flow.name}</h3>
-                            <p className="text-xs text-zinc-400 truncate">{flow.steps?.length || 0} prompt{(flow.steps?.length || 0) !== 1 ? 's' : ''}</p>
+                            <p className="text-xs text-zinc-400 truncate">{flow.steps.length} prompt{flow.steps.length !== 1 ? 's' : ''}</p>
                           </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteFlow(flow.id);
+                            }}
+                            className="p-1 text-zinc-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                            title="Delete flow"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -498,31 +460,35 @@ export const PromptFlowPage: React.FC = () => {
                     <div className="border-b border-zinc-800/50 p-4">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                          {isEditingFlowName ? (
+                          {editingFlowName ? (
                             <div className="flex items-center gap-2">
                               <input
                                 type="text"
-                                value={editingFlowName}
-                                onChange={(e) => setEditingFlowName(e.target.value)}
-                                onBlur={handleSaveFlowName}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSaveFlowName()}
-                                className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 text-xl font-bold"
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                onBlur={handleRenameFlow}
                                 autoFocus
+                                className="text-xl font-bold text-white bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-1 focus:outline-none focus:border-indigo-500"
                               />
                               <button
-                                onClick={handleSaveFlowName}
-                                className="p-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-lg transition-all duration-200"
+                                onClick={handleRenameFlow}
+                                className="p-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200"
                               >
-                                <Check size={16} />
+                                <Save size={16} />
                               </button>
                             </div>
                           ) : (
-                            <h1 
-                              className="text-xl font-bold text-white cursor-pointer hover:text-indigo-400 transition-colors"
-                              onClick={() => setIsEditingFlowName(true)}
-                            >
-                              {selectedFlow.name}
-                            </h1>
+                            <div className="flex items-center gap-2">
+                              <h1 className="text-xl font-bold text-white">{selectedFlow.name}</h1>
+                              <button
+                                onClick={() => setEditingFlowName(true)}
+                                className="p-1 text-zinc-500 hover:text-indigo-400 transition-colors"
+                                title="Rename flow"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                            </div>
                           )}
                           {selectedFlow.description && (
                             <p className="text-zinc-400 text-sm">{selectedFlow.description}</p>
@@ -532,7 +498,7 @@ export const PromptFlowPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={handleRunFlow}
-                            disabled={isRunningFlow || !selectedFlow.steps || selectedFlow.steps.length === 0}
+                            disabled={isRunningFlow || selectedFlow.steps.length === 0}
                             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg transition-all duration-200 text-sm"
                           >
                             {isRunningFlow ? (
@@ -547,6 +513,13 @@ export const PromptFlowPage: React.FC = () => {
                               </>
                             )}
                           </button>
+                          <button
+                            onClick={handleClearOutputs}
+                            className="flex items-center gap-2 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg transition-all duration-200 text-sm"
+                          >
+                            <X size={14} />
+                            <span>Clear</span>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -560,14 +533,6 @@ export const PromptFlowPage: React.FC = () => {
                             <h2 className="text-lg font-semibold text-white">Prompts</h2>
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => setShowApiSettings(!showApiSettings)}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-zinc-600/20 hover:bg-zinc-600/30 text-zinc-400 rounded-lg transition-all duration-200 text-xs"
-                                title="API Settings"
-                              >
-                                <Settings size={12} />
-                                <span>API Settings</span>
-                              </button>
-                              <button
                                 onClick={handleAddPrompt}
                                 className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
                                 title="Import from gallery"
@@ -575,130 +540,36 @@ export const PromptFlowPage: React.FC = () => {
                                 <Import size={12} />
                                 <span>Import</span>
                               </button>
+                              <button
+                                onClick={handleCreateNewPrompt}
+                                className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
+                                title="Create new prompt"
+                              >
+                                <Plus size={12} />
+                                <span>Create</span>
+                              </button>
                             </div>
                           </div>
-
-                          {/* API Settings Panel */}
-                          <AnimatePresence>
-                            {showApiSettings && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="mb-4 overflow-hidden"
-                              >
-                                <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-lg p-4 mb-4">
-                                  <h3 className="text-sm font-medium text-white mb-3">API Settings</h3>
-                                  
-                                  {/* API Provider Selection */}
-                                  <div className="mb-3">
-                                    <label className="block text-xs text-zinc-400 mb-2">Provider</label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                      <button
-                                        onClick={() => {
-                                          setApiProvider('openai')
-                                          setModel('gpt-3.5-turbo')
-                                        }}
-                                        className={`px-3 py-2 text-xs rounded-lg transition-all ${
-                                          apiProvider === 'openai' 
-                                            ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-600/30' 
-                                            : 'bg-zinc-700/30 text-zinc-400 border border-zinc-700/30'
-                                        }`}
-                                      >
-                                        OpenAI
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          setApiProvider('anthropic')
-                                          setModel('claude-3-haiku-20240307')
-                                        }}
-                                        className={`px-3 py-2 text-xs rounded-lg transition-all ${
-                                          apiProvider === 'anthropic' 
-                                            ? 'bg-purple-600/20 text-purple-400 border border-purple-600/30' 
-                                            : 'bg-zinc-700/30 text-zinc-400 border border-zinc-700/30'
-                                        }`}
-                                      >
-                                        Anthropic
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          setApiProvider('google')
-                                          setModel('gemini-pro')
-                                        }}
-                                        className={`px-3 py-2 text-xs rounded-lg transition-all ${
-                                          apiProvider === 'google' 
-                                            ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30' 
-                                            : 'bg-zinc-700/30 text-zinc-400 border border-zinc-700/30'
-                                        }`}
-                                      >
-                                        Google
-                                      </button>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Model Selection */}
-                                  <div className="mb-3">
-                                    <label className="block text-xs text-zinc-400 mb-2">Model</label>
-                                    <select
-                                      value={model}
-                                      onChange={(e) => setModel(e.target.value)}
-                                      className="w-full bg-zinc-700/30 border border-zinc-700/30 rounded-lg px-3 py-2 text-white text-xs"
-                                    >
-                                      {apiProvider === 'openai' && (
-                                        <>
-                                          <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                                          <option value="gpt-4">GPT-4</option>
-                                          <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                                        </>
-                                      )}
-                                      {apiProvider === 'anthropic' && (
-                                        <>
-                                          <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
-                                          <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
-                                          <option value="claude-3-opus-20240229">Claude 3 Opus</option>
-                                        </>
-                                      )}
-                                      {apiProvider === 'google' && (
-                                        <>
-                                          <option value="gemini-pro">Gemini Pro</option>
-                                        </>
-                                      )}
-                                    </select>
-                                  </div>
-                                  
-                                  {/* API Key */}
-                                  <div className="mb-3">
-                                    <label className="block text-xs text-zinc-400 mb-2">API Key</label>
-                                    <input
-                                      type="password"
-                                      value={apiKey}
-                                      onChange={(e) => setApiKey(e.target.value)}
-                                      placeholder={`Enter your ${apiProvider} API key`}
-                                      className="w-full bg-zinc-700/30 border border-zinc-700/30 rounded-lg px-3 py-2 text-white text-xs"
-                                    />
-                                  </div>
-                                  
-                                  <div className="text-xs text-zinc-500">
-                                    Your API key is stored locally in your browser and is never sent to our servers.
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
                           
                           {/* Prompts */}
                           <div className="space-y-3">
-                            {!selectedFlow.steps || selectedFlow.steps.length === 0 ? (
+                            {selectedFlow.steps.length === 0 ? (
                               <div className="text-center py-8 bg-zinc-800/20 rounded-lg border border-zinc-800/50">
                                 <p className="text-zinc-500 mb-2">No prompts in this flow</p>
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
                                   <button
                                     onClick={handleAddPrompt}
-                                    className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs w-full"
-                                    title="Import from gallery"
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
                                   >
                                     <Import size={12} />
                                     <span>Import from Gallery</span>
+                                  </button>
+                                  <button
+                                    onClick={handleCreateNewPrompt}
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
+                                  >
+                                    <Plus size={12} />
+                                    <span>Create New Prompt</span>
                                   </button>
                                 </div>
                               </div>
@@ -752,7 +623,7 @@ export const PromptFlowPage: React.FC = () => {
                                       <div>
                                         <div className="flex items-center justify-between p-3 border-b border-zinc-700/30">
                                           <div className="flex items-center gap-2">
-                                            <div className="w-6 h-6 bg-indigo-600/30 rounded-full flex items-center justify-center text-indigo-400 text-xs font-medium" title={`Step ${step.order_index + 1}`}>
+                                            <div className="w-6 h-6 bg-indigo-600/30 rounded-full flex items-center justify-center text-indigo-400 text-xs font-medium">
                                               {step.order_index + 1}
                                             </div>
                                             <h3 className="text-sm font-medium text-white">{step.step_title}</h3>
@@ -801,11 +672,9 @@ export const PromptFlowPage: React.FC = () => {
                                                       </button>
                                                       <button
                                                         onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          if (step.order_index > 0) {
-                                                            setShowPromptMenu(null);
-                                                            handleMovePrompt(step.id, 'up');
-                                                          }
+                                                          e.stopPropagation()
+                                                          setShowPromptMenu(null)
+                                                          handleMovePrompt(step.id, 'up')
                                                         }}
                                                         disabled={step.order_index === 0}
                                                         className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
@@ -815,13 +684,11 @@ export const PromptFlowPage: React.FC = () => {
                                                       </button>
                                                       <button
                                                         onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          if (step.order_index < selectedFlow.steps?.length - 1) {
-                                                            setShowPromptMenu(null);
-                                                            handleMovePrompt(step.id, 'down');
-                                                          }
+                                                          e.stopPropagation()
+                                                          setShowPromptMenu(null)
+                                                          handleMovePrompt(step.id, 'down')
                                                         }}
-                                                        disabled={step.order_index === (selectedFlow.steps?.length || 0) - 1}
+                                                        disabled={step.order_index === selectedFlow.steps.length - 1}
                                                         className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
                                                       >
                                                         <ArrowDown size={14} />
@@ -846,7 +713,7 @@ export const PromptFlowPage: React.FC = () => {
                                           </div>
                                         </div>
                                         
-                                        <AnimatePresence initial={false}>
+                                        <AnimatePresence>
                                           {step.isExpanded && (
                                             <motion.div
                                               initial={{ height: 0, opacity: 0 }}
@@ -857,8 +724,27 @@ export const PromptFlowPage: React.FC = () => {
                                             >
                                               <div className="p-3 bg-zinc-800/50 border-t border-zinc-700/30">
                                                 <pre className="text-xs text-zinc-300 font-mono whitespace-pre-wrap">
-                                                  {step.prompt?.content || 'No content available'}
+                                                  {step.prompt_content || "No content available"}
                                                 </pre>
+                                                
+                                                {/* Output display */}
+                                                {step.output && (
+                                                  <div className="mt-3 pt-3 border-t border-zinc-700/30">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                      <h4 className="text-xs font-medium text-emerald-400">Output</h4>
+                                                      <button
+                                                        onClick={() => copyToClipboard(step.output || '')}
+                                                        className="p-1 text-zinc-500 hover:text-white transition-colors"
+                                                        title="Copy output"
+                                                      >
+                                                        <Copy size={12} />
+                                                      </button>
+                                                    </div>
+                                                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-lg p-2 text-xs text-emerald-300 font-mono whitespace-pre-wrap">
+                                                      {step.output}
+                                                    </div>
+                                                  </div>
+                                                )}
                                               </div>
                                             </motion.div>
                                           )}
@@ -877,65 +763,32 @@ export const PromptFlowPage: React.FC = () => {
                         <div className="p-4">
                           <h2 className="text-lg font-semibold text-white mb-4">Flow Output</h2>
                           
-                          {flowError ? (
-                            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
-                              <div className="flex items-start gap-3">
-                                <AlertCircle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
-                                <div>
-                                  <h3 className="text-red-400 font-medium mb-1">Error Running Flow</h3>
-                                  <p className="text-red-300 text-sm">{flowError}</p>
-                                </div>
-                              </div>
-                            </div>
-                          ) : flowResults ? (
-                            <div className="relative">
-                              <div className="absolute top-2 right-2 flex items-center gap-2">
-                                <button
-                                  onClick={() => copyToClipboard(flowOutput || '')}
-                                  className="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-lg transition-all duration-200"
-                                  title="Copy to clipboard"
-                                >
-                                  <Save size={14} />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setFlowOutput(null)
-                                    setFlowResults(null)
-                                  }}
-                                  className="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-lg transition-all duration-200"
-                                  title="Clear output"
-                                >
-                                  <X size={14} />
-                                </button>
-                              </div>
-                              <div className="space-y-4">
-                                {flowResults.map((result, index) => (
-                                  <div key={index} className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg overflow-hidden">
-                                    <div className="bg-zinc-700/30 px-4 py-2 border-b border-zinc-700/50">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          <div className="w-5 h-5 bg-indigo-600/30 rounded-full flex items-center justify-center text-indigo-400 text-xs font-medium">
-                                            {index + 1}
-                                          </div>
-                                          <h3 className="text-sm font-medium text-white">{result.step_title}</h3>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <button
-                                            onClick={() => copyToClipboard(result.result)}
-                                            className="p-1 text-zinc-400 hover:text-white transition-colors"
-                                            title="Copy result"
-                                          >
-                                            <Copy size={14} />
-                                          </button>
-                                        </div>
-                                      </div>
+                          {selectedFlow.steps.some(step => step.output) ? (
+                            <div className="space-y-4">
+                              {selectedFlow.steps
+                                .filter(step => step.output)
+                                .map((step, index) => (
+                                  <div key={step.id} className="relative">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <h3 className="text-sm font-medium text-white flex items-center gap-2">
+                                        <span className="w-5 h-5 bg-indigo-600/30 rounded-full flex items-center justify-center text-indigo-400 text-xs">
+                                          {step.order_index + 1}
+                                        </span>
+                                        {step.step_title}
+                                      </h3>
+                                      <button
+                                        onClick={() => copyToClipboard(step.output || '')}
+                                        className="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-lg transition-all duration-200"
+                                        title="Copy to clipboard"
+                                      >
+                                        <Copy size={14} />
+                                      </button>
                                     </div>
-                                    <div className="p-4 font-mono text-sm text-zinc-300 whitespace-pre-wrap">
-                                      {result.result}
+                                    <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-4 font-mono text-sm text-zinc-300 whitespace-pre-wrap">
+                                      {step.output}
                                     </div>
                                   </div>
                                 ))}
-                              </div>
                             </div>
                           ) : (
                             <div className="bg-zinc-800/20 border border-zinc-800/50 rounded-lg p-8 text-center">
@@ -943,20 +796,11 @@ export const PromptFlowPage: React.FC = () => {
                               <p className="text-zinc-500 mb-4">Run the flow to see output here</p>
                               <button
                                 onClick={handleRunFlow}
-                                disabled={isRunningFlow || !selectedFlow.steps || selectedFlow.steps.length === 0 || !apiKey}
+                                disabled={isRunningFlow || selectedFlow.steps.length === 0}
                                 className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg transition-all duration-200 text-sm"
                               >
-                                {isRunningFlow ? (
-                                  <>
-                                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    <span>Running...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Play size={14} />
-                                    <span>Run Flow</span>
-                                  </>
-                                )}
+                                <Play size={14} />
+                                <span>Run Flow</span>
                               </button>
                             </div>
                           )}
@@ -968,7 +812,7 @@ export const PromptFlowPage: React.FC = () => {
                   <div className="flex-1 flex items-center justify-center p-4">
                     <div className="text-center max-w-md">
                       <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <Play size={32} className="text-indigo-400" />
+                        <Folder size={32} className="text-indigo-400" />
                       </div>
                       <h2 className="text-xl font-semibold text-white mb-2">
                         No Flow Selected
@@ -1059,11 +903,20 @@ export const PromptFlowPage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleCreateFlow}
-                  disabled={!newFlowName.trim()}
+                  disabled={isCreatingFlow || !newFlowName.trim()}
                   className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
                 >
-                  <Plus size={16} />
-                  <span>Create Flow</span>
+                  {isCreatingFlow ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      <span>Create Flow</span>
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>
