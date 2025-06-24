@@ -492,61 +492,17 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
     moveNode: async (nodeId: string, position: { x: number; y: number }) => {
       try {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('flow_nodes')
           .update({
             position_x: position.x,
             position_y: position.y
           })
           .eq('id', nodeId)
-          .select()
-          .maybeSingle()
 
         if (error) throw error
 
-        // If no node was found (data is null), handle gracefully
-        if (!data) {
-          // Node doesn't exist, but we can still update local state with the changes
-          const { selectedProject } = get()
-          if (selectedProject?.nodes) {
-            const updatedNodes = selectedProject.nodes.map(n => 
-              n.id === nodeId ? { ...n, position } : n
-            )
-            
-            set({
-              selectedProject: {
-                ...selectedProject,
-                nodes: updatedNodes
-              }
-            })
-          }
-          return
-        }
-
-        // Update local state with the confirmed database state
-        const { selectedProject } = get()
-        if (selectedProject?.nodes) {
-          // Transform node to include position object
-          const transformedNode: FlowNode = {
-            ...data,
-            position: { x: data.position_x, y: data.position_y }
-          }
-          
-          const updatedNodes = selectedProject.nodes.map(n =>
-            n.id === nodeId ? transformedNode : n
-          )
-          
-          set({
-            selectedProject: {
-              ...selectedProject,
-              nodes: updatedNodes
-            }
-          })
-        }
-      } catch (error) {
-        console.error('Error moving node:', error)
-        // If there's an error, we should still update the UI to match user's action
-        // This prevents the node from "jumping back" if the database update fails
+        // Update local state immediately for smooth UX
         const { selectedProject } = get()
         if (selectedProject?.nodes) {
           const updatedNodes = selectedProject.nodes.map(n => 
@@ -560,6 +516,9 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
             }
           })
         }
+      } catch (error) {
+        console.error('Error moving node:', error)
+        throw error
       }
     },
 
