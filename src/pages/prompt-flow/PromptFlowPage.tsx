@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   Menu, 
-  Plus, 
-  Trash2,
+  Plus,
   Check, 
+  Trash2,
   ArrowUp, 
   ArrowDown, 
   Edit3, 
@@ -32,6 +32,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
+import { useFlowStore } from '../../store/flowStore'
 import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
 import { useFlowStore, PromptFlow, FlowStep } from '../../store/flowStore'
@@ -47,7 +48,6 @@ export const PromptFlowPage: React.FC = () => {
   const [showCreateFlow, setShowCreateFlow] = useState(false)
   const [newFlowName, setNewFlowName] = useState('') 
   const [newFlowDescription, setNewFlowDescription] = useState('')
-  const [isCreatingFlow, setIsCreatingFlow] = useState(false)
   const [showPromptModal, setShowPromptModal] = useState(false)
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
   const [editingPromptTitle, setEditingPromptTitle] = useState('')
@@ -113,8 +113,6 @@ export const PromptFlowPage: React.FC = () => {
   const handleCreateFlow = async () => {
     if (!newFlowName.trim()) return
     
-    setIsCreatingFlow(true)
-    
     // Create a new flow using the store
     createFlow(newFlowName.trim(), newFlowDescription.trim() || undefined)
       .then((newFlow) => {
@@ -127,9 +125,6 @@ export const PromptFlowPage: React.FC = () => {
       .catch((error) => {
         console.error('Failed to create flow:', error)
         setToast({ message: 'Failed to create flow: ' + error.message, type: 'error' })
-      })
-      .finally(() => {
-        setIsCreatingFlow(false)
       })
   }
 
@@ -1064,20 +1059,11 @@ export const PromptFlowPage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleCreateFlow}
-                  disabled={isCreatingFlow || !newFlowName.trim()}
+                  disabled={!newFlowName.trim()}
                   className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
                 >
-                  {isCreatingFlow ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Creating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Plus size={16} />
-                      <span>Create Flow</span>
-                    </>
-                  )}
+                  <Plus size={16} />
+                  <span>Create Flow</span>
                 </button>
               </div>
             </motion.div>
