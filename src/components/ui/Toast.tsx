@@ -23,7 +23,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
 
   return (
     <motion.div 
-      className="fixed bottom-4 left-70 z-50"
+      className="fixed bottom-4 left-80 z-50"
       initial={{ y: 50, opacity: 0 }}
       animate={{ y: isVisible ? 0 : 50, opacity: isVisible ? 1 : 0 }}
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
