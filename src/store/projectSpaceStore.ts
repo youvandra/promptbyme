@@ -529,14 +529,14 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           .from('flow_nodes')
           .select('*')
           .eq('id', nodeId)
-          .single()
+          .maybeSingle()
 
         if (fetchError) {
-          // If node doesn't exist, throw a more descriptive error
-          if (fetchError.code === 'PGRST116') {
-            throw new Error('Node not found')
-          }
           throw fetchError
+        }
+        
+        if (!originalNode) {
+          throw new Error('Node not found')
         }
         
         // Create a new node with the same properties but at an offset position
