@@ -99,26 +99,35 @@ export const PromptFlowPage: React.FC = () => {
     if (savedProvider) setApiProvider(savedProvider as any)
   }, [])
 
-  const handleCreateFlow = async () => {
-    if (!newFlowName.trim()) return
-    
-    setIsCreatingFlow(true)
-    try {
-      const newFlow = await createFlow(
-        newFlowName.trim(),
-        newFlowDescription.trim() || undefined
-      )
-      setSelectedFlow(newFlow)
-      setShowCreateFlow(false)
-      setNewFlowName('')
-      setNewFlowDescription('')
-      setToast({ message: 'Flow created successfully', type: 'success' })
-    } catch (error) {
-      console.error('Failed to create flow:', error)
-      setToast({ message: 'Failed to create flow', type: 'error' })
-    } finally {
-      setIsCreatingFlow(false)
-    }
+
+    // Use the flowStore to create a new flow
+    useFlowStore.getState().createFlow(
+      newFlowName.trim(),
+      newFlowDescription.trim() || undefined
+    )
+    .then((newFlow) => {
+      setSelectedFlow({
+        ...newFlow,
+        prompts: newFlow.steps.map(step => ({
+          id: step.id,
+          title: step.step_title,
+          content: step.prompt_content || '',
+          order: step.order_index,
+          isExpanded: false
+        }))
+      });
+      setShowCreateFlow(false);
+      setNewFlowName('');
+      setNewFlowDescription('');
+      setToast({ message: 'Flow created successfully', type: 'success' });
+    })
+    .catch(error => {
+      console.error('Failed to create flow:', error);
+      setToast({ message: `Failed to create flow: ${error.message}`, type: 'error' });
+    })
+    .finally(() => {
+      setIsCreatingFlow(false);
+    });
   }
 
   const handleAddPrompt = () => {
@@ -157,33 +166,6 @@ export const PromptFlowPage: React.FC = () => {
         .insert([{
           user_id: user.id,
           title: 'New Prompt',
-          content: 'Enter your prompt content here...',
-          access: 'private'
-        }])
-        .select()
-        .single()
-        
-      if (error) throw error
-      
-      // Then add it to the flow
-      const step = await addStep(
-        selectedFlow.id,
-        newPrompt.id,
-        newPrompt.title || 'New Prompt'
-      )
-      
-      // Start editing the new prompt
-      setEditingPromptId(step.id)
-      setEditingPromptTitle(step.step_title)
-      setEditingPromptContent(step.prompt?.content || '')
-      
-      setToast({ message: 'New prompt created', type: 'success' })
-    } catch (error) {
-      console.error('Failed to create new prompt:', error)
-      setToast({ message: 'Failed to create new prompt', type: 'error' })
-    }
-  }
-
   const handleEditPrompt = (promptId: string) => {
     if (!selectedFlow) return
     
@@ -520,19 +502,11 @@ export const PromptFlowPage: React.FC = () => {
                               </button>
                               <button
                                 onClick={handleAddPrompt}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
+                                className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs w-full justify-center"
                                 title="Import from gallery"
                               >
                                 <Import size={12} />
                                 <span>Import</span>
-                              </button>
-                              <button
-                                onClick={handleCreateNewPrompt}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
-                                title="Create new prompt"
-                              >
-                                <Plus size={12} />
-                                <span>Create</span>
                               </button>
                             </div>
                           </div>
@@ -651,20 +625,13 @@ export const PromptFlowPage: React.FC = () => {
                               <div className="text-center py-8 bg-zinc-800/20 rounded-lg border border-zinc-800/50">
                                 <p className="text-zinc-500 mb-2">No prompts in this flow</p>
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                                  <button
-                                    onClick={handleAddPrompt}
-                                    className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
-                                  >
-                                    <Import size={12} />
-                                    <span>Import from Gallery</span>
-                                  </button>
-                                  <button
-                                    onClick={handleCreateNewPrompt}
-                                    className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
-                                  >
-                                    <Plus size={12} />
-                                    <span>Create New Prompt</span>
-                                  </button>
+                                 <button
+                                   onClick={handleAddPrompt}
+                                   className="flex items-center gap-1 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-sm"
+                                 >
+                                   <Import size={14} />
+                                   <span>Import from Gallery</span>
+                                 </button>
                                 </div>
                               </div>
                             ) : (
