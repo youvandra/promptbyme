@@ -144,12 +144,18 @@ export const PromptFlowPage: React.FC = () => {
   const handleCreateNewPrompt = async () => {
     if (!selectedFlow) return
     
+    // Check if user is authenticated
+    if (!user) {
+      setToast({ message: 'Please sign in to create prompts', type: 'error' })
+      return
+    }
+    
     try {
       // First create a new prompt in the database
       const { data: newPrompt, error } = await supabase
         .from('prompts')
         .insert([{
-          user_id: user?.id,
+          user_id: user.id,
           title: 'New Prompt',
           content: 'Enter your prompt content here...',
           access: 'private'
