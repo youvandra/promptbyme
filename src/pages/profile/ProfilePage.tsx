@@ -63,29 +63,30 @@ export const ProfilePage: React.FC = () => {
     
     setLoading(true)
     try {
-      // Use maybeSingle() instead of single() to handle cases where no profile exists
+      // Use limit(1) for more robust handling of zero or one row results
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
-        .maybeSingle()
+        .limit(1)
 
       if (error) {
         console.error('Error loading user profile:', error)
         setToast({ message: 'Failed to load profile', type: 'error' })
-      } else if (!data) {
+      } else if (!data || data.length === 0) {
         // No profile exists, create one
         await createUserProfile()
       } else {
         // Profile exists, use it
-        setUserProfile(data)
+        const profile = data[0]
+        setUserProfile(profile)
         setFormData({
-          email: data.email || '',
-          displayName: data.display_name || '',
-          role: data.role || '',
-          isPublicProfile: data.is_public_profile !== false
+          email: profile.email || '',
+          displayName: profile.display_name || '',
+          role: profile.role || '',
+          isPublicProfile: profile.is_public_profile !== false
         })
-        setProfileImage(data.avatar_url || null)
+        setProfileImage(profile.avatar_url || null)
       }
     } catch (error) {
       console.error('Error loading profile:', error)
@@ -104,13 +105,16 @@ export const ProfilePage: React.FC = () => {
         .from('users')
         .select('id')
         .eq('id', user.id)
-        .maybeSingle()
+        .limit(1)
 
-      if (existingProfile) {
+      if (existingProfile && existingProfile.length > 0) {
         // Profile already exists, just reload
         await loadUserProfile()
         return
       }
+
+      // Add a small delay to ensure auth.users record is fully committed
+      await new Promise(resolve => setTimeout(resolve, 500))
 
       const { data, error } = await supabase
         .from('users')
