@@ -400,32 +400,45 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           .update(dbUpdates)
           .eq('id', nodeId)
           .select()
-          .maybeSingle()
+          .single()
 
-        if (error) throw error
+        if (error) {
+          // If the error is because no rows were found, handle gracefully
+          if (error.code === 'PGRST116') {
+            // Node doesn't exist, but we can still update local state with the changes
+            const { selectedProject } = get()
+            if (selectedProject?.nodes) {
+              const existingNode = selectedProject.nodes.find(n => n.id === nodeId)
+              if (existingNode) {
+                const transformedNode = {
+                  ...existingNode,
+                  ...updates
+                }
+                
+                const updatedNodes = selectedProject.nodes.map(n => 
+                  n.id === nodeId ? transformedNode : n
+                )
+                
+                set({
+                  selectedProject: {
+                    ...selectedProject,
+                    nodes: updatedNodes
+                  }
+                })
+              }
+            }
+            return
+          }
+          throw error
+        }
 
         // Update selected project if it contains this node
         const { selectedProject } = get()
         if (selectedProject?.nodes) {
-          // If no node was returned (no changes made), use the existing node with updates
-          let transformedNode: FlowNode
-          
-          if (node) {
-            // Transform node to include position object
-            transformedNode = {
-              ...node,
-              position: { x: node.position_x, y: node.position_y }
-            }
-          } else {
-            // No changes were made, merge updates with existing node
-            const existingNode = selectedProject.nodes.find(n => n.id === nodeId)
-            if (!existingNode) {
-              throw new Error('Node not found in local state')
-            }
-            transformedNode = {
-              ...existingNode,
-              ...updates
-            }
+          // Transform node to include position object
+          const transformedNode: FlowNode = {
+            ...node,
+            position: { x: node.position_x, y: node.position_y }
           }
           
           const updatedNodes = selectedProject.nodes.map(n => 
@@ -515,16 +528,16 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           .from('flow_nodes')
           .select('*')
           .eq('id', nodeId)
-          .maybeSingle()
+          .single()
 
         if (fetchError) {
+          // If node doesn't exist, throw a more descriptive error
+          if (fetchError.code === 'PGRST116') {
+            throw new Error('Node not found')
+          }
           throw fetchError
         }
         
-        if (!originalNode) {
-          throw new Error('Failed to fetch original node')
-        }
-
         // Create a new node with the same properties but at an offset position
         const { data: newNode, error: createError } = await supabase
           .from('flow_nodes')
