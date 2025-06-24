@@ -400,19 +400,34 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           .update(dbUpdates)
           .eq('id', nodeId)
           .select()
-          .single()
+          .maybeSingle()
 
         if (error) throw error
-
-        // Transform node to include position object
-        const transformedNode: FlowNode = {
-          ...node,
-          position: { x: node.position_x, y: node.position_y }
-        }
 
         // Update selected project if it contains this node
         const { selectedProject } = get()
         if (selectedProject?.nodes) {
+          // If no node was returned (no changes made), use the existing node with updates
+          let transformedNode: FlowNode
+          
+          if (node) {
+            // Transform node to include position object
+            transformedNode = {
+              ...node,
+              position: { x: node.position_x, y: node.position_y }
+            }
+          } else {
+            // No changes were made, merge updates with existing node
+            const existingNode = selectedProject.nodes.find(n => n.id === nodeId)
+            if (!existingNode) {
+              throw new Error('Node not found in local state')
+            }
+            transformedNode = {
+              ...existingNode,
+              ...updates
+            }
+          }
+          
           const updatedNodes = selectedProject.nodes.map(n => 
             n.id === nodeId ? transformedNode : n
           )
