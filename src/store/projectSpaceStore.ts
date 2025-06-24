@@ -500,9 +500,28 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           })
           .eq('id', nodeId)
           .select()
-          .single()
+          .maybeSingle()
 
         if (error) throw error
+
+        // If no node was found (data is null), handle gracefully
+        if (!data) {
+          // Node doesn't exist, but we can still update local state with the changes
+          const { selectedProject } = get()
+          if (selectedProject?.nodes) {
+            const updatedNodes = selectedProject.nodes.map(n => 
+              n.id === nodeId ? { ...n, position } : n
+            )
+            
+            set({
+              selectedProject: {
+                ...selectedProject,
+                nodes: updatedNodes
+              }
+            })
+          }
+          return
+        }
 
         // Update local state with the confirmed database state
         const { selectedProject } = get()
