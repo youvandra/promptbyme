@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   Menu, 
   Plus, 
-  Trash2, 
+  Trash2,
+  Check, 
   ArrowUp, 
   ArrowDown, 
   Edit3, 
@@ -18,7 +19,6 @@ import {
   MoreVertical,
   X,
   AlertCircle,
-  Check,
   Settings,
   Copy,
   AlertTriangle,
@@ -33,6 +33,7 @@ import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
+import { useFlowStore } from '../../store/flowStore'
 import { usePromptStore } from '../../store/promptStore'
 import { useFlowStore, PromptFlow, FlowStep } from '../../store/flowStore'
 import { supabase } from '../../lib/supabase'
@@ -61,20 +62,24 @@ export const PromptFlowPage: React.FC = () => {
   const [apiProvider, setApiProvider] = useState<'openai' | 'anthropic' | 'google'>('openai')
   const [flowResults, setFlowResults] = useState<any[] | null>(null)
   const [flowError, setFlowError] = useState<string | null>(null)
+  const [isEditingFlowName, setIsEditingFlowName] = useState(false)
+  const [editingFlowName, setEditingFlowName] = useState('')
   
   const { user, loading: authLoading } = useAuthStore()
-  const { fetchUserPrompts } = usePromptStore()
   const { 
     flows: storeFlows, 
+    selectedFlow: storeSelectedFlow, 
     fetchFlows, 
     createFlow, 
-    selectFlow, 
+    updateFlow, 
+    selectFlow,
     addStep,
     updateStep,
     deleteStep,
     reorderStep,
     executeFlow
   } = useFlowStore()
+  const { fetchUserPrompts } = usePromptStore()
 
   useEffect(() => {
     if (user) {
@@ -87,6 +92,13 @@ export const PromptFlowPage: React.FC = () => {
   useEffect(() => {
     setFlows(storeFlows)
   }, [storeFlows])
+  
+  // Update editingFlowName when selectedFlow changes
+  useEffect(() => {
+    if (selectedFlow) {
+      setEditingFlowName(selectedFlow.name)
+    }
+  }, [selectedFlow])
 
   // Load API key from localStorage
   useEffect(() => {
@@ -103,22 +115,23 @@ export const PromptFlowPage: React.FC = () => {
     if (!newFlowName.trim()) return
     
     setIsCreatingFlow(true)
-    try {
-      const newFlow = await createFlow(
-        newFlowName.trim(),
-        newFlowDescription.trim() || undefined
-      )
-      setSelectedFlow(newFlow)
-      setShowCreateFlow(false)
-      setNewFlowName('')
-      setNewFlowDescription('')
-      setToast({ message: 'Flow created successfully', type: 'success' })
-    } catch (error) {
-      console.error('Failed to create flow:', error)
-      setToast({ message: 'Failed to create flow', type: 'error' })
-    } finally {
-      setIsCreatingFlow(false)
-    }
+    
+    // Create a new flow using the store
+    createFlow(newFlowName.trim(), newFlowDescription.trim() || undefined)
+      .then((newFlow) => {
+        setSelectedFlow(newFlow)
+        setShowCreateFlow(false)
+        setNewFlowName('')
+        setNewFlowDescription('')
+        setToast({ message: 'Flow created successfully', type: 'success' })
+      })
+      .catch((error) => {
+        console.error('Failed to create flow:', error)
+        setToast({ message: 'Failed to create flow: ' + error.message, type: 'error' })
+      })
+      .finally(() => {
+        setIsCreatingFlow(false)
+      })
   }
 
   const handleAddPrompt = () => {
@@ -128,17 +141,20 @@ export const PromptFlowPage: React.FC = () => {
   const handlePromptSelected = async (prompt: any) => {
     if (!selectedFlow) return
     
-    try {
-      await addStep(
-        selectedFlow.id,
-        prompt.id,
-        prompt.title || 'Untitled Prompt'
-      )
-      setToast({ message: 'Prompt added to flow', type: 'success' })
-    } catch (error) {
-      console.error('Failed to add prompt to flow:', error)
-      setToast({ message: 'Failed to add prompt to flow', type: 'error' })
-    }
+    // Add the selected prompt to the flow using the store
+    addStep(
+      selectedFlow.id,
+      prompt.id,
+      prompt.title || 'Untitled Prompt',
+      prompt.content
+    )
+      .then(() => {
+        setToast({ message: 'Prompt added to flow', type: 'success' })
+      })
+      .catch((error) => {
+        console.error('Failed to add prompt to flow:', error)
+        setToast({ message: 'Failed to add prompt: ' + error.message, type: 'error' })
+      })
   }
 
   const handleCreateNewPrompt = async () => {
@@ -252,34 +268,34 @@ export const PromptFlowPage: React.FC = () => {
 
   const handleMovePrompt = async (promptId: string, direction: 'up' | 'down') => {
     if (!selectedFlow) return
-    if (!selectedFlow.steps) return
-    
-    const promptIndex = selectedFlow.steps.findIndex(s => s.id === promptId)
-    if (promptIndex === -1) return
-    
-    const steps = [...selectedFlow.steps]
-    
-    if (direction === 'up' && promptIndex > 0) {
-      // Swap with the previous prompt
-      const temp = steps[promptIndex]
-      steps[promptIndex] = steps[promptIndex - 1]
-      steps[promptIndex - 1] = temp
-    } else if (direction === 'down' && promptIndex < steps.length - 1) {
-      // Swap with the next prompt
-      const temp = steps[promptIndex]
-      steps[promptIndex] = steps[promptIndex + 1]
-      steps[promptIndex + 1] = temp
-    } else {
-      return // No change needed
-    }
     
     try {
-      // Get the IDs in the new order
-      const stepIds = steps.map(step => step.id)
-      await reorderStep(stepIds[0], steps.findIndex(s => s.id === stepIds[0]))
+      const step = selectedFlow.prompts.find(p => p.id === promptId)
+      if (!step) return
+      
+      const currentIndex = step.order
+      let newIndex = currentIndex
+      
+      if (direction === 'up' && currentIndex > 0) {
+        newIndex = currentIndex - 1
+      } else if (direction === 'down' && currentIndex < selectedFlow.prompts.length - 1) {
+        newIndex = currentIndex + 1
+      } else {
+        return // No change needed
+      }
+      
+      // Use the reorderStep function from the store
+      useFlowStore.getState().reorderStep(promptId, newIndex)
+        .then(() => {
+          // Success is handled by the store updating the state
+        })
+        .catch((error) => {
+          console.error('Failed to reorder steps:', error)
+          setToast({ message: 'Failed to reorder steps: ' + error.message, type: 'error' })
+        })
     } catch (error) {
       console.error('Failed to reorder steps:', error)
-      setToast({ message: 'Failed to reorder steps', type: 'error' })
+      setToast({ message: 'Failed to reorder steps: ' + error.message, type: 'error' })
     }
   }
 
@@ -295,6 +311,20 @@ export const PromptFlowPage: React.FC = () => {
       ...selectedFlow,
       steps: updatedSteps
     })
+  }
+
+  const handleSaveFlowName = () => {
+    if (!selectedFlow || !editingFlowName.trim()) return
+    
+    updateFlow(selectedFlow.id, { name: editingFlowName.trim() })
+      .then(() => {
+        setToast({ message: 'Flow name updated', type: 'success' })
+        setIsEditingFlowName(false)
+      })
+      .catch((error) => {
+        console.error('Failed to update flow name:', error)
+        setToast({ message: 'Failed to update flow name: ' + error.message, type: 'error' })
+      })
   }
 
   const handleRunFlow = async () => {
@@ -474,7 +504,32 @@ export const PromptFlowPage: React.FC = () => {
                     <div className="border-b border-zinc-800/50 p-4">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                          <h1 className="text-xl font-bold text-white">{selectedFlow.name}</h1>
+                          {isEditingFlowName ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={editingFlowName}
+                                onChange={(e) => setEditingFlowName(e.target.value)}
+                                onBlur={handleSaveFlowName}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSaveFlowName()}
+                                className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 text-xl font-bold"
+                                autoFocus
+                              />
+                              <button
+                                onClick={handleSaveFlowName}
+                                className="p-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 rounded-lg transition-all duration-200"
+                              >
+                                <Check size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <h1 
+                              className="text-xl font-bold text-white cursor-pointer hover:text-indigo-400 transition-colors"
+                              onClick={() => setIsEditingFlowName(true)}
+                            >
+                              {selectedFlow.name}
+                            </h1>
+                          )}
                           {selectedFlow.description && (
                             <p className="text-zinc-400 text-sm">{selectedFlow.description}</p>
                           )}
@@ -645,7 +700,8 @@ export const PromptFlowPage: React.FC = () => {
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
                                   <button
                                     onClick={handleAddPrompt}
-                                    className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs w-full"
+                                    title="Import from gallery"
                                   >
                                     <Import size={12} />
                                     <span>Import from Gallery</span>
@@ -751,9 +807,11 @@ export const PromptFlowPage: React.FC = () => {
                                                       </button>
                                                       <button
                                                         onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          setShowPromptMenu(null)
-                                                          handleMovePrompt(step.id, 'up')
+                                                          e.stopPropagation();
+                                                          if (step.order_index > 0) {
+                                                            setShowPromptMenu(null);
+                                                            handleMovePrompt(step.id, 'up');
+                                                          }
                                                         }}
                                                         disabled={step.order_index === 0}
                                                         className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
@@ -763,9 +821,11 @@ export const PromptFlowPage: React.FC = () => {
                                                       </button>
                                                       <button
                                                         onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          setShowPromptMenu(null)
-                                                          handleMovePrompt(step.id, 'down')
+                                                          e.stopPropagation();
+                                                          if (step.order_index < selectedFlow.steps?.length - 1) {
+                                                            setShowPromptMenu(null);
+                                                            handleMovePrompt(step.id, 'down');
+                                                          }
                                                         }}
                                                         disabled={step.order_index === (selectedFlow.steps?.length || 0) - 1}
                                                         className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
