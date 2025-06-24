@@ -192,22 +192,57 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         throw error
       }
     },
-
+      const { data, error } = await supabase
     updateProject: async (id: string, updates: Partial<FlowProject>) => {
       try {
         const { data: project, error } = await supabase
           .from('flow_projects')
           .update(updates)
           .eq('id', id)
+        .select()
+        .single()
           .select()
           .single()
 
         if (error) throw error
 
         const { projects, selectedProject } = get()
-        const updatedProjects = projects.map(p => p.id === id ? project : p)
-        
-        set({ 
+        // If we got data back from the database, use it to update the node
+        if (data) {
+          const transformedNode: FlowNode = {
+            ...data,
+            position: { x: data.position_x, y: data.position_y }
+          }
+          
+          const updatedNodes = selectedProject.nodes.map(n => 
+            n.id === nodeId ? transformedNode : n
+          )
+          
+          set({
+            selectedProject: {
+              ...selectedProject,
+              nodes: updatedNodes
+            }
+          })
+        } else {
+          // Fallback to just updating the position in local state
+          const updatedNodes = selectedProject.nodes.map(n => 
+            n.id === nodeId ? { ...n, position } : n
+          )
+          
+          set({
+            selectedProject: {
+              ...selectedProject,
+              nodes: updatedNodes
+            }
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error moving node:', error)
+      throw error
+    }
+      if (selectedProject?.id === originalNode.project_id) {
           projects: updatedProjects,
           selectedProject: selectedProject?.id === id ? {
             ...selectedProject,
@@ -885,13 +920,9 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
               })
             }
           }
-        )
+            nodes: [...(selectedProject.nodes || []), transformedNode]
         .subscribe()
 
       return () => {
-        nodesSubscription.unsubscribe()
-        connectionsSubscription.unsubscribe()
-      }
-    }
   }))
 )
