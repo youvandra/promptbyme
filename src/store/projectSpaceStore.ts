@@ -400,36 +400,37 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           .update(dbUpdates)
           .eq('id', nodeId)
           .select()
-          .single()
+          .maybeSingle()
 
         if (error) {
-          // If the error is because no rows were found, handle gracefully
-          if (error.code === 'PGRST116') {
-            // Node doesn't exist, but we can still update local state with the changes
-            const { selectedProject } = get()
-            if (selectedProject?.nodes) {
-              const existingNode = selectedProject.nodes.find(n => n.id === nodeId)
-              if (existingNode) {
-                const transformedNode = {
-                  ...existingNode,
-                  ...updates
-                }
-                
-                const updatedNodes = selectedProject.nodes.map(n => 
-                  n.id === nodeId ? transformedNode : n
-                )
-                
-                set({
-                  selectedProject: {
-                    ...selectedProject,
-                    nodes: updatedNodes
-                  }
-                })
-              }
-            }
-            return
-          }
           throw error
+        }
+
+        // If no node was found (node is null), handle gracefully
+        if (!node) {
+          // Node doesn't exist, but we can still update local state with the changes
+          const { selectedProject } = get()
+          if (selectedProject?.nodes) {
+            const existingNode = selectedProject.nodes.find(n => n.id === nodeId)
+            if (existingNode) {
+              const transformedNode = {
+                ...existingNode,
+                ...updates
+              }
+              
+              const updatedNodes = selectedProject.nodes.map(n => 
+                n.id === nodeId ? transformedNode : n
+              )
+              
+              set({
+                selectedProject: {
+                  ...selectedProject,
+                  nodes: updatedNodes
+                }
+              })
+            }
+          }
+          return
         }
 
         // Update selected project if it contains this node
