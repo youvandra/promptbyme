@@ -26,7 +26,8 @@ import {
   Download,
   MessageSquare,
   Bot,
-  Sparkles
+  Sparkles,
+  Pencil
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Toast } from '../../components/ui/Toast'
