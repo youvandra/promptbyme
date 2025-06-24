@@ -7,11 +7,12 @@ export interface FlowStep {
   prompt_id: string
   order_index: number
   step_title: string
-  created_at: string
-  prompt?: {
-    title?: string
-    content: string
-  }
+  created_at?: string
+  prompt_content?: string
+  prompt_title?: string
+  output?: string
+  isExpanded?: boolean
+  isRunning?: boolean
 }
 
 export interface PromptFlow {
@@ -19,44 +20,66 @@ export interface PromptFlow {
   user_id: string
   name: string
   description?: string
-  created_at: string
-  updated_at: string
-  steps?: FlowStep[]
+  created_at?: string
+  updated_at?: string
+  steps: FlowStep[]
+}
+
+interface ApiSettings {
+  provider: 'openai' | 'anthropic' | 'google'
+  apiKey: string
+  model: string
+  temperature: number
+  maxTokens: number
 }
 
 interface FlowState {
   flows: PromptFlow[]
   selectedFlow: PromptFlow | null
+  apiSettings: ApiSettings
   loading: boolean
+  executing: boolean
   
   // Flow operations
   fetchFlows: () => Promise<void>
   createFlow: (name: string, description?: string) => Promise<PromptFlow>
-  updateFlow: (id: string, updates: Partial<PromptFlow>) => Promise<void>
+  updateFlow: (id: string, updates: Partial<Omit<PromptFlow, 'id' | 'steps'>>) => Promise<void>
   deleteFlow: (id: string) => Promise<void>
-  selectFlow: (flow: PromptFlow) => Promise<void>
+  selectFlow: (id: string) => Promise<void>
   
   // Step operations
-  addStep: (flowId: string, promptId: string, stepTitle: string, orderIndex?: number) => Promise<FlowStep>
-  updateStep: (stepId: string, updates: Partial<FlowStep>) => Promise<void>
+  addStep: (flowId: string, promptId: string, title: string, content: string) => Promise<void>
+  updateStep: (stepId: string, updates: Partial<Omit<FlowStep, 'id' | 'flow_id'>>) => Promise<void>
   deleteStep: (stepId: string) => Promise<void>
-  reorderSteps: (flowId: string, stepIds: string[]) => Promise<void>
+  reorderStep: (stepId: string, newIndex: number) => Promise<void>
   
-  // Flow execution
-  executeFlow: (flowId: string, apiKey: string, model: string, initialVariables?: Record<string, string>) => Promise<string[]>
+  // Execution
+  executeFlow: (flowId: string, variables?: Record<string, string>) => Promise<void>
+  executeStep: (stepId: string, variables?: Record<string, string>) => Promise<string>
+  updateApiSettings: (settings: Partial<ApiSettings>) => void
+  clearOutputs: () => void
 }
 
 export const useFlowStore = create<FlowState>((set, get) => ({
   flows: [],
   selectedFlow: null,
+  apiSettings: {
+    provider: 'openai',
+    apiKey: '',
+    model: 'gpt-3.5-turbo',
+    temperature: 0.7,
+    maxTokens: 1000
+  },
   loading: false,
-
+  executing: false,
+  
   fetchFlows: async () => {
     set({ loading: true })
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('User not authenticated')
 
+      // Fetch flows
       const { data: flows, error } = await supabase
         .from('prompt_flows')
         .select('*')
@@ -65,14 +88,54 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
       if (error) throw error
 
-      set({ flows: flows || [] })
+      // For each flow, fetch its steps
+      const flowsWithSteps = await Promise.all((flows || []).map(async (flow) => {
+        const { data: steps, error: stepsError } = await supabase
+          .from('flow_steps')
+          .select(`
+            id,
+            flow_id,
+            prompt_id,
+            order_index,
+            step_title,
+            created_at,
+            prompts (
+              id,
+              title,
+              content
+            )
+          `)
+          .eq('flow_id', flow.id)
+          .order('order_index')
+
+        if (stepsError) {
+          console.error(`Error fetching steps for flow ${flow.id}:`, stepsError)
+          return { ...flow, steps: [] }
+        }
+
+        // Transform steps to include prompt content
+        const transformedSteps = (steps || []).map(step => ({
+          id: step.id,
+          flow_id: step.flow_id,
+          prompt_id: step.prompt_id,
+          order_index: step.order_index,
+          step_title: step.step_title,
+          created_at: step.created_at,
+          prompt_content: step.prompts?.content || '',
+          prompt_title: step.prompts?.title || '',
+          isExpanded: false
+        }))
+
+        return { ...flow, steps: transformedSteps }
+      }))
+
+      set({ flows: flowsWithSteps, loading: false })
     } catch (error) {
       console.error('Error fetching flows:', error)
-    } finally {
       set({ loading: false })
     }
   },
-
+  
   createFlow: async (name, description) => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -90,17 +153,15 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
       if (error) throw error
 
-      // Update local state
-      const { flows } = get()
-      set({ flows: [data, ...flows] })
-      
-      return data
+      const newFlow = { ...data, steps: [] }
+      set(state => ({ flows: [newFlow, ...state.flows] }))
+      return newFlow
     } catch (error) {
       console.error('Error creating flow:', error)
       throw error
     }
   },
-
+  
   updateFlow: async (id, updates) => {
     try {
       const { data, error } = await supabase
@@ -112,18 +173,20 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
       if (error) throw error
 
-      // Update local state
-      const { flows, selectedFlow } = get()
-      set({
-        flows: flows.map(f => f.id === id ? { ...f, ...data } : f),
-        selectedFlow: selectedFlow?.id === id ? { ...selectedFlow, ...data } : selectedFlow
-      })
+      set(state => ({
+        flows: state.flows.map(flow => 
+          flow.id === id ? { ...flow, ...data } : flow
+        ),
+        selectedFlow: state.selectedFlow?.id === id 
+          ? { ...state.selectedFlow, ...data } 
+          : state.selectedFlow
+      }))
     } catch (error) {
       console.error('Error updating flow:', error)
       throw error
     }
   },
-
+  
   deleteFlow: async (id) => {
     try {
       const { error } = await supabase
@@ -133,109 +196,81 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
       if (error) throw error
 
-      // Update local state
-      const { flows, selectedFlow } = get()
-      set({
-        flows: flows.filter(f => f.id !== id),
-        selectedFlow: selectedFlow?.id === id ? null : selectedFlow
-      })
+      set(state => ({
+        flows: state.flows.filter(flow => flow.id !== id),
+        selectedFlow: state.selectedFlow?.id === id ? null : state.selectedFlow
+      }))
     } catch (error) {
       console.error('Error deleting flow:', error)
       throw error
     }
   },
-
-  selectFlow: async (flow) => {
+  
+  selectFlow: async (id) => {
     try {
-      // Fetch steps for the selected flow
-      const { data: steps, error } = await supabase
-        .from('flow_steps')
-        .select(`
-          *,
-          prompt:prompts(id, title, content)
-        `)
-        .eq('flow_id', flow.id)
-        .order('order_index')
-
-      if (error) throw error
-
-      // Format steps to include prompt data
-      const formattedSteps = steps?.map(step => ({
-        ...step,
-        prompt_id: step.prompt_id,
-        prompt: {
-          title: step.prompt.title,
-          content: step.prompt.content
-        }
-      })) || []
-
-      // Set selected flow with steps
-      set({
-        selectedFlow: {
-          ...flow,
-          steps: formattedSteps
-        }
-      })
+      const flow = get().flows.find(f => f.id === id)
+      if (!flow) throw new Error('Flow not found')
+      
+      set({ selectedFlow: flow })
     } catch (error) {
       console.error('Error selecting flow:', error)
       throw error
     }
   },
-
-  addStep: async (flowId, promptId, stepTitle, orderIndex) => {
+  
+  addStep: async (flowId, promptId, title, content) => {
     try {
-      // If order index is not provided, add to the end
-      let nextOrderIndex = orderIndex
-      
-      if (nextOrderIndex === undefined) {
-        const { selectedFlow } = get()
-        nextOrderIndex = selectedFlow?.steps?.length || 0
-      }
+      // Get the current highest order index
+      const { selectedFlow } = get()
+      const steps = selectedFlow?.steps || []
+      const nextOrderIndex = steps.length > 0 
+        ? Math.max(...steps.map(s => s.order_index)) + 1 
+        : 0
 
       const { data, error } = await supabase
         .from('flow_steps')
         .insert([{
           flow_id: flowId,
           prompt_id: promptId,
-          step_title: stepTitle,
-          order_index: nextOrderIndex
+          order_index: nextOrderIndex,
+          step_title: title
         }])
-        .select(`
-          *,
-          prompt:prompts(id, title, content)
-        `)
+        .select()
         .single()
 
       if (error) throw error
 
-      // Format step to include prompt data
-      const formattedStep = {
+      const newStep: FlowStep = {
         ...data,
-        prompt_id: data.prompt_id,
-        prompt: {
-          title: data.prompt.title,
-          content: data.prompt.content
-        }
+        prompt_content: content,
+        prompt_title: title,
+        isExpanded: false
       }
 
-      // Update selected flow
-      const { selectedFlow } = get()
-      if (selectedFlow?.id === flowId) {
-        set({
-          selectedFlow: {
-            ...selectedFlow,
-            steps: [...(selectedFlow.steps || []), formattedStep]
+      set(state => {
+        // Update both flows and selectedFlow
+        const updatedFlows = state.flows.map(flow => {
+          if (flow.id === flowId) {
+            return { ...flow, steps: [...flow.steps, newStep] }
           }
+          return flow
         })
-      }
+        
+        const updatedSelectedFlow = state.selectedFlow?.id === flowId
+          ? { ...state.selectedFlow, steps: [...state.selectedFlow.steps, newStep] }
+          : state.selectedFlow
 
-      return formattedStep
+        return { 
+          flows: updatedFlows,
+          selectedFlow: updatedSelectedFlow
+        }
+      })
     } catch (error) {
       console.error('Error adding step:', error)
       throw error
     }
   },
-
+  
   updateStep: async (stepId, updates) => {
     try {
       const { data, error } = await supabase
@@ -247,33 +282,49 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
       if (error) throw error
 
-      // Update selected flow
-      const { selectedFlow } = get()
-      if (selectedFlow?.steps) {
-        set({
-          selectedFlow: {
-            ...selectedFlow,
-            steps: selectedFlow.steps.map(step => 
-              step.id === stepId ? { ...step, ...data } : step
-            )
+      set(state => {
+        // Update both flows and selectedFlow
+        const updatedFlows = state.flows.map(flow => {
+          const stepIndex = flow.steps.findIndex(s => s.id === stepId)
+          if (stepIndex >= 0) {
+            const updatedSteps = [...flow.steps]
+            updatedSteps[stepIndex] = { 
+              ...updatedSteps[stepIndex], 
+              ...updates,
+              ...data
+            }
+            return { ...flow, steps: updatedSteps }
           }
+          return flow
         })
-      }
+        
+        let updatedSelectedFlow = state.selectedFlow
+        if (state.selectedFlow) {
+          const stepIndex = state.selectedFlow.steps.findIndex(s => s.id === stepId)
+          if (stepIndex >= 0) {
+            const updatedSteps = [...state.selectedFlow.steps]
+            updatedSteps[stepIndex] = { 
+              ...updatedSteps[stepIndex], 
+              ...updates,
+              ...data
+            }
+            updatedSelectedFlow = { ...state.selectedFlow, steps: updatedSteps }
+          }
+        }
+
+        return { 
+          flows: updatedFlows,
+          selectedFlow: updatedSelectedFlow
+        }
+      })
     } catch (error) {
       console.error('Error updating step:', error)
       throw error
     }
   },
-
+  
   deleteStep: async (stepId) => {
     try {
-      const { selectedFlow } = get()
-      if (!selectedFlow) return
-
-      // Find the step to delete
-      const stepToDelete = selectedFlow.steps?.find(step => step.id === stepId)
-      if (!stepToDelete) return
-
       const { error } = await supabase
         .from('flow_steps')
         .delete()
@@ -281,212 +332,323 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
       if (error) throw error
 
-      // Get remaining steps
-      const remainingSteps = selectedFlow.steps?.filter(step => step.id !== stepId) || []
-      
-      // Reorder remaining steps if needed
-      if (remainingSteps.length > 0) {
-        // Update order_index for all steps after the deleted one
-        const stepsToUpdate = remainingSteps
-          .filter(step => step.order_index > stepToDelete.order_index)
-          .map(step => ({
-            id: step.id,
-            order_index: step.order_index - 1
-          }))
-        
-        if (stepsToUpdate.length > 0) {
-          // Update each step's order_index in the database
-          for (const step of stepsToUpdate) {
-            await supabase
-              .from('flow_steps')
-              .update({ order_index: step.order_index })
-              .eq('id', step.id)
+      set(state => {
+        // Find which flow contains this step
+        let flowId: string | null = null
+        for (const flow of state.flows) {
+          if (flow.steps.some(s => s.id === stepId)) {
+            flowId = flow.id
+            break
           }
         }
+
+        if (!flowId) return state // Step not found
+
+        // Update the order_index of remaining steps
+        const updateOrderIndices = async (flowId: string, steps: FlowStep[]) => {
+          // Sort steps by order_index
+          const sortedSteps = [...steps].sort((a, b) => a.order_index - b.order_index)
+          
+          // Update order_index for each step
+          for (let i = 0; i < sortedSteps.length; i++) {
+            if (sortedSteps[i].order_index !== i) {
+              await supabase
+                .from('flow_steps')
+                .update({ order_index: i })
+                .eq('id', sortedSteps[i].id)
+              
+              sortedSteps[i].order_index = i
+            }
+          }
+          
+          return sortedSteps
+        }
+
+        // Update both flows and selectedFlow
+        const updatedFlows = state.flows.map(flow => {
+          if (flow.id === flowId) {
+            const updatedSteps = flow.steps.filter(s => s.id !== stepId)
+            // Schedule reordering (don't wait for it)
+            updateOrderIndices(flow.id, updatedSteps)
+            return { ...flow, steps: updatedSteps }
+          }
+          return flow
+        })
         
-        // Update local state with reordered steps
-        set({
-          selectedFlow: {
-            ...selectedFlow,
-            steps: remainingSteps.map(step => ({
-              ...step,
-              order_index: step.order_index > stepToDelete.order_index 
-                ? step.order_index - 1 
-                : step.order_index
-            }))
-          }
-        })
-      } else {
-        // No steps left
-        set({
-          selectedFlow: {
-            ...selectedFlow,
-            steps: []
-          }
-        })
-      }
+        let updatedSelectedFlow = state.selectedFlow
+        if (state.selectedFlow?.id === flowId) {
+          const updatedSteps = state.selectedFlow.steps.filter(s => s.id !== stepId)
+          updatedSelectedFlow = { ...state.selectedFlow, steps: updatedSteps }
+        }
+
+        return { 
+          flows: updatedFlows,
+          selectedFlow: updatedSelectedFlow
+        }
+      })
     } catch (error) {
       console.error('Error deleting step:', error)
       throw error
     }
   },
-
-  reorderSteps: async (flowId, stepIds) => {
+  
+  reorderStep: async (stepId, newIndex) => {
     try {
-      // Update each step's order_index in the database
-      for (let i = 0; i < stepIds.length; i++) {
+      const { selectedFlow } = get()
+      if (!selectedFlow) throw new Error('No flow selected')
+
+      const stepIndex = selectedFlow.steps.findIndex(s => s.id === stepId)
+      if (stepIndex === -1) throw new Error('Step not found')
+
+      const step = selectedFlow.steps[stepIndex]
+      const currentIndex = step.order_index
+      
+      if (currentIndex === newIndex) return // No change needed
+
+      // Update the step's order_index
+      const { error } = await supabase
+        .from('flow_steps')
+        .update({ order_index: newIndex })
+        .eq('id', stepId)
+
+      if (error) throw error
+
+      // Reorder other steps as needed
+      const stepsToUpdate = selectedFlow.steps.filter(s => {
+        if (currentIndex < newIndex) {
+          // Moving down: update steps between current and new position
+          return s.order_index > currentIndex && s.order_index <= newIndex
+        } else {
+          // Moving up: update steps between new and current position
+          return s.order_index >= newIndex && s.order_index < currentIndex
+        }
+      })
+
+      // Update order_index for affected steps
+      for (const stepToUpdate of stepsToUpdate) {
+        const newOrderIndex = currentIndex < newIndex
+          ? stepToUpdate.order_index - 1 // Moving down: decrement steps in between
+          : stepToUpdate.order_index + 1 // Moving up: increment steps in between
+        
         await supabase
           .from('flow_steps')
-          .update({ order_index: i })
-          .eq('id', stepIds[i])
+          .update({ order_index: newOrderIndex })
+          .eq('id', stepToUpdate.id)
       }
 
       // Update local state
-      const { selectedFlow } = get()
-      if (selectedFlow?.id === flowId && selectedFlow.steps) {
-        // Create a map of step IDs to their new order
-        const orderMap = new Map(stepIds.map((id, index) => [id, index]))
+      set(state => {
+        const updatedSteps = [...selectedFlow.steps]
         
-        // Sort steps based on new order
-        const reorderedSteps = [...selectedFlow.steps]
-          .map(step => ({
-            ...step,
-            order_index: orderMap.get(step.id) ?? step.order_index
-          }))
-          .sort((a, b) => a.order_index - b.order_index)
+        // Update the moved step
+        updatedSteps[stepIndex] = { ...step, order_index: newIndex }
         
-        set({
-          selectedFlow: {
-            ...selectedFlow,
-            steps: reorderedSteps
+        // Update other affected steps
+        for (let i = 0; i < updatedSteps.length; i++) {
+          if (i !== stepIndex) {
+            const s = updatedSteps[i]
+            if (currentIndex < newIndex && s.order_index > currentIndex && s.order_index <= newIndex) {
+              updatedSteps[i] = { ...s, order_index: s.order_index - 1 }
+            } else if (currentIndex > newIndex && s.order_index >= newIndex && s.order_index < currentIndex) {
+              updatedSteps[i] = { ...s, order_index: s.order_index + 1 }
+            }
           }
-        })
-      }
+        }
+        
+        // Sort steps by order_index
+        updatedSteps.sort((a, b) => a.order_index - b.order_index)
+        
+        // Update both selectedFlow and flows
+        const updatedSelectedFlow = { ...selectedFlow, steps: updatedSteps }
+        const updatedFlows = state.flows.map(flow => 
+          flow.id === selectedFlow.id ? updatedSelectedFlow : flow
+        )
+        
+        return {
+          selectedFlow: updatedSelectedFlow,
+          flows: updatedFlows
+        }
+      })
     } catch (error) {
-      console.error('Error reordering steps:', error)
+      console.error('Error reordering step:', error)
       throw error
     }
   },
-
-  executeFlow: async (flowId, apiKey, model, initialVariables = {}) => {
+  
+  executeFlow: async (flowId, variables = {}) => {
     try {
-      const { selectedFlow } = get()
-      if (!selectedFlow || !selectedFlow.steps || selectedFlow.steps.length === 0) {
-        throw new Error('No flow selected or flow has no steps')
-      }
-
-      // Sort steps by order_index to ensure correct execution order
-      const orderedSteps = [...selectedFlow.steps].sort((a, b) => a.order_index - b.order_index)
+      set({ executing: true })
       
-      // Initialize results array to store outputs from each step
-      const results: string[] = []
-      
-      // Initialize variables object with initial variables
-      let variables = { ...initialVariables }
-      
-      // Execute each step in sequence
-      for (const step of orderedSteps) {
-        // Get the prompt content
-        let promptContent = step.prompt?.content || ''
-        
-        // Replace variables in the prompt content
-        for (const [key, value] of Object.entries(variables)) {
-          promptContent = promptContent.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value)
-        }
-        
-        // Execute the prompt using the specified API
-        let response
-        
-        if (model.includes('gpt')) {
-          // OpenAI API
-          response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-              model: model,
-              messages: [{ role: 'user', content: promptContent }],
-              temperature: 0.7
-            })
-          })
-          
-          const data = await response.json()
-          if (!response.ok) {
-            throw new Error(data.error?.message || 'Failed to execute prompt with OpenAI')
-          }
-          
-          const result = data.choices[0]?.message?.content || ''
-          results.push(result)
-          
-          // Store result as a variable for the next step
-          variables[`step_${step.order_index + 1}_output`] = result
-        } 
-        else if (model.includes('claude')) {
-          // Anthropic Claude API
-          response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': apiKey,
-              'anthropic-version': '2023-06-01'
-            },
-            body: JSON.stringify({
-              model: model,
-              messages: [{ role: 'user', content: promptContent }],
-              max_tokens: 1000
-            })
-          })
-          
-          const data = await response.json()
-          if (!response.ok) {
-            throw new Error(data.error?.message || 'Failed to execute prompt with Claude')
-          }
-          
-          const result = data.content[0]?.text || ''
-          results.push(result)
-          
-          // Store result as a variable for the next step
-          variables[`step_${step.order_index + 1}_output`] = result
-        }
-        else if (model.includes('gemini')) {
-          // Google Gemini API
-          response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-goog-api-key': apiKey
-            },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: promptContent }] }],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 1000
-              }
-            })
-          })
-          
-          const data = await response.json()
-          if (!response.ok) {
-            throw new Error(data.error?.message || 'Failed to execute prompt with Gemini')
-          }
-          
-          const result = data.candidates[0]?.content?.parts[0]?.text || ''
-          results.push(result)
-          
-          // Store result as a variable for the next step
-          variables[`step_${step.order_index + 1}_output`] = result
-        }
-        else {
-          throw new Error(`Unsupported model: ${model}`)
-        }
+      const { selectedFlow, apiSettings } = get()
+      if (!selectedFlow || selectedFlow.id !== flowId) {
+        throw new Error('Selected flow does not match the flow to execute')
       }
       
-      return results
+      if (!apiSettings.apiKey) {
+        throw new Error('API key is required')
+      }
+      
+      // Clear previous outputs
+      set(state => ({
+        selectedFlow: state.selectedFlow ? {
+          ...state.selectedFlow,
+          steps: state.selectedFlow.steps.map(step => ({
+            ...step,
+            output: undefined,
+            isRunning: false
+          }))
+        } : null
+      }))
+      
+      // Sort steps by order_index
+      const steps = [...selectedFlow.steps].sort((a, b) => a.order_index - b.order_index)
+      
+      // Execute steps in sequence
+      let context = { ...variables }
+      
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i]
+        
+        // Mark step as running
+        set(state => ({
+          selectedFlow: state.selectedFlow ? {
+            ...state.selectedFlow,
+            steps: state.selectedFlow.steps.map(s => 
+              s.id === step.id ? { ...s, isRunning: true } : s
+            )
+          } : null
+        }))
+        
+        try {
+          // Execute the step
+          const output = await get().executeStep(step.id, context)
+          
+          // Add output to context for next steps
+          context[`step_${i+1}_output`] = output
+          
+          // Update step with output
+          set(state => ({
+            selectedFlow: state.selectedFlow ? {
+              ...state.selectedFlow,
+              steps: state.selectedFlow.steps.map(s => 
+                s.id === step.id ? { ...s, output, isRunning: false } : s
+              )
+            } : null
+          }))
+        } catch (error) {
+          console.error(`Error executing step ${step.id}:`, error)
+          
+          // Mark step as failed
+          set(state => ({
+            selectedFlow: state.selectedFlow ? {
+              ...state.selectedFlow,
+              steps: state.selectedFlow.steps.map(s => 
+                s.id === step.id ? { ...s, output: `Error: ${error.message}`, isRunning: false } : s
+              )
+            } : null
+          }))
+          
+          // Stop execution
+          break
+        }
+      }
     } catch (error) {
       console.error('Error executing flow:', error)
       throw error
+    } finally {
+      set({ executing: false })
     }
+  },
+  
+  executeStep: async (stepId, variables = {}) => {
+    try {
+      const { selectedFlow, apiSettings } = get()
+      if (!selectedFlow) throw new Error('No flow selected')
+      
+      const step = selectedFlow.steps.find(s => s.id === stepId)
+      if (!step) throw new Error('Step not found')
+      
+      // Replace variables in prompt content
+      let content = step.prompt_content || ''
+      
+      // Replace {{variable}} placeholders with values from context
+      for (const [key, value] of Object.entries(variables)) {
+        const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g')
+        content = content.replace(regex, value)
+      }
+      
+      // Call the appropriate API based on provider
+      let response
+      
+      // For demo purposes, we'll use the Supabase Edge Function
+      try {
+        const { data, error } = await supabase.functions.invoke('run-prompt-flow', {
+          body: {
+            provider: apiSettings.provider,
+            apiKey: apiSettings.apiKey,
+            model: apiSettings.model,
+            prompt: content,
+            temperature: apiSettings.temperature,
+            maxTokens: apiSettings.maxTokens
+          }
+        })
+        
+        if (error) throw new Error(error.message)
+        if (!data.success) throw new Error(data.error || 'Unknown error')
+        
+        response = data.response
+      } catch (error) {
+        console.error('API call failed:', error)
+        throw new Error(`API call failed: ${error.message}`)
+      }
+      
+      return response
+    } catch (error) {
+      console.error('Error executing step:', error)
+      throw error
+    }
+  },
+  
+  updateApiSettings: (settings) => {
+    set(state => ({
+      apiSettings: { ...state.apiSettings, ...settings }
+    }))
+    
+    // Save API settings to localStorage (except the API key which is stored encrypted)
+    if (settings.provider) localStorage.setItem('flow_api_provider', settings.provider)
+    if (settings.model) localStorage.setItem('flow_api_model', settings.model)
+    if (settings.temperature) localStorage.setItem('flow_api_temperature', settings.temperature.toString())
+    if (settings.maxTokens) localStorage.setItem('flow_api_max_tokens', settings.maxTokens.toString())
+  },
+  
+  clearOutputs: () => {
+    set(state => ({
+      selectedFlow: state.selectedFlow ? {
+        ...state.selectedFlow,
+        steps: state.selectedFlow.steps.map(step => ({
+          ...step,
+          output: undefined,
+          isRunning: false
+        }))
+      } : null
+    }))
   }
 }))
+
+// Initialize API settings from localStorage
+if (typeof window !== 'undefined') {
+  const provider = localStorage.getItem('flow_api_provider')
+  const model = localStorage.getItem('flow_api_model')
+  const temperature = localStorage.getItem('flow_api_temperature')
+  const maxTokens = localStorage.getItem('flow_api_max_tokens')
+  
+  const settings: Partial<ApiSettings> = {}
+  if (provider) settings.provider = provider as any
+  if (model) settings.model = model
+  if (temperature) settings.temperature = parseFloat(temperature)
+  if (maxTokens) settings.maxTokens = parseInt(maxTokens)
+  
+  if (Object.keys(settings).length > 0) {
+    useFlowStore.getState().updateApiSettings(settings)
+  }
+}
