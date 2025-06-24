@@ -72,7 +72,7 @@ export const PromptFlowPage: React.FC = () => {
     addStep,
     updateStep,
     deleteStep,
-    reorderSteps,
+    reorderStep,
     executeFlow
   } = useFlowStore()
 
@@ -276,7 +276,7 @@ export const PromptFlowPage: React.FC = () => {
     try {
       // Get the IDs in the new order
       const stepIds = steps.map(step => step.id)
-      await reorderSteps(selectedFlow.id, stepIds)
+      await reorderStep(stepIds[0], steps.findIndex(s => s.id === stepIds[0]))
     } catch (error) {
       console.error('Failed to reorder steps:', error)
       setToast({ message: 'Failed to reorder steps', type: 'error' })
