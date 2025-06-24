@@ -20,7 +20,13 @@ import {
   AlertCircle,
   Check,
   Settings,
-  Copy
+  Copy,
+  AlertTriangle,
+  CheckCircle,
+  Download,
+  MessageSquare,
+  Bot,
+  Sparkles
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Toast } from '../../components/ui/Toast'
@@ -31,14 +37,6 @@ import { usePromptStore } from '../../store/promptStore'
 import { useFlowStore, PromptFlow, FlowStep } from '../../store/flowStore'
 import { supabase } from '../../lib/supabase'
 import { PromptSelectionModal } from '../../components/prompts/PromptSelectionModal'
-
-interface FlowPrompt {
-  id: string
-  title: string
-  content: string
-  order: number
-  isExpanded?: boolean
-}
 
 export const PromptFlowPage: React.FC = () => {
   const navigate = useNavigate()
