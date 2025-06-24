@@ -346,4 +346,56 @@ export type Database = {
       }
     }
   }
+  prompt_flows: {
+    Row: {
+      id: string
+      user_id: string
+      name: string
+      description: string | null
+      created_at: string | null
+      updated_at: string | null
+    }
+    Insert: {
+      id?: string
+      user_id: string
+      name: string
+      description?: string | null
+      created_at?: string | null
+      updated_at?: string | null
+    }
+    Update: {
+      id?: string
+      user_id?: string
+      name?: string
+      description?: string | null
+      created_at?: string | null
+      updated_at?: string | null
+    }
+  }
+  flow_steps: {
+    Row: {
+      id: string
+      flow_id: string
+      prompt_id: string
+      order_index: number
+      step_title: string
+      created_at: string | null
+    }
+    Insert: {
+      id?: string
+      flow_id: string
+      prompt_id: string
+      order_index: number
+      step_title: string
+      created_at?: string | null
+    }
+    Update: {
+      id?: string
+      flow_id?: string
+      prompt_id?: string
+      order_index?: number
+      step_title?: string
+      created_at?: string | null
+    }
+  }
 }
