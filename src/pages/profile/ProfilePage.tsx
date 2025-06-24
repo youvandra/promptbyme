@@ -625,17 +625,6 @@ export const ProfilePage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-
-
-                    <div className="border-t border-zinc-700/50 pt-4">
-                      <button className="flex items-center gap-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-200 text-sm">
-                        <Trash2 size={14} />
-                        <span>Delete Account</span>
-                      </button>
-                      <p className="text-xs text-zinc-500 mt-2">
-                        This action cannot be undone. All your prompts will be permanently deleted.
-                      </p>
-                    </div>
                   </div>
                 </div>
               </div>
