@@ -7,6 +7,7 @@ import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
 import { useClipboard } from '../../hooks/useClipboard'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
 const ROLE_OPTIONS = [
@@ -23,6 +24,7 @@ const ROLE_OPTIONS = [
 export const ProfilePage: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -32,6 +34,8 @@ export const ProfilePage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const { copied, copyToClipboard } = useClipboard()
+  
+  const navigate = useNavigate()
   
   const [formData, setFormData] = useState({
     email: '',
@@ -257,6 +261,47 @@ export const ProfilePage: React.FC = () => {
       setSaving(false)
     }
   }
+
+  const handleDeleteAccount = async () => {
+    // Show confirmation dialog
+    const confirmMessage = 'Are you sure you want to delete your account? This action cannot be undone. All your prompts and data will be permanently deleted.';
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+    
+    // Second confirmation for extra safety
+    const confirmMessage2 = 'Please type "DELETE" to confirm account deletion:';
+    const userInput = window.prompt(confirmMessage2);
+    if (userInput !== 'DELETE') {
+      setToast({ message: 'Account deletion cancelled', type: 'error' });
+      return;
+    }
+    
+    setIsDeleting(true);
+    try {
+      // Call Supabase to delete the user account
+      const { error } = await supabase.rpc('delete_user');
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Sign out the user
+      await signOut();
+      
+      // Show success message and redirect to home
+      setToast({ message: 'Your account has been deleted successfully', type: 'success' });
+      navigate('/');
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      setToast({ 
+        message: error.message || 'Failed to delete account. Please try again or contact support.', 
+        type: 'error' 
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleCopyProfileLink = () => {
     if (!userProfile?.display_name) return
@@ -628,9 +673,13 @@ export const ProfilePage: React.FC = () => {
 
 
                     <div className="border-t border-zinc-700/50 pt-4">
-                      <button className="flex items-center gap-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-200 text-sm">
+                      <button 
+                        onClick={handleDeleteAccount}
+                        disabled={isDeleting}
+                        className="flex items-center gap-2 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
                         <Trash2 size={14} />
-                        <span>Delete Account</span>
+                        <span>{isDeleting ? 'Deleting Account...' : 'Delete Account'}</span>
                       </button>
                       <p className="text-xs text-zinc-500 mt-2">
                         This action cannot be undone. All your prompts will be permanently deleted.
