@@ -39,7 +39,6 @@ interface PromptFlow {
   name: string
   description?: string
   prompts: FlowPrompt[]
-  isPublic: boolean
   createdAt: string
   updatedAt: string
 }
@@ -96,7 +95,6 @@ export const PromptFlowPage: React.FC = () => {
               order: 3
             }
           ],
-          isPublic: false,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         },
@@ -130,7 +128,6 @@ export const PromptFlowPage: React.FC = () => {
               order: 4
             }
           ],
-          isPublic: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
@@ -153,7 +150,6 @@ export const PromptFlowPage: React.FC = () => {
         name: newFlowName.trim(),
         description: newFlowDescription.trim() || undefined,
         prompts: [],
-        isPublic: false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
@@ -484,16 +480,7 @@ export const PromptFlowPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-sm font-medium text-white truncate">{flow.name}</h3>
-                            <p className="text-xs text-zinc-400 truncate">
-                              {flow.prompts.length} prompt{flow.prompts.length !== 1 ? 's' : ''}
-                            </p>
-                          </div>
-                          <div className="flex items-center">
-                            {flow.isPublic ? (
-                              <Eye size={14} className="text-emerald-400" />
-                            ) : (
-                              <EyeOff size={14} className="text-amber-400" />
-                            )}
+                            <p className="text-xs text-zinc-400 truncate">{flow.prompts.length} prompt{flow.prompts.length !== 1 ? 's' : ''}</p>
                           </div>
                         </div>
                       </div>
@@ -544,36 +531,6 @@ export const PromptFlowPage: React.FC = () => {
                               <>
                                 <Play size={14} />
                                 <span>Run Flow</span>
-                              </>
-                            )}
-                          </button>
-                          
-                          <button
-                            onClick={() => {
-                              // Toggle public/private
-                              const updatedFlow = {
-                                ...selectedFlow,
-                                isPublic: !selectedFlow.isPublic,
-                                updatedAt: new Date().toISOString()
-                              }
-                              setSelectedFlow(updatedFlow)
-                              setFlows(flows.map(f => f.id === updatedFlow.id ? updatedFlow : f))
-                            }}
-                            className={`flex items-center gap-1 px-3 py-2 rounded-lg transition-all duration-200 text-sm ${
-                              selectedFlow.isPublic
-                                ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
-                                : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
-                            }`}
-                          >
-                            {selectedFlow.isPublic ? (
-                              <>
-                                <Eye size={14} />
-                                <span>Public</span>
-                              </>
-                            ) : (
-                              <>
-                                <EyeOff size={14} />
-                                <span>Private</span>
                               </>
                             )}
                           </button>
