@@ -150,7 +150,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
     {
       path: '/prompt-flow',
       icon: Folder,
-      label: 'Sequential Prompts',
+      label: 'Prompt Flow',
       description: 'Sequential prompt chains'
     }
   ]
