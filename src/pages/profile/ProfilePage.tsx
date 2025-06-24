@@ -44,7 +44,6 @@ export const ProfilePage: React.FC = () => {
     isPublicProfile: true
   })
   
-  const { user, loading: authLoading, initialize } = useAuthStore()
   const { user, loading: authLoading, initialize, signOut } = useAuthStore()
   const { prompts, fetchUserPrompts } = usePromptStore()
 
