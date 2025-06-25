@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { marked } from 'marked';
 import { 
   Menu, 
   Plus, 
@@ -528,8 +529,8 @@ export const PromptFlowPage: React.FC = () => {
                               <div className="flex items-center justify-between mb-2">
                                 <h4 className="text-sm font-medium text-emerald-300">Result</h4>
                                 <button
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(lastStep.output || '');
+                                  onClick={async () => {
+                                    await navigator.clipboard.writeText(lastStep.output || '');
                                     setToast({ message: 'Output copied to clipboard', type: 'success' });
                                   }}
                                   className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded transition-colors"
@@ -538,9 +539,10 @@ export const PromptFlowPage: React.FC = () => {
                                   <Copy size={16} />
                                 </button>
                               </div>
-                              <pre className="text-zinc-300 text-sm whitespace-pre-wrap bg-zinc-800/30 p-4 rounded-lg border border-zinc-700/30 max-h-[400px] overflow-y-auto">
-                                {lastStep.output}
-                              </pre>
+                              <div 
+                                className="text-zinc-300 text-sm bg-zinc-800/30 p-4 rounded-lg border border-zinc-700/30 max-h-[400px] overflow-y-auto prose prose-invert prose-sm max-w-none"
+                                dangerouslySetInnerHTML={{ __html: marked(lastStep.output || '') }}
+                              />
                             </div>
                             
                             <div className="flex items-center justify-end">
