@@ -17,14 +17,17 @@ Deno.serve(async (req: Request) => {
 
   try {
     // Parse request body
-    const { provider, apiKey, model, prompt, temperature, maxTokens } = await req.json();
+    const { provider, model, prompt, temperature, maxTokens } = await req.json();
+    
+    // Use the global Groq API key from environment variable
+    const apiKey = Deno.env.get('GROQ_API_KEY') || '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';
 
     // Validate required fields
-    if (!provider || !apiKey || !prompt) {
+    if (!provider || !prompt) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Missing required fields: provider, apiKey, and prompt are required",
+          error: "Missing required fields: provider and prompt are required",
         }),
         {
           status: 400,
@@ -35,26 +38,9 @@ Deno.serve(async (req: Request) => {
 
     let response;
 
-    // Call the appropriate API based on provider
-    switch (provider) {
-      case "openai":
-        response = await callOpenAI(apiKey, model || "gpt-3.5-turbo", prompt, temperature, maxTokens);
-        break;
-      case "anthropic":
-        response = await callAnthropic(apiKey, model || "claude-3-haiku-20240307", prompt, temperature, maxTokens);
-        break;
-      case "google":
-        response = await callGemini(apiKey, model || "gemini-pro", prompt, temperature, maxTokens);
-        break;
-      case "llama":
-        response = await callLlama(apiKey, model || "llama-3-8b-instruct", prompt, temperature, maxTokens);
-        break;
-      case "groq":
-        response = await callGroq(apiKey, model || "llama3-8b-8192", prompt, temperature, maxTokens);
-        break;
-      default:
-        throw new Error(`Unsupported provider: ${provider}`);
-    }
+    // Always use Groq API regardless of the provider selected in the UI
+    const groqModel = model || "llama3-8b-8192";
+    response = await callGroq(apiKey, groqModel, prompt, temperature, maxTokens);
 
     return new Response(
       JSON.stringify({
