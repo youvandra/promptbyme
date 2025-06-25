@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { useSecureStorage } from '../hooks/useSecureStorage'
 
 export interface FlowStep {
   id: string
@@ -64,11 +65,11 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   flows: [],
   selectedFlow: null,
   apiSettings: {
-    provider: 'openai',
+    provider: localStorage.getItem('flow_api_provider') as ApiSettings['provider'] || 'openai',
     apiKey: '',
-    model: 'gpt-3.5-turbo',
-    temperature: 0.7,
-    maxTokens: 1000
+    model: localStorage.getItem('flow_api_model') || 'gpt-3.5-turbo',
+    temperature: parseFloat(localStorage.getItem('flow_api_temperature') || '0.7'),
+    maxTokens: parseInt(localStorage.getItem('flow_api_max_tokens') || '1000')
   },
   loading: false,
   executing: false,
@@ -614,7 +615,10 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   
   updateApiSettings: (settings) => {
     set(state => ({
-      apiSettings: { ...state.apiSettings, ...settings }
+      apiSettings: { 
+        ...state.apiSettings, 
+        ...settings 
+      }
     }))
     
     // Save API settings to localStorage (except the API key which is stored encrypted)
@@ -636,22 +640,3 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       } : null
     }))
   }
-}))
-
-// Initialize API settings from localStorage
-if (typeof window !== 'undefined') {
-  const provider = localStorage.getItem('flow_api_provider')
-  const model = localStorage.getItem('flow_api_model')
-  const temperature = localStorage.getItem('flow_api_temperature')
-  const maxTokens = localStorage.getItem('flow_api_max_tokens')
-  
-  const settings: Partial<ApiSettings> = {}
-  if (provider) settings.provider = provider as any
-  if (model) settings.model = model
-  if (temperature) settings.temperature = parseFloat(temperature)
-  if (maxTokens) settings.maxTokens = parseInt(maxTokens)
-  
-  if (Object.keys(settings).length > 0) {
-    useFlowStore.getState().updateApiSettings(settings)
-  }
-}

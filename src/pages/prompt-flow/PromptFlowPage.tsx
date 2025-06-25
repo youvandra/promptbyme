@@ -2,11 +2,10 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   Menu, 
-  Plus, Trash2, ArrowUp, ArrowDown, Edit3, Save, Eye, EyeOff, Play,
+  Plus, Trash2, ArrowUp, ArrowDown, Edit3, Save, Eye, EyeOff, Play, Settings,
   Folder, Import, ChevronRight, ChevronDown, MoreVertical, X, Pencil,
   Check, 
   AlertCircle,
-  Settings,
   Copy,
   AlertTriangle,
   CheckCircle,
@@ -21,6 +20,7 @@ import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
+import { FlowApiSettingsModal } from '../../components/prompt-flow/FlowApiSettingsModal'
 import { useFlowStore, PromptFlow, FlowStep } from '../../store/flowStore'
 import { supabase } from '../../lib/supabase'
 import { PromptSelectionModal } from '../../components/prompts/PromptSelectionModal'
@@ -40,6 +40,7 @@ export const PromptFlowPage: React.FC = () => {
   const [showPromptMenu, setShowPromptMenu] = useState<string | null>(null)
   const [editingFlowName, setEditingFlowName] = useState(false)
   const [newName, setNewName] = useState('')
+  const [showApiSettingsModal, setShowApiSettingsModal] = useState(false)
   
   const { user, loading: authLoading } = useAuthStore()
   const { prompts, fetchUserPrompts } = usePromptStore()
@@ -49,6 +50,7 @@ export const PromptFlowPage: React.FC = () => {
     loading: flowLoading, 
     executing: isRunningFlow,
     fetchFlows, 
+    apiSettings,
     createFlow, 
     updateFlow,
     deleteFlow,
@@ -57,6 +59,7 @@ export const PromptFlowPage: React.FC = () => {
     updateStep,
     deleteStep,
     reorderStep,
+    updateApiSettings,
     executeFlow,
     clearOutputs
   } = useFlowStore()
@@ -312,6 +315,11 @@ export const PromptFlowPage: React.FC = () => {
     setToast({ message: 'Outputs cleared', type: 'success' })
   }
 
+  const handleSaveApiSettings = (settings: any) => {
+    updateApiSettings(settings)
+    setToast({ message: 'API settings saved', type: 'success' })
+  }
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text)
@@ -498,7 +506,7 @@ export const PromptFlowPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={handleRunFlow}
-                            disabled={isRunningFlow || selectedFlow.steps.length === 0}
+                            disabled={isRunningFlow || selectedFlow.steps.length === 0 || !apiSettings.apiKey}
                             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg transition-all duration-200 text-sm"
                           >
                             {isRunningFlow ? (
@@ -512,6 +520,13 @@ export const PromptFlowPage: React.FC = () => {
                                 <span>Run Flow</span>
                               </>
                             )}
+                          </button>
+                          <button
+                            onClick={() => setShowApiSettingsModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg transition-all duration-200 text-sm"
+                          >
+                            <Settings size={14} />
+                            <span>API Settings</span>
                           </button>
                           <button
                             onClick={handleClearOutputs}
@@ -929,6 +944,14 @@ export const PromptFlowPage: React.FC = () => {
         isOpen={showPromptModal}
         onClose={() => setShowPromptModal(false)}
         onSelectPrompt={handlePromptSelected}
+      />
+
+      {/* API Settings Modal */}
+      <FlowApiSettingsModal
+        isOpen={showApiSettingsModal}
+        onClose={() => setShowApiSettingsModal(false)}
+        settings={apiSettings}
+        onSave={handleSaveApiSettings}
       />
 
       {/* Toast */}
