@@ -1,31 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { 
   Menu, 
-  Plus, Trash2, ArrowUp, ArrowDown, Edit3, Save, Eye, EyeOff, Play, Settings,
-  Folder, Import, ChevronRight, ChevronDown, MoreVertical, X, Pencil, Wand2,
-  Check, 
-  AlertCircle,
+  Plus, 
+  Trash2, 
+  Settings, 
+  Play,
+  Pause,
+  ChevronDown,
+  ChevronRight,
+  Edit3,
+  Save,
+  Wand2,
+  Zap,
+  ArrowRight,
+  X,
   Copy,
-  AlertTriangle,
-  CheckCircle,
   Download,
-  MessageSquare,
-  Bot,
-  Sparkles
+  RotateCcw,
+  Server
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
-import { useAuthStore } from '../../store/authStore'
-import { useSecureStorage } from '../../hooks/useSecureStorage'
-import { usePromptStore } from '../../store/promptStore'
-import { FlowApiSettingsModal } from '../../components/prompt-flow/FlowApiSettingsModal'
-import { useFlowStore, PromptFlow, FlowStep } from '../../store/flowStore'
-import { supabase } from '../../lib/supabase'
 import { PromptSelectionModal } from '../../components/prompts/PromptSelectionModal'
-import { VariableFillModal } from '../../components/prompts/VariableFillModal'
+import { FlowApiSettingsModal } from '../../components/prompt-flow/FlowApiSettingsModal'
+import { VariableFillModal } from '../../components/prompt-flow/VariableFillModal'
+import { useAuthStore } from '../../store/authStore'
+import { useFlowStore, FlowStep, PromptFlow } from '../../store/flowStore'
+import { useClipboard } from '../../hooks/useClipboard'
 
 export const PromptFlowPage: React.FC = () => {
   const navigate = useNavigate()
@@ -34,358 +38,185 @@ export const PromptFlowPage: React.FC = () => {
   const [showCreateFlow, setShowCreateFlow] = useState(false)
   const [newFlowName, setNewFlowName] = useState('')
   const [newFlowDescription, setNewFlowDescription] = useState('')
-  const [isCreatingFlow, setIsCreatingFlow] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
   const [showPromptModal, setShowPromptModal] = useState(false)
-  const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
-  const [editingPromptTitle, setEditingPromptTitle] = useState('')
-  const [editingPromptContent, setEditingPromptContent] = useState('')
-  const [showPromptMenu, setShowPromptMenu] = useState<string | null>(null)
+  const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null)
+  const [showApiSettings, setShowApiSettings] = useState(false)
   const [showVariableModal, setShowVariableModal] = useState(false)
-  const [selectedPromptForVariables, setSelectedPromptForVariables] = useState<{id: string, title: string, content: string} | null>(null)
-  const [editingFlowName, setEditingFlowName] = useState(false)
-  const [apiKey, setApiKey] = useState('')
-  const [newName, setNewName] = useState('')
-  const [showApiSettingsModal, setShowApiSettingsModal] = useState(false)
-  const { getSecureItem, setSecureItem } = useSecureStorage()
+  const [selectedStep, setSelectedStep] = useState<FlowStep | null>(null)
+  const [editingStepTitle, setEditingStepTitle] = useState<string | null>(null)
+  const [editingStepTitleValue, setEditingStepTitleValue] = useState('')
+  
+  const { copied, copyToClipboard } = useClipboard()
   
   const { user, loading: authLoading } = useAuthStore()
-  const { prompts, fetchUserPrompts } = usePromptStore()
   const { 
-    flows, 
-    selectedFlow, 
-    loading: flowLoading, 
-    executing: isRunningFlow,
-    fetchFlows, 
+    flows,
+    selectedFlow,
     apiSettings,
-    createFlow, 
-    updateFlow,
-    deleteFlow,
+    loading,
+    executing,
+    fetchFlows,
+    createFlow,
     selectFlow,
     addStep,
     updateStep,
+    updateStepContent,
     deleteStep,
     reorderStep,
-    updateApiSettings,
     executeFlow,
+    executeStep,
+    updateApiSettings,
     clearOutputs
   } = useFlowStore()
 
+  // Load flows on mount
   useEffect(() => {
     if (user) {
-      fetchUserPrompts(user.id)
-      fetchFlows() 
-      
-      // Load API key from secure storage
-      const loadApiKey = async () => {
-        try {
-          const storedKey = await getSecureItem('flow_api_key_encrypted')
-          if (storedKey) {
-            setApiKey(storedKey)
-          }
-        } catch (error) {
-          console.error('Failed to load API key:', error)
-        }
-      }
-      
-      loadApiKey()
+      fetchFlows()
     }
-  }, [user, fetchUserPrompts, fetchFlows])
+  }, [user, fetchFlows])
 
-  // Set initial flow name when editing
-  useEffect(() => {
-    if (selectedFlow) {
-      setNewName(selectedFlow.name)
-    }
-  }, [selectedFlow])
-
-  const handleCreateFlow = () => {
+  const handleCreateFlow = async () => {
     if (!newFlowName.trim()) return
     
-    setIsCreatingFlow(true)
-
-    createFlow(newFlowName.trim(), newFlowDescription.trim() || undefined)
-      .then(() => {
-        setShowCreateFlow(false)
-        setNewFlowName('')
-        setNewFlowDescription('')
-        setToast({ message: 'Flow created successfully', type: 'success' })
-      })
-      .catch(error => {
-        console.error('Failed to create flow:', error)
-        setToast({ message: 'Failed to create flow', type: 'error' })
-      })
-      .finally(() => {
-        setIsCreatingFlow(false)
-      })
-  }
-
-  const handleRenameFlow = () => {
-    if (!selectedFlow || !newName.trim()) return
-
-    updateFlow(selectedFlow.id, { name: newName.trim() })
-      .then(() => {
-        setEditingFlowName(false)
-        setToast({ message: 'Flow renamed successfully', type: 'success' })
-      })
-      .catch(error => {
-        console.error('Failed to rename flow:', error)
-        setToast({ message: 'Failed to rename flow', type: 'error' })
-      })
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleRenameFlow()
-    } else if (e.key === 'Escape') {
-      setEditingFlowName(false)
-      if (selectedFlow) {
-        setNewName(selectedFlow.name)
-      }
+    setIsCreating(true)
+    try {
+      const flow = await createFlow(
+        newFlowName.trim(), 
+        newFlowDescription.trim() || undefined
+      )
+      await selectFlow(flow.id)
+      setShowCreateFlow(false)
+      setNewFlowName('')
+      setNewFlowDescription('')
+      setToast({ message: 'Flow created successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to create flow:', error)
+      setToast({ message: 'Failed to create flow', type: 'error' })
+    } finally {
+      setIsCreating(false)
     }
   }
 
-  const handleSelectFlow = (flowId: string) => {
-    selectFlow(flowId)
-      .catch(error => {
-        console.error('Failed to select flow:', error)
-        setToast({ message: 'Failed to select flow', type: 'error' })
-      })
-  }
-
-  const handleDeleteFlow = (flowId: string) => {
-    if (!confirm('Are you sure you want to delete this flow?')) return
-
-    deleteFlow(flowId)
-      .then(() => {
-        setToast({ message: 'Flow deleted successfully', type: 'success' })
-      })
-      .catch(error => {
-        console.error('Failed to delete flow:', error)
-        setToast({ message: 'Failed to delete flow', type: 'error' })
-      })
-  }
-
-  const handleAddPrompt = () => {
-    setShowPromptModal(true)
-  }
-
-  const handlePromptSelected = (prompt: any) => {
+  const handlePromptSelected = async (prompt: any) => {
     if (!selectedFlow) return
-
-    addStep(selectedFlow.id, prompt.id, prompt.title || 'Untitled Prompt', prompt.content)
-      .then(() => {
-        setToast({ message: 'Prompt added to flow', type: 'success' })
-      })
-      .catch(error => {
-        console.error('Failed to add prompt:', error)
-        setToast({ message: 'Failed to add prompt', type: 'error' })
-      })
-      .finally(() => {
-        setShowPromptModal(false)
-      })
-  }
-
-  const handleCreateNewPrompt = () => {
-    if (!selectedFlow) return
-
-    // Create a new empty prompt in the database first
-    const { createPrompt } = usePromptStore.getState()
-    const { user } = useAuthStore.getState()
-
-    if (!user) {
-      setToast({ message: 'You must be logged in to create prompts', type: 'error' })
-      return
+    
+    try {
+      await addStep(
+        selectedFlow.id,
+        prompt.id,
+        prompt.title || 'Untitled Prompt',
+        prompt.content
+      )
+      setToast({ message: 'Prompt added to flow', type: 'success' })
+    } catch (error) {
+      console.error('Failed to add prompt to flow:', error)
+      setToast({ message: 'Failed to add prompt to flow', type: 'error' })
     }
-
-    createPrompt({
-      user_id: user.id,
-      title: 'New Prompt',
-      content: '',
-      access: 'private',
-      tags: [],
-    })
-      .then((promptData) => {
-        // Now add this prompt to the flow
-        return addStep(selectedFlow.id, promptData.id, promptData.title || 'New Prompt', promptData.content)
-      })
-      .then(() => {
-        setToast({ message: 'New prompt created and added to flow', type: 'success' })
-      })
-      .catch(error => {
-        console.error('Failed to create new prompt:', error)
-        setToast({ message: 'Failed to create new prompt', type: 'error' })
-      })
   }
 
-  const handleEditPrompt = (promptId: string) => {
-    if (!selectedFlow) return
-
-    const step = selectedFlow.steps.find(s => s.id === promptId)
-    if (!step) return
-
-    setEditingPromptId(promptId)
-    setEditingPromptTitle(step.step_title)
-    setEditingPromptContent(step.prompt_content || '')
-  }
-
-  const handleSavePrompt = () => {
-    if (!selectedFlow || !editingPromptId) return
-
-    const step = selectedFlow.steps.find(p => p.id === editingPromptId)
-    if (!step) return
-
-    // Get the necessary functions from the store
-    const { updatePrompt, createVersion } = usePromptStore.getState()
-    
-    // First, check if content has changed
-    const contentChanged = step.prompt_content !== editingPromptContent
-    const titleChanged = step.step_title !== editingPromptTitle
-    
-    // Start with updating the step title in the flow
-    updateStep(editingPromptId, {
-      step_title: editingPromptTitle
-    })
-      .then(async () => {
-        // If content has changed, create a new version instead of just updating
-        if (contentChanged) {
-          try {
-            // Create a new version of the prompt
-            await createVersion(
-              step.prompt_id,
-              editingPromptTitle,
-              editingPromptContent,
-              `Updated from Prompt Flow: ${selectedFlow.name}`
-            )
-            setToast({ message: 'New prompt version created successfully', type: 'success' })
-          } catch (error) {
-            console.error('Failed to create prompt version:', error)
-            setToast({ message: 'Failed to create prompt version', type: 'error' })
-            throw error // Re-throw to be caught by the outer catch
-          }
-        } else if (titleChanged) {
-          // If only title changed, just update the prompt
-          try {
-            await updatePrompt(step.prompt_id, {
-              title: editingPromptTitle
-            })
-            setToast({ message: 'Prompt title updated successfully', type: 'success' })
-          } catch (error) {
-            console.error('Failed to update prompt title:', error)
-            setToast({ message: 'Failed to update prompt title', type: 'error' })
-            throw error
-          }
-        } else {
-          setToast({ message: 'No changes detected', type: 'success' })
-        }
-        
-        setEditingPromptId(null)
-      })
-      .catch(error => {
-        console.error('Failed to save prompt:', error)
-        setToast({ message: 'Failed to save prompt', type: 'error' })
-      })
-  }
-
-  const handleFillVariables = (promptId: string) => {
-    if (!selectedFlow) return
-
-    const step = selectedFlow.steps.find(p => p.id === promptId)
-    if (!step) return
-
-    // Check if content has variables
-    const hasVariables = /\{\{([^}]+)\}\}/.test(step.prompt_content || '')
-    
-    if (!hasVariables) {
-      setToast({ message: 'This prompt does not contain any variables', type: 'error' })
-      return
+  const handleStepTitleUpdate = async (stepId: string, newTitle: string) => {
+    try {
+      await updateStep(stepId, { step_title: newTitle })
+      setEditingStepTitle(null)
+      setToast({ message: 'Step title updated', type: 'success' })
+    } catch (error) {
+      console.error('Failed to update step title:', error)
+      setToast({ message: 'Failed to update step title', type: 'error' })
     }
-
-    setSelectedPromptForVariables({
-      id: promptId,
-      title: step.step_title,
-      content: step.prompt_content || ''
-    })
-    setShowVariableModal(true)
-    setShowPromptMenu(null)
   }
 
-  const handleVariablesFilled = (filledContent: string) => {
-    // Copy the filled content to clipboard
-    copyToClipboard(filledContent)
-    setShowVariableModal(false)
-    setSelectedPromptForVariables(null)
+  const handleDeleteStep = async (stepId: string) => {
+    if (!confirm('Are you sure you want to delete this step?')) return
+    
+    try {
+      await deleteStep(stepId)
+      setToast({ message: 'Step deleted successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to delete step:', error)
+      setToast({ message: 'Failed to delete step', type: 'error' })
+    }
   }
 
-  const handleCancelEdit = () => {
-    setEditingPromptId(null)
-  }
-
-  const handleDeletePrompt = (promptId: string) => {
+  const handleMoveStep = async (stepId: string, direction: 'up' | 'down') => {
     if (!selectedFlow) return
-
-    if (!confirm('Are you sure you want to delete this prompt?')) return
-
-    deleteStep(promptId)
-      .then(() => {
-        setToast({ message: 'Prompt deleted successfully', type: 'success' })
-      })
-      .catch(error => {
-        console.error('Failed to delete prompt:', error)
-        setToast({ message: 'Failed to delete prompt', type: 'error' })
-      })
-  }
-
-  const handleMovePrompt = (promptId: string, direction: 'up' | 'down') => {
-    if (!selectedFlow) return
-
-    const step = selectedFlow.steps.find(s => s.id === promptId)
-    if (!step) return
-
-    const currentIndex = step.order_index
-    let newIndex = currentIndex
-
-    if (direction === 'up' && currentIndex > 0) {
-      newIndex = currentIndex - 1
-    } else if (direction === 'down' && currentIndex < selectedFlow.steps.length - 1) {
-      newIndex = currentIndex + 1
+    
+    const stepIndex = selectedFlow.steps.findIndex(s => s.id === stepId)
+    if (stepIndex === -1) return
+    
+    const currentOrderIndex = selectedFlow.steps[stepIndex].order_index
+    let newOrderIndex: number
+    
+    if (direction === 'up' && stepIndex > 0) {
+      newOrderIndex = selectedFlow.steps[stepIndex - 1].order_index
+    } else if (direction === 'down' && stepIndex < selectedFlow.steps.length - 1) {
+      newOrderIndex = selectedFlow.steps[stepIndex + 1].order_index
     } else {
-      return // No change needed
+      return // Can't move further in this direction
     }
-
-    reorderStep(promptId, newIndex)
-      .catch(error => {
-        console.error('Failed to move prompt:', error)
-        setToast({ message: 'Failed to move prompt', type: 'error' })
-      })
+    
+    try {
+      await reorderStep(stepId, newOrderIndex)
+      setToast({ message: 'Step reordered successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to reorder step:', error)
+      setToast({ message: 'Failed to reorder step', type: 'error' })
+    }
   }
 
-  const handleTogglePromptExpansion = (promptId: string) => {
+  const handleRunFlow = async () => {
     if (!selectedFlow) return
-
-    const updatedSteps = selectedFlow.steps.map(step => 
-      step.id === promptId ? { ...step, isExpanded: !step.isExpanded } : step
-    )
-
-    // Update local state only (no need to persist this to the database)
-    useFlowStore.setState({
-      selectedFlow: {
-        ...selectedFlow,
-        steps: updatedSteps
-      }
-    })
+    
+    try {
+      await executeFlow(selectedFlow.id)
+      setToast({ message: 'Flow executed successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to execute flow:', error)
+      setToast({ message: 'Failed to execute flow', type: 'error' })
+    }
   }
 
-  const handleRunFlow = () => {
-    if (!selectedFlow || selectedFlow.steps.length === 0) return
-
-    executeFlow(selectedFlow.id, { apiKey })
-      .then(() => {
-        setToast({ message: 'Flow executed successfully', type: 'success' })
+  const handleRunStep = async (stepId: string) => {
+    if (!selectedFlow) return
+    
+    try {
+      const step = selectedFlow.steps.find(s => s.id === stepId)
+      if (!step) return
+      
+      // Get variables from previous steps
+      const stepIndex = selectedFlow.steps.findIndex(s => s.id === stepId)
+      const previousSteps = selectedFlow.steps.slice(0, stepIndex)
+      
+      // Build context from previous steps' outputs
+      const context: Record<string, string> = {}
+      previousSteps.forEach((s, idx) => {
+        if (s.output) {
+          context[`step_${idx+1}_output`] = s.output
+        }
       })
-      .catch(error => {
-        console.error('Failed to execute flow:', error)
-        setToast({ message: 'Failed to execute flow', type: 'error' })
-      })
+      
+      // Add variables from the current step if they exist
+      if (step.variables) {
+        Object.entries(step.variables).forEach(([key, value]) => {
+          context[key] = value
+        })
+      }
+      
+      // Get previous step output if available
+      const prevStepOutput = stepIndex > 0 && previousSteps[previousSteps.length - 1].output 
+        ? previousSteps[previousSteps.length - 1].output 
+        : ''
+      
+      // Use custom content if available, otherwise use original prompt content
+      const contentToUse = step.custom_content || step.prompt_content || ''
+      
+      const output = await executeStep(stepId, context, prevStepOutput, contentToUse)
+      setToast({ message: 'Step executed successfully', type: 'success' })
+    } catch (error) {
+      console.error('Failed to execute step:', error)
+      setToast({ message: 'Failed to execute step', type: 'error' })
+    }
   }
 
   const handleClearOutputs = () => {
@@ -395,18 +226,7 @@ export const PromptFlowPage: React.FC = () => {
 
   const handleSaveApiSettings = async (settings: any) => {
     try {
-      // Store API key securely
-      if (settings.apiKey) {
-        await setSecureItem('flow_api_key_encrypted', settings.apiKey)
-        setApiKey(settings.apiKey)
-      }
-      
-      // Update other settings in the store
-      await updateApiSettings({
-        ...settings,
-        apiKey: settings.apiKey || apiKey // Use existing key if not provided
-      })
-      
+      await updateApiSettings(settings)
       setToast({ message: 'API settings saved', type: 'success' })
     } catch (error) {
       console.error('Failed to save API settings:', error)
@@ -414,17 +234,38 @@ export const PromptFlowPage: React.FC = () => {
     }
   }
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setToast({ message: 'Copied to clipboard', type: 'success' })
-    } catch (err) {
-      setToast({ message: 'Failed to copy', type: 'error' })
-    }
+  const handleVariablesFilled = (stepId: string, filledContent: string, variables: Record<string, string>) => {
+    updateStepContent(stepId, filledContent, variables)
+      .then(() => {
+        setToast({ message: 'Variables saved successfully', type: 'success' })
+      })
+      .catch(error => {
+        console.error('Failed to save variables:', error)
+        setToast({ message: 'Failed to save variables', type: 'error' })
+      })
+  }
+
+  const copyStepOutput = (output: string) => {
+    copyToClipboard(output)
+    setToast({ message: 'Output copied to clipboard', type: 'success' })
+  }
+
+  const downloadStepOutput = (output: string, stepTitle: string) => {
+    const blob = new Blob([output], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${stepTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_output.txt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    
+    setToast({ message: 'Output downloaded', type: 'success' })
   }
 
   // Loading state
-  if (authLoading || flowLoading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="text-zinc-400">
@@ -444,7 +285,7 @@ export const PromptFlowPage: React.FC = () => {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <Folder size={32} className="text-indigo-400" />
+              <Zap size={32} className="text-indigo-400" />
             </div>
             <h1 className="text-4xl font-bold text-white mb-4">
               Access Required
@@ -491,451 +332,404 @@ export const PromptFlowPage: React.FC = () => {
           </header>
 
           {/* Content */}
-          <div className="relative z-10 flex-1 overflow-hidden">
-            <div className="h-full flex flex-col md:flex-row">
-              {/* Sidebar - Flow List */}
-              <div className="w-full md:w-64 lg:w-72 border-b md:border-b-0 md:border-r border-zinc-800/50 overflow-y-auto">
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-white">Your Flows</h2>
-                    <button
-                      onClick={() => setShowCreateFlow(true)}
-                      className="p-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200"
-                      title="Create new flow"
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
+          <div className="relative z-10 flex-1">
+            <div className="w-full max-w-7xl px-6 mx-auto py-8">
+              {/* Page Header */}
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
+                <div>
+                  <h1 className="text-3xl font-bold text-white mb-2">
+                    Prompt Flow
+                  </h1>
+                  <p className="text-zinc-400">
+                    Create and run sequential prompt chains
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowApiSettings(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-xl transition-all duration-200 text-sm"
+                  >
+                    <Server size={16} className="text-indigo-400" />
+                    <span>API Settings</span>
+                  </button>
                   
-                  {/* Flow List */}
-                  <div className="space-y-2">
-                    {flows.map(flow => (
-                      <div
-                        key={flow.id}
-                        onClick={() => handleSelectFlow(flow.id)}
-                        className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-                          selectedFlow?.id === flow.id
-                            ? 'bg-indigo-600/20 border border-indigo-500/30'
-                            : 'hover:bg-zinc-800/50 border border-transparent'
-                        }`}
+                  <button
+                    onClick={() => setShowCreateFlow(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                  >
+                    <Plus size={16} />
+                    <span>New Flow</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Flow Selection */}
+              {flows.length > 0 && (
+                <div className="mb-8">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="relative z-20 min-w-[200px]">
+                      <select
+                        value={selectedFlow?.id || ''}
+                        onChange={(e) => {
+                          const flowId = e.target.value
+                          if (flowId) {
+                            selectFlow(flowId)
+                          }
+                        }}
+                        className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 appearance-none"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-medium text-white truncate">{flow.name}</h3>
-                            <p className="text-xs text-zinc-400 truncate">{flow.steps.length} prompt{flow.steps.length !== 1 ? 's' : ''}</p>
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteFlow(flow.id);
-                            }}
-                            className="p-1 text-zinc-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                            title="Delete flow"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                        <option value="" disabled>Select a flow</option>
+                        {flows.map(flow => (
+                          <option key={flow.id} value={flow.id}>{flow.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown 
+                        size={16} 
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-zinc-400 pointer-events-none" 
+                      />
+                    </div>
                     
-                    {flows.length === 0 && (
-                      <div className="text-center py-8">
-                        <Folder className="mx-auto text-zinc-600 mb-2" size={32} />
-                        <p className="text-zinc-500 text-sm">No flows yet</p>
+                    {selectedFlow && (
+                      <div className="flex items-center gap-3">
                         <button
-                          onClick={() => setShowCreateFlow(true)}
-                          className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-all duration-200"
+                          onClick={handleRunFlow}
+                          disabled={executing || selectedFlow.steps.length === 0}
+                          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
                         >
-                          Create Your First Flow
+                          {executing ? (
+                            <>
+                              <Pause size={16} />
+                              <span>Running...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play size={16} />
+                              <span>Run Flow</span>
+                            </>
+                          )}
+                        </button>
+                        
+                        <button
+                          onClick={handleClearOutputs}
+                          disabled={executing}
+                          className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 disabled:bg-zinc-900/30 border border-zinc-700/50 disabled:border-zinc-800/30 rounded-xl transition-all duration-200 text-sm disabled:text-zinc-600 disabled:cursor-not-allowed"
+                        >
+                          <RotateCcw size={16} />
+                          <span>Clear Outputs</span>
                         </button>
                       </div>
                     )}
                   </div>
                 </div>
-              </div>
-              
-              {/* Main Content - Flow Editor */}
-              <div className="flex-1 flex flex-col overflow-hidden">
-                {selectedFlow ? (
-                  <>
-                    {/* Flow Header */}
-                    <div className="border-b border-zinc-800/50 p-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                          {editingFlowName ? (
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="text"
-                                value={newName}
-                                onChange={(e) => setNewName(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                onBlur={handleRenameFlow}
-                                autoFocus
-                                className="text-xl font-bold text-white bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-1 focus:outline-none focus:border-indigo-500"
-                              />
-                              <button
-                                onClick={handleRenameFlow}
-                                className="p-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200"
-                              >
-                                <Save size={16} />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <h1 className="text-xl font-bold text-white">{selectedFlow.name}</h1>
-                              <button
-                                onClick={() => setEditingFlowName(true)}
-                                className="p-1 text-zinc-500 hover:text-indigo-400 transition-colors"
-                                title="Rename flow"
-                              >
-                                <Pencil size={14} />
-                              </button>
-                            </div>
-                          )}
-                          {selectedFlow.description && (
-                            <p className="text-zinc-400 text-sm">{selectedFlow.description}</p>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={handleRunFlow}
-                            disabled={isRunningFlow || selectedFlow.steps.length === 0}
-                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg transition-all duration-200 text-sm"
-                          >
-                            {isRunningFlow ? (
-                              <>
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                <span>Running...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Play size={14} />
-                                <span>Run Flow</span>
-                              </>
-                            )}
-                          </button>
-                          <button
-                            onClick={() => setShowApiSettingsModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg transition-all duration-200 text-sm"
-                          >
-                            <Settings size={14} />
-                            <span>API Settings</span>
-                          </button>
-                          <button
-                            onClick={handleClearOutputs}
-                            className="flex items-center gap-2 px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 rounded-lg transition-all duration-200 text-sm"
-                          >
-                            <X size={14} />
-                            <span>Clear</span>
-                          </button>
-                        </div>
-                      </div>
+              )}
+
+              {/* Flow Content */}
+              {selectedFlow ? (
+                <div className="space-y-6">
+                  {/* Description */}
+                  {selectedFlow.description && (
+                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+                      <p className="text-zinc-300">{selectedFlow.description}</p>
                     </div>
-                    
-                    {/* Flow Content */}
-                    <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                      {/* Prompts List */}
-                      <div className="w-full md:w-1/2 lg:w-2/5 border-b md:border-b-0 md:border-r border-zinc-800/50 overflow-y-auto">
-                        <div className="p-4">
-                          <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-white">Prompts</h2>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={handleAddPrompt}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
-                                title="Import from gallery"
-                              >
-                                <Import size={12} />
-                                <span>Import</span>
-                              </button>
-                            </div>
-                          </div>
+                  )}
+                  
+                  {/* Steps */}
+                  <div className="space-y-4">
+                    {selectedFlow.steps.length === 0 ? (
+                      <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-8 text-center">
+                        <Zap className="mx-auto text-zinc-500 mb-4" size={32} />
+                        <h3 className="text-xl font-semibold text-white mb-2">
+                          No steps yet
+                        </h3>
+                        <p className="text-zinc-400 mb-6">
+                          Add prompts to create a sequential flow
+                        </p>
+                        <button
+                          onClick={() => setShowPromptModal(true)}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                        >
+                          <Plus size={16} />
+                          <span>Add First Step</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        {selectedFlow.steps.map((step, index) => {
+                          const isExpanded = step.isExpanded || false
+                          const isRunning = step.isRunning || false
+                          const hasOutput = !!step.output
+                          const hasCustomContent = !!step.custom_content
                           
-                          {/* Prompts */}
-                          <div className="space-y-3">
-                            {selectedFlow.steps.length === 0 ? (
-                              <div className="text-center py-8 bg-zinc-800/20 rounded-lg border border-zinc-800/50">
-                                <p className="text-zinc-500 mb-2">No prompts in this flow</p>
-                                <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                                  <button
-                                    onClick={handleAddPrompt}
-                                    className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
-                                  >
-                                    <Import size={12} />
-                                    <span>Import from Gallery</span>
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              selectedFlow.steps
-                                .sort((a, b) => a.order_index - b.order_index)
-                                .map((step) => (
-                                  <div
-                                    key={step.id}
-                                    className={`bg-zinc-800/30 border rounded-lg transition-all duration-200 ${
-                                      editingPromptId === step.id
-                                        ? 'border-indigo-500/50'
-                                        : 'border-zinc-700/50 hover:border-zinc-600/50'
-                                    }`}
-                                  >
-                                    {editingPromptId === step.id ? (
-                                      // Editing mode
-                                      <div className="p-4">
+                          return (
+                            <div 
+                              key={step.id}
+                              className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl overflow-hidden"
+                            >
+                              {/* Step Header */}
+                              <div className="p-4 sm:p-6 border-b border-zinc-800/50">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                  {/* Step Number and Title */}
+                                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className="w-8 h-8 bg-indigo-600/20 rounded-lg flex items-center justify-center text-indigo-400 font-semibold">
+                                      {index + 1}
+                                    </div>
+                                    
+                                    {editingStepTitle === step.id ? (
+                                      <div className="flex-1 min-w-0">
                                         <input
                                           type="text"
-                                          value={editingPromptTitle}
-                                          onChange={(e) => setEditingPromptTitle(e.target.value)}
-                                          placeholder="Prompt title"
-                                          className="w-full bg-zinc-700/50 border border-zinc-600/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 mb-3"
+                                          value={editingStepTitleValue}
+                                          onChange={(e) => setEditingStepTitleValue(e.target.value)}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                              handleStepTitleUpdate(step.id, editingStepTitleValue)
+                                            } else if (e.key === 'Escape') {
+                                              setEditingStepTitle(null)
+                                            }
+                                          }}
+                                          onBlur={() => {
+                                            if (editingStepTitleValue.trim()) {
+                                              handleStepTitleUpdate(step.id, editingStepTitleValue)
+                                            } else {
+                                              setEditingStepTitle(null)
+                                            }
+                                          }}
+                                          className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                                          placeholder="Enter step title"
+                                          autoFocus
                                         />
-                                        <textarea
-                                          value={editingPromptContent}
-                                          onChange={(e) => setEditingPromptContent(e.target.value)}
-                                          placeholder="Prompt content"
-                                          rows={6}
-                                          className="w-full bg-zinc-700/50 border border-zinc-600/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 mb-3 font-mono text-sm"
-                                        />
-                                        <div className="flex justify-end gap-2">
-                                          <button
-                                            onClick={handleCancelEdit}
-                                            className="px-3 py-1.5 text-zinc-400 hover:text-white transition-colors text-sm"
-                                          >
-                                            Cancel
-                                          </button>
-                                          <button
-                                            onClick={handleSavePrompt}
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 text-sm"
-                                          >
-                                            <Save size={14} />
-                                            <span>Save</span>
-                                          </button>
-                                        </div>
                                       </div>
                                     ) : (
-                                      // View mode
-                                      <div>
-                                        <div className="flex items-center justify-between p-3 border-b border-zinc-700/30">
-                                          <div className="flex items-center gap-2">
-                                            <div className="w-6 h-6 bg-indigo-600/30 rounded-full flex items-center justify-center text-indigo-400 text-xs font-medium">
-                                              {step.order_index + 1}
-                                            </div>
-                                            <h3 className="text-sm font-medium text-white">{step.step_title}</h3>
-                                          </div>
-                                          <div className="flex items-center">
-                                            <button
-                                              onClick={() => handleTogglePromptExpansion(step.id)}
-                                              className="p-1 text-zinc-400 hover:text-white transition-colors"
-                                            >
-                                              {step.isExpanded ? (
-                                                <ChevronDown size={16} />
-                                              ) : (
-                                                <ChevronRight size={16} />
-                                              )}
-                                            </button>
-                                            <div className="relative">
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation()
-                                                  setShowPromptMenu(showPromptMenu === step.id ? null : step.id)
-                                                }}
-                                                className="p-1 text-zinc-400 hover:text-white transition-colors"
-                                              >
-                                                <MoreVertical size={16} />
-                                              </button>
-                                              
-                                              <AnimatePresence>
-                                                {showPromptMenu === step.id && (
-                                                  <motion.div
-                                                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                    className="absolute top-full right-0 mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-10 w-40"
-                                                  >
-                                                    <div className="py-1">
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          setShowPromptMenu(null)
-                                                          handleEditPrompt(step.id)
-                                                        }}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm"
-                                                      >
-                                                        <Edit3 size={14} />
-                                                        <span>Edit</span>
-                                                      </button>
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          setShowPromptMenu(null)
-                                                          handleFillVariables(step.id)
-                                                        }}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm"
-                                                      >
-                                                        <Wand2 size={14} />
-                                                        <span>Fill Variables</span>
-                                                      </button>
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          setShowPromptMenu(null)
-                                                          handleMovePrompt(step.id, 'up')
-                                                        }}
-                                                        disabled={step.order_index === 0}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
-                                                      >
-                                                        <ArrowUp size={14} />
-                                                        <span>Move Up</span>
-                                                      </button>
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          setShowPromptMenu(null)
-                                                          handleMovePrompt(step.id, 'down')
-                                                        }}
-                                                        disabled={step.order_index === selectedFlow.steps.length - 1}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
-                                                      >
-                                                        <ArrowDown size={14} />
-                                                        <span>Move Down</span>
-                                                      </button>
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          setShowPromptMenu(null)
-                                                          handleDeletePrompt(step.id)
-                                                        }}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left text-sm"
-                                                      >
-                                                        <Trash2 size={14} />
-                                                        <span>Delete</span>
-                                                      </button>
-                                                    </div>
-                                                  </motion.div>
-                                                )}
-                                              </AnimatePresence>
-                                            </div>
-                                          </div>
-                                        </div>
-                                        
-                                        <AnimatePresence>
-                                          {step.isExpanded && (
-                                            <motion.div
-                                              initial={{ height: 0, opacity: 0 }}
-                                              animate={{ height: 'auto', opacity: 1 }}
-                                              exit={{ height: 0, opacity: 0 }}
-                                              transition={{ duration: 0.2 }}
-                                              className="overflow-hidden"
-                                            >
-                                              <div className="p-3 bg-zinc-800/50 border-t border-zinc-700/30">
-                                                <pre className="text-xs text-zinc-300 font-mono whitespace-pre-wrap">
-                                                  {step.prompt_content || "No content available"}
-                                                </pre>
-                                                
-                                                {/* Output display */}
-                                                {step.output && (
-                                                  <div className="mt-3 pt-3 border-t border-zinc-700/30">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                      <h4 className="text-xs font-medium text-emerald-400">Output</h4>
-                                                      <button
-                                                        onClick={() => copyToClipboard(step.output || '')}
-                                                        className="p-1 text-zinc-500 hover:text-white transition-colors"
-                                                        title="Copy output"
-                                                      >
-                                                        <Copy size={12} />
-                                                      </button>
-                                                    </div>
-                                                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-lg p-2 text-xs text-emerald-300 font-mono whitespace-pre-wrap">
-                                                      {step.output}
-                                                    </div>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            </motion.div>
-                                          )}
-                                        </AnimatePresence>
+                                      <div 
+                                        className="flex-1 min-w-0"
+                                        onDoubleClick={() => {
+                                          setEditingStepTitle(step.id)
+                                          setEditingStepTitleValue(step.step_title)
+                                        }}
+                                      >
+                                        <h3 className="text-lg font-semibold text-white truncate">
+                                          {step.step_title}
+                                        </h3>
+                                        <p className="text-sm text-zinc-400 truncate">
+                                          {step.prompt_title || 'Untitled Prompt'}
+                                        </p>
                                       </div>
                                     )}
                                   </div>
-                                ))
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Output Panel */}
-                      <div className="flex-1 overflow-y-auto">
-                        <div className="p-4">
-                          <h2 className="text-lg font-semibold text-white mb-4">Flow Output</h2>
-                          
-                          {selectedFlow.steps.some(step => step.output) ? (
-                            <div className="space-y-4">
-                              {selectedFlow.steps
-                                .filter(step => step.output)
-                                .map((step, index) => (
-                                  <div key={step.id} className="relative">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <h3 className="text-sm font-medium text-white flex items-center gap-2">
-                                        <span className="w-5 h-5 bg-indigo-600/30 rounded-full flex items-center justify-center text-indigo-400 text-xs">
-                                          {step.order_index + 1}
-                                        </span>
-                                        {step.step_title}
-                                      </h3>
+                                  
+                                  {/* Actions */}
+                                  <div className="flex items-center gap-2">
+                                    {/* Edit Title */}
+                                    <button
+                                      onClick={() => {
+                                        setEditingStepTitle(step.id)
+                                        setEditingStepTitleValue(step.step_title)
+                                      }}
+                                      className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                                      title="Edit title"
+                                    >
+                                      <Edit3 size={16} />
+                                    </button>
+                                    
+                                    {/* Move Up */}
+                                    {index > 0 && (
                                       <button
-                                        onClick={() => copyToClipboard(step.output || '')}
-                                        className="p-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-lg transition-all duration-200"
-                                        title="Copy to clipboard"
+                                        onClick={() => handleMoveStep(step.id, 'up')}
+                                        className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                                        title="Move up"
                                       >
-                                        <Copy size={14} />
+                                        <ChevronUp size={16} />
                                       </button>
-                                    </div>
-                                    <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-4 font-mono text-sm text-zinc-300 whitespace-pre-wrap">
-                                      {step.output}
-                                    </div>
+                                    )}
+                                    
+                                    {/* Move Down */}
+                                    {index < selectedFlow.steps.length - 1 && (
+                                      <button
+                                        onClick={() => handleMoveStep(step.id, 'down')}
+                                        className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                                        title="Move down"
+                                      >
+                                        <ChevronDown size={16} />
+                                      </button>
+                                    )}
+                                    
+                                    {/* Delete */}
+                                    <button
+                                      onClick={() => handleDeleteStep(step.id)}
+                                      className="p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                                      title="Delete step"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                    
+                                    {/* Fill Variables */}
+                                    <button
+                                      onClick={() => {
+                                        setSelectedStep(step)
+                                        setShowVariableModal(true)
+                                      }}
+                                      className="p-2 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all duration-200"
+                                      title="Fill variables"
+                                    >
+                                      <Wand2 size={16} />
+                                    </button>
+                                    
+                                    {/* Run Step */}
+                                    <button
+                                      onClick={() => handleRunStep(step.id)}
+                                      disabled={executing || isRunning}
+                                      className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 disabled:bg-zinc-800/30 text-emerald-400 disabled:text-zinc-500 border border-emerald-500/30 disabled:border-zinc-700/30 rounded-lg transition-all duration-200 text-xs font-medium disabled:cursor-not-allowed"
+                                    >
+                                      {isRunning ? (
+                                        <>
+                                          <div className="w-3 h-3 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
+                                          <span>Running</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Play size={12} />
+                                          <span>Run</span>
+                                        </>
+                                      )}
+                                    </button>
+                                    
+                                    {/* Expand/Collapse */}
+                                    <button
+                                      onClick={() => {
+                                        updateStep(step.id, { isExpanded: !isExpanded })
+                                      }}
+                                      className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                                      title={isExpanded ? 'Collapse' : 'Expand'}
+                                    >
+                                      {isExpanded ? (
+                                        <ChevronDown size={16} />
+                                      ) : (
+                                        <ChevronRight size={16} />
+                                      )}
+                                    </button>
                                   </div>
-                                ))}
+                                </div>
+                              </div>
+                              
+                              {/* Step Content (Expanded) */}
+                              <AnimatePresence>
+                                {isExpanded && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="p-4 sm:p-6 border-b border-zinc-800/50 bg-zinc-900/30">
+                                      <div className="flex items-center gap-2 mb-3">
+                                        <h4 className="text-sm font-medium text-zinc-300">Prompt Content</h4>
+                                        {hasCustomContent && (
+                                          <div className="px-2 py-0.5 bg-indigo-500/20 text-indigo-400 text-xs rounded-full">
+                                            Customized
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4 whitespace-pre-wrap text-zinc-300 text-sm font-mono">
+                                        {step.custom_content || step.prompt_content}
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Step Output */}
+                                    {hasOutput && (
+                                      <div className="p-4 sm:p-6 bg-zinc-900/30">
+                                        <div className="flex items-center justify-between mb-3">
+                                          <h4 className="text-sm font-medium text-zinc-300">Output</h4>
+                                          <div className="flex items-center gap-2">
+                                            <button
+                                              onClick={() => copyStepOutput(step.output!)}
+                                              className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                                              title="Copy output"
+                                            >
+                                              <Copy size={14} />
+                                            </button>
+                                            <button
+                                              onClick={() => downloadStepOutput(step.output!, step.step_title)}
+                                              className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                                              title="Download output"
+                                            >
+                                              <Download size={14} />
+                                            </button>
+                                          </div>
+                                        </div>
+                                        <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4 whitespace-pre-wrap text-zinc-300 text-sm">
+                                          {step.output}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                              
+                              {/* Step Connector */}
+                              {index < selectedFlow.steps.length - 1 && (
+                                <div className="flex justify-center py-2">
+                                  <ArrowRight className="text-zinc-600" size={20} />
+                                </div>
+                              )}
                             </div>
-                          ) : (
-                            <div className="bg-zinc-800/20 border border-zinc-800/50 rounded-lg p-8 text-center">
-                              <Play className="mx-auto text-zinc-600 mb-3" size={32} />
-                              <p className="text-zinc-500 mb-4">Run the flow to see output here</p>
-                              <button
-                                onClick={handleRunFlow}
-                                disabled={isRunningFlow || selectedFlow.steps.length === 0}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg transition-all duration-200 text-sm"
-                              >
-                                <Play size={14} />
-                                <span>Run Flow</span>
-                              </button>
-                            </div>
-                          )}
+                          )
+                        })}
+                        
+                        {/* Add Step Button */}
+                        <div className="flex justify-center mt-6">
+                          <button
+                            onClick={() => setShowPromptModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-xl transition-all duration-200 text-sm"
+                          >
+                            <Plus size={16} className="text-indigo-400" />
+                            <span>Add Step</span>
+                          </button>
                         </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center p-4">
-                    <div className="text-center max-w-md">
-                      <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <Folder size={32} className="text-indigo-400" />
-                      </div>
-                      <h2 className="text-xl font-semibold text-white mb-2">
-                        No Flow Selected
-                      </h2>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  {flows.length === 0 ? (
+                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
+                      <Zap className="mx-auto text-zinc-500 mb-4" size={48} />
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        No Prompt Flows Yet
+                      </h3>
                       <p className="text-zinc-400 mb-6">
-                        Select an existing flow or create a new one to get started.
+                        Create your first flow to get started
                       </p>
                       <button
                         onClick={() => setShowCreateFlow(true)}
-                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 mx-auto"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
                       >
                         <Plus size={16} />
-                        <span>Create Flow</span>
+                        <span>Create First Flow</span>
                       </button>
                     </div>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
+                      <Zap className="mx-auto text-zinc-500 mb-4" size={48} />
+                      <h3 className="text-xl font-semibold text-white mb-2">
+                        Select a Flow
+                      </h3>
+                      <p className="text-zinc-400 mb-6">
+                        Choose a flow from the dropdown above or create a new one
+                      </p>
+                      <button
+                        onClick={() => setShowCreateFlow(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                      >
+                        <Plus size={16} />
+                        <span>Create New Flow</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -948,7 +742,7 @@ export const PromptFlowPage: React.FC = () => {
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCreateFlow(false)} />
             
             <motion.div 
-              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-md overflow-hidden flex flex-col"
+              className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-lg overflow-hidden flex flex-col"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -1008,10 +802,10 @@ export const PromptFlowPage: React.FC = () => {
                 </button>
                 <button
                   onClick={handleCreateFlow}
-                  disabled={isCreatingFlow || !newFlowName.trim()}
+                  disabled={isCreating || !newFlowName.trim()}
                   className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
                 >
-                  {isCreatingFlow ? (
+                  {isCreating ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       <span>Creating...</span>
@@ -1036,25 +830,23 @@ export const PromptFlowPage: React.FC = () => {
         onSelectPrompt={handlePromptSelected}
       />
 
-      {/* Variable Fill Modal */}
-      <VariableFillModal
-        isOpen={showVariableModal}
-        onClose={() => {
-          setShowVariableModal(false)
-          setSelectedPromptForVariables(null)
-        }}
-        promptContent={selectedPromptForVariables?.content || ''}
-        promptTitle={selectedPromptForVariables?.title}
-        onVariablesFilled={handleVariablesFilled}
-      />
-
       {/* API Settings Modal */}
       <FlowApiSettingsModal
-        isOpen={showApiSettingsModal}
-        onClose={() => setShowApiSettingsModal(false)} 
-        settings={{...apiSettings, apiKey}}
+        isOpen={showApiSettings}
+        onClose={() => setShowApiSettings(false)}
+        settings={apiSettings}
         onSave={handleSaveApiSettings}
       />
+
+      {/* Variable Fill Modal */}
+      {selectedStep && (
+        <VariableFillModal
+          isOpen={showVariableModal}
+          onClose={() => setShowVariableModal(false)}
+          step={selectedStep}
+          onVariablesFilled={handleVariablesFilled}
+        />
+      )}
 
       {/* Toast */}
       {toast && (
@@ -1069,3 +861,21 @@ export const PromptFlowPage: React.FC = () => {
     </div>
   )
 }
+
+// Helper component for ChevronUp icon
+const ChevronUp = (props: any) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="m18 15-6-6-6 6"/>
+  </svg>
+)
