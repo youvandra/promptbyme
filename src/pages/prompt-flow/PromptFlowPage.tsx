@@ -678,17 +678,6 @@ export const PromptFlowPage: React.FC = () => {
                                                         onClick={(e) => {
                                                           e.stopPropagation()
                                                           setShowPromptMenu(null)
-                                                          handleEditPrompt(step.id)
-                                                        }}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm"
-                                                      >
-                                                        <Edit3 size={14} />
-                                                        <span>Edit</span>
-                                                      </button>
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          setShowPromptMenu(null)
                                                           handleMovePrompt(step.id, 'up')
                                                         }}
                                                         disabled={step.order_index === 0}
