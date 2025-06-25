@@ -641,7 +641,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         // Use a derived key for encryption (in a real app, you'd use a more secure key derivation)
         const keyMaterial = await crypto.subtle.importKey(
           'raw',
-          encoder.encode('promptby-me-secure-key'),
+          encoder.encode('promptby.me-encryption-key'),
           { name: 'PBKDF2' },
           false,
           ['deriveKey']
@@ -650,7 +650,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         const key = await crypto.subtle.deriveKey(
           {
             name: 'PBKDF2',
-            salt: encoder.encode('promptby-me-salt'),
+            salt: encoder.encode('promptby.me-salt'),
             iterations: 100000,
             hash: 'SHA-256'
           },
