@@ -1,6 +1,6 @@
 import { marked } from 'marked';
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Edit3, Trash2, Play, Copy, Wand2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Edit3, Trash2, Play, Copy, Wand2, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FlowStep } from '../../store/flowStore';
 import { FlowStepEditor } from './FlowStepEditor';
@@ -103,6 +103,28 @@ export const FlowStepItem: React.FC<FlowStepItemProps> = ({
             className="overflow-hidden"
           >
             <div className="p-4 space-y-4">
+              {/* Run Step Button */}
+              <div className="flex justify-end">
+                <button
+                  onClick={() => onExecute(step.id)}
+                  disabled={isExecuting || (hasVariables && !allVariablesFilled)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 disabled:bg-zinc-700/20 disabled:text-zinc-500 text-emerald-400 border border-emerald-500/30 rounded-lg transition-all duration-200 text-sm"
+                  title={hasVariables && !allVariablesFilled ? "Fill variables before running" : "Run this step"}
+                >
+                  {step.isRunning ? (
+                    <>
+                      <Loader size={14} className="animate-spin" />
+                      <span>Running...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play size={14} />
+                      <span>Run Step</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
               {/* Content */}
               <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -146,9 +168,18 @@ export const FlowStepItem: React.FC<FlowStepItemProps> = ({
               {step.output && (
                 <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-emerald-300 mb-2">Output</h4>
-                    <div className="text-zinc-300 text-sm bg-zinc-800/30 p-4 rounded-lg border border-zinc-700/30 max-h-[400px] overflow-y-auto prose prose-invert prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: marked(step.output || '') }}
-                     />
+                  <div className="text-zinc-300 text-sm bg-zinc-800/30 p-4 rounded-lg border border-zinc-700/30 max-h-[400px] overflow-y-auto prose prose-invert prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: marked(step.output || '') }}
+                  />
+                  <div className="flex justify-end mt-2">
+                    <button
+                      onClick={copyToClipboard}
+                      className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded transition-colors"
+                    >
+                      <Copy size={12} />
+                      <span>{copied ? 'Copied!' : 'Copy'}</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
