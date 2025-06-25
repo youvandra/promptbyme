@@ -19,6 +19,7 @@ import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
+import { useSecureStorage } from '../../hooks/useSecureStorage'
 import { usePromptStore } from '../../store/promptStore'
 import { FlowApiSettingsModal } from '../../components/prompt-flow/FlowApiSettingsModal'
 import { useFlowStore, PromptFlow, FlowStep } from '../../store/flowStore'
@@ -39,8 +40,10 @@ export const PromptFlowPage: React.FC = () => {
   const [editingPromptContent, setEditingPromptContent] = useState('')
   const [showPromptMenu, setShowPromptMenu] = useState<string | null>(null)
   const [editingFlowName, setEditingFlowName] = useState(false)
+  const [apiKey, setApiKey] = useState('')
   const [newName, setNewName] = useState('')
   const [showApiSettingsModal, setShowApiSettingsModal] = useState(false)
+  const { getSecureItem, setSecureItem } = useSecureStorage()
   
   const { user, loading: authLoading } = useAuthStore()
   const { prompts, fetchUserPrompts } = usePromptStore()
@@ -67,7 +70,21 @@ export const PromptFlowPage: React.FC = () => {
   useEffect(() => {
     if (user) {
       fetchUserPrompts(user.id)
-      fetchFlows()
+      fetchFlows() 
+      
+      // Load API key from secure storage
+      const loadApiKey = async () => {
+        try {
+          const storedKey = await getSecureItem('flow_api_key_encrypted')
+          if (storedKey) {
+            setApiKey(storedKey)
+          }
+        } catch (error) {
+          console.error('Failed to load API key:', error)
+        }
+      }
+      
+      loadApiKey()
     }
   }, [user, fetchUserPrompts, fetchFlows])
 
@@ -300,7 +317,7 @@ export const PromptFlowPage: React.FC = () => {
   const handleRunFlow = () => {
     if (!selectedFlow || selectedFlow.steps.length === 0) return
 
-    executeFlow(selectedFlow.id)
+    executeFlow(selectedFlow.id, { apiKey })
       .then(() => {
         setToast({ message: 'Flow executed successfully', type: 'success' })
       })
@@ -315,15 +332,25 @@ export const PromptFlowPage: React.FC = () => {
     setToast({ message: 'Outputs cleared', type: 'success' })
   }
 
-  const handleSaveApiSettings = (settings: any) => {
-    updateApiSettings(settings)
-      .then(() => {
-        setToast({ message: 'API settings saved', type: 'success' })
+  const handleSaveApiSettings = async (settings: any) => {
+    try {
+      // Store API key securely
+      if (settings.apiKey) {
+        await setSecureItem('flow_api_key_encrypted', settings.apiKey)
+        setApiKey(settings.apiKey)
+      }
+      
+      // Update other settings in the store
+      await updateApiSettings({
+        ...settings,
+        apiKey: settings.apiKey || apiKey // Use existing key if not provided
       })
-      .catch(error => {
-        console.error('Failed to save API settings:', error)
-        setToast({ message: 'Failed to save API settings', type: 'error' })
-      })
+      
+      setToast({ message: 'API settings saved', type: 'success' })
+    } catch (error) {
+      console.error('Failed to save API settings:', error)
+      setToast({ message: 'Failed to save API settings', type: 'error' })
+    }
   }
 
   const copyToClipboard = async (text: string) => {
@@ -929,8 +956,8 @@ export const PromptFlowPage: React.FC = () => {
       {/* API Settings Modal */}
       <FlowApiSettingsModal
         isOpen={showApiSettingsModal}
-        onClose={() => setShowApiSettingsModal(false)}
-        settings={apiSettings}
+        onClose={() => setShowApiSettingsModal(false)} 
+        settings={{...apiSettings, apiKey}}
         onSave={handleSaveApiSettings}
       />
 

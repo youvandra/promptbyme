@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { X, Save, Key, Thermometer, Zap, Server, Bot, MessageSquare, Sparkles, Brain, Cpu } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useSecureStorage } from '../../hooks/useSecureStorage'
 
 interface ApiSettings {
   provider: 'openai' | 'anthropic' | 'google' | 'llama' | 'groq'
+  apiKey: string
   model: string
   temperature: number
   maxTokens: number
@@ -25,9 +27,11 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
   const [provider, setProvider] = useState<ApiSettings['provider']>(settings.provider)
   const [model, setModel] = useState(settings.model)
   const [temperature, setTemperature] = useState(settings.temperature)
-  const [maxTokens, setMaxTokens] = useState(settings.maxTokens)
+  const [maxTokens, setMaxTokens] = useState(settings.maxTokens) 
+  const [apiKey, setApiKey] = useState(settings.apiKey || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { getSecureItem } = useSecureStorage()
 
   // Update local state when settings prop changes
   useEffect(() => {
@@ -35,12 +39,27 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
     setModel(settings.model)
     setTemperature(settings.temperature)
     setMaxTokens(settings.maxTokens)
+    
+    // Load API key from secure storage if available
+    const loadApiKey = async () => {
+      try {
+        const storedKey = await getSecureItem('flow_api_key_encrypted')
+        if (storedKey) {
+          setApiKey(storedKey)
+        }
+      } catch (error) {
+        console.error('Failed to load API key:', error)
+      }
+    }
+    
+    loadApiKey()
   }, [settings])
 
   const handleSave = () => {
     setSaving(true)
     const savePromise = onSave({
       provider,
+      apiKey,
       model,
       temperature,
       maxTokens
@@ -222,6 +241,24 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
             </div>
           </div>
           
+          {/* API Key */}
+          <div>
+            <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
+              <Key size={16} className="text-indigo-400" />
+              API Key
+            </label>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder={`Enter your ${provider} API key`}
+              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+            />
+            <p className="text-xs text-zinc-500 mt-1">
+              Your API key is stored securely in your browser and never sent to our servers.
+            </p>
+          </div>
+          
           {/* Model Selection */}
           <div>
             <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
@@ -274,17 +311,6 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
               onChange={(e) => setMaxTokens(parseInt(e.target.value))}
               className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
             />
-          </div>
-          
-          {/* Info message about global API key */}
-          <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-4">
-            <h3 className="text-sm font-medium text-indigo-300 mb-2 flex items-center gap-2">
-              <Key size={16} />
-              <span>API Key Information</span>
-            </h3>
-            <p className="text-sm text-zinc-300">
-              This application uses a global Groq API key for all users. You don't need to provide your own API key.
-            </p>
           </div>
           
           {error && (

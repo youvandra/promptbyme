@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
+import { callAI } from '../lib/aiApi'
 
 export interface FlowStep {
   id: string
@@ -27,6 +28,7 @@ export interface PromptFlow {
 
 interface ApiSettings {
   provider: 'openai' | 'anthropic' | 'google' | 'llama' | 'groq'
+  apiKey: string
   model: string
   temperature: number
   maxTokens: number
@@ -64,6 +66,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   selectedFlow: null,
   apiSettings: {
     provider: localStorage.getItem('flow_api_provider') as ApiSettings['provider'] || 'groq',
+    apiKey: '',
     model: localStorage.getItem('flow_api_model') || 'llama3-8b-8192',
     temperature: parseFloat(localStorage.getItem('flow_api_temperature') || '0.7'),
     maxTokens: parseInt(localStorage.getItem('flow_api_max_tokens') || '1000')
@@ -485,6 +488,10 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         throw new Error('Selected flow does not match the flow to execute')
       }
       
+      if (!apiSettings.apiKey) {
+        throw new Error('API key is required. Please configure your API settings.')
+      }
+      
       // Clear previous outputs
       set(state => ({
         selectedFlow: state.selectedFlow ? {
@@ -564,7 +571,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       if (!selectedFlow) throw new Error('No flow selected')
       
       const step = selectedFlow.steps.find(s => s.id === stepId)
-      if (!step) throw new Error('Step not found')      
+      if (!step) throw new Error('Step not found')
       
       // Replace variables in prompt content
       let content = step.prompt_content || ''
@@ -578,63 +585,21 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       // Call the appropriate API based on provider
       let response
       
-      // For demo purposes, we'll use the Supabase Edge Function
+      // Call the AI API directly
       try {
-        const response = await supabase.functions.invoke('run-prompt-flow', {
-          body: { 
-            provider: get().apiSettings.provider,
-            model: get().apiSettings.model,
-            prompt: content,
-            temperature: get().apiSettings.temperature,
-            maxTokens: get().apiSettings.maxTokens
-          }
-        })
-        
-        // Handle network-level errors (Edge Function not reachable)
-        if (response.error) {
-          console.error('Edge Function error:', response.error)
-          throw new Error(`Edge Function failed: ${response.error.message || 'Network error'}`)
-        }
-        
-        // Handle application-level errors (API restrictions, etc.)
-        if (!response.data) {
-          throw new Error('No response data received from Edge Function')
-        }
-        
-        if (!response.data.success) {
-          const errorData = response.data
-          
-          // Handle network restriction errors with helpful guidance
-          if (errorData.errorType === 'NETWORK_RESTRICTION') {
-            throw new Error(`Network Configuration Required: ${errorData.userMessage}\n\nTo fix this:\n${errorData.troubleshooting.steps.join('\n')}`)
-          }
-          
-          // Handle API errors
-          if (errorData.errorType === 'API_ERROR') {
-            throw new Error(`AI Provider Error: ${errorData.userMessage}`)
-          }
-          
-          // Handle other errors
-          throw new Error(errorData.error || errorData.userMessage || 'Unknown error occurred')
-        }
-        
-        return response.data.response
+        const { provider, apiKey, model, temperature, maxTokens } = get().apiSettings;
+        const response = await callAI({
+          provider,
+          apiKey,
+          model,
+          prompt: content,
+          temperature,
+          maxTokens
+        });
+        return response;
       } catch (error) {
-        console.error('Step execution failed:', error)
-        
-        // Re-throw with more context if it's our custom error
-        if (error.message.includes('Network Configuration Required') || 
-            error.message.includes('AI Provider Error')) {
-          throw error
-        }
-        
-        // Handle generic fetch failures
-        if (error.message.includes('Failed to fetch') || 
-            error.message.includes('fetch')) {
-          throw new Error('Unable to connect to AI service. Please check your network connection and Supabase Edge Function configuration.')
-        }
-        
-        throw new Error(`Step execution failed: ${error.message}`)
+        console.error('AI API call failed:', error);
+        throw new Error(`AI API call failed: ${error.message}`);
       }
     } catch (error) {
       console.error('Error executing step:', error)
@@ -644,17 +609,71 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   
   updateApiSettings: async (settings) => {
     set(state => ({
-      apiSettings: { 
+      apiSettings: {
         ...state.apiSettings,
         ...settings
       }
     }))
     
     // Save API settings to localStorage
-    if (settings.provider) localStorage.setItem('flow_api_provider', settings.provider)
-    if (settings.model) localStorage.setItem('flow_api_model', settings.model)
-    if (settings.temperature) localStorage.setItem('flow_api_temperature', settings.temperature.toString())
-    if (settings.maxTokens) localStorage.setItem('flow_api_max_tokens', settings.maxTokens.toString())
+    if (settings.provider) localStorage.setItem('flow_api_provider', settings.provider);
+    if (settings.model) localStorage.setItem('flow_api_model', settings.model);
+    if (settings.temperature) localStorage.setItem('flow_api_temperature', settings.temperature.toString());
+    if (settings.maxTokens) localStorage.setItem('flow_api_max_tokens', settings.maxTokens.toString());
+    
+    // If API key is provided, store it securely
+    if (settings.apiKey) {
+      try {
+        // Use the browser's built-in crypto API for simple encryption
+        const encoder = new TextEncoder();
+        const data = encoder.encode(settings.apiKey);
+        
+        // Create a random initialization vector
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        
+        // Use a derived key for encryption (in a real app, you'd use a more secure key derivation)
+        const keyMaterial = await crypto.subtle.importKey(
+          'raw',
+          encoder.encode('promptby-me-secure-key'),
+          { name: 'PBKDF2' },
+          false,
+          ['deriveKey']
+        );
+        
+        const key = await crypto.subtle.deriveKey(
+          {
+            name: 'PBKDF2',
+            salt: encoder.encode('promptby-me-salt'),
+            iterations: 100000,
+            hash: 'SHA-256'
+          },
+          keyMaterial,
+          { name: 'AES-GCM', length: 256 },
+          false,
+          ['encrypt']
+        );
+        
+        // Encrypt the API key
+        const encrypted = await crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          key,
+          data
+        );
+        
+        // Combine IV and encrypted data
+        const encryptedArray = new Uint8Array(encrypted);
+        const combined = new Uint8Array(iv.length + encryptedArray.length);
+        combined.set(iv);
+        combined.set(encryptedArray, iv.length);
+        
+        // Store as base64 string
+        const base64 = btoa(String.fromCharCode(...combined));
+        localStorage.setItem('flow_api_key_encrypted', base64);
+      } catch (error) {
+        console.error('Failed to securely store API key:', error);
+        // Fallback to storing in memory only
+      }
+    }
   },
   
   clearOutputs: () => {
