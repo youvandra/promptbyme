@@ -11,8 +11,6 @@ export interface FlowStep {
   created_at?: string
   prompt_content?: string
   prompt_title?: string
-  custom_content?: string
-  variables?: Record<string, string>
   output?: string
   isExpanded?: boolean
   isRunning?: boolean
@@ -53,7 +51,6 @@ interface FlowState {
   // Step operations
   addStep: (flowId: string, promptId: string, title: string, content: string) => Promise<void>
   updateStep: (stepId: string, updates: Partial<Omit<FlowStep, 'id' | 'flow_id'>>) => Promise<void>
-  updateStepContent: (stepId: string, customContent: string, variables?: Record<string, string>) => Promise<void>
   deleteStep: (stepId: string) => Promise<void>
   reorderStep: (stepId: string, newIndex: number) => Promise<void>
   
@@ -97,45 +94,38 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         const { data: steps, error: stepsError } = await supabase
           .from('flow_steps')
           .select(`
-            flow_steps.id,
-            flow_steps.flow_id,
-            flow_steps.prompt_id,
-            flow_steps.order_index,
-            flow_steps.step_title,
-            flow_steps.created_at,
-            prompts.id as prompt_id,
-            prompts.title as prompt_title,
-            prompts.content as prompt_content,
-            prompt_flow_step.custom_content,
-            prompt_flow_step.variables
+            id,
+            flow_id,
+            prompt_id,
+            order_index,
+            step_title,
+            created_at,
+            prompts (
+              id,
+              title,
+              content
+            )
           `)
-          .from('flow_steps')
-          .join('prompts', 'flow_steps.prompt_id', 'prompts.id')
-          .left_join('prompt_flow_step', 'flow_steps.id', 'prompt_flow_step.flow_step_id')
-          .eq('flow_steps.flow_id', flow.id)
-          .order('flow_steps.order_index')
+          .eq('flow_id', flow.id)
+          .order('order_index')
 
         if (stepsError) {
           console.error(`Error fetching steps for flow ${flow.id}:`, stepsError)
           return { ...flow, steps: [] }
         }
 
-        // Transform steps to include prompt content and custom content if available
-        const transformedSteps = (steps || []).map(step => {
-          return {
-            id: step.id,
-            flow_id: step.flow_id,
-            prompt_id: step.prompt_id,
-            order_index: step.order_index,
-            step_title: step.step_title,
-            created_at: step.created_at,
-            prompt_content: step.prompt_content || '',
-            prompt_title: step.prompt_title || '',
-            custom_content: step.custom_content || null,
-            variables: step.variables || {},
-            isExpanded: false
-          }
-        })
+        // Transform steps to include prompt content
+        const transformedSteps = (steps || []).map(step => ({
+          id: step.id,
+          flow_id: step.flow_id,
+          prompt_id: step.prompt_id,
+          order_index: step.order_index,
+          step_title: step.step_title,
+          created_at: step.created_at,
+          prompt_content: step.prompts?.content || '',
+          prompt_title: step.prompts?.title || '',
+          isExpanded: false
+        }))
 
         return { ...flow, steps: transformedSteps }
       }))
@@ -333,77 +323,6 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       })
     } catch (error) {
       console.error('Error updating step:', error)
-      throw error
-    }
-  },
-
-  updateStepContent: async (stepId: string, customContent: string, variables = {}) => {
-    try {
-      // Check if a custom content record already exists for this step
-      const { data: existingRecord } = await supabase
-        .from('prompt_flow_step')
-        .select('id')
-        .eq('flow_step_id', stepId)
-        .maybeSingle()
-
-      if (existingRecord) {
-        // Update existing record
-        await supabase
-          .from('prompt_flow_step')
-          .update({
-            custom_content: customContent,
-            variables: variables,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingRecord.id)
-      } else {
-        // Create new record
-        await supabase
-          .from('prompt_flow_step')
-          .insert({
-            flow_step_id: stepId,
-            custom_content: customContent,
-            variables: variables
-          })
-      }
-
-      // Update local state
-      set(state => {
-        const updatedFlows = state.flows.map(flow => {
-          const stepIndex = flow.steps.findIndex(s => s.id === stepId)
-          if (stepIndex >= 0) {
-            const updatedSteps = [...flow.steps]
-            updatedSteps[stepIndex] = {
-              ...updatedSteps[stepIndex],
-              custom_content: customContent,
-              variables: variables
-            }
-            return { ...flow, steps: updatedSteps }
-          }
-          return flow
-        })
-        
-        let updatedSelectedFlow = state.selectedFlow
-        if (state.selectedFlow) {
-          const stepIndex = state.selectedFlow.steps.findIndex(s => s.id === stepId)
-          if (stepIndex >= 0) {
-            const updatedSteps = [...state.selectedFlow.steps]
-            updatedSteps[stepIndex] = {
-              ...updatedSteps[stepIndex],
-              custom_content: customContent,
-              variables: variables
-            }
-            updatedSelectedFlow = { ...state.selectedFlow, steps: updatedSteps }
-          }
-        }
-
-        return {
-          flows: updatedFlows,
-          selectedFlow: updatedSelectedFlow
-        }
-      })
-    } catch (error) {
-      console.error('Error updating step content:', error)
       throw error
     }
   },
@@ -656,8 +575,8 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       const step = selectedFlow.steps.find(s => s.id === stepId)
       if (!step) throw new Error('Step not found')
 
-      // Use custom content if available, otherwise use original prompt content
-      let content = step.custom_content || step.prompt_content || ''
+      // Replace variables in prompt content
+      let content = step.prompt_content || ''
 
       // Replace {{variable}} placeholders with values from context
       for (const [key, value] of Object.entries(variables)) {
