@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { X, Save, Key, Thermometer, Zap, Server, Bot, MessageSquare, Sparkles } from 'lucide-react'
+import { X, Save, Key, Thermometer, Zap, Server, Bot, MessageSquare, Sparkles, Brain } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useSecureStorage } from '../../hooks/useSecureStorage'
 
 interface ApiSettings {
-  provider: 'openai' | 'anthropic' | 'google'
+  provider: 'openai' | 'anthropic' | 'google' | 'llama'
   apiKey: string
   model: string
   temperature: number
@@ -86,7 +86,16 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
       case 'google':
         return [
           { id: 'gemini-pro', name: 'Gemini Pro' },
-          { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' }
+          { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+          { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' }
+        ]
+      case 'llama':
+        return [
+          { id: 'llama-2-7b-chat', name: 'Llama 2 (7B) Chat' },
+          { id: 'llama-2-13b-chat', name: 'Llama 2 (13B) Chat' },
+          { id: 'llama-2-70b-chat', name: 'Llama 2 (70B) Chat' },
+          { id: 'llama-3-8b-instruct', name: 'Llama 3 (8B) Instruct' },
+          { id: 'llama-3-70b-instruct', name: 'Llama 3 (70B) Instruct' }
         ]
       default:
         return []
@@ -102,6 +111,8 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
         return <Bot size={20} className="text-purple-400" />
       case 'google':
         return <Sparkles size={20} className="text-blue-400" />
+      case 'llama':
+        return <Brain size={20} className="text-amber-400" />
       default:
         return <Server size={20} className="text-indigo-400" />
     }
@@ -147,7 +158,7 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 onClick={() => setProvider('openai')}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
                   provider === 'openai' 
                     ? 'bg-green-500/10 border-green-500/30 text-green-300' 
                     : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
@@ -159,7 +170,7 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
               
               <button
                 onClick={() => setProvider('anthropic')}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
                   provider === 'anthropic' 
                     ? 'bg-purple-500/10 border-purple-500/30 text-purple-300' 
                     : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
@@ -171,7 +182,7 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
               
               <button
                 onClick={() => setProvider('google')}
-                className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
                   provider === 'google' 
                     ? 'bg-blue-500/10 border-blue-500/30 text-blue-300' 
                     : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
@@ -179,6 +190,18 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
               >
                 <Sparkles size={20} />
                 <span className="text-sm font-medium">Google</span>
+              </button>
+              
+              <button
+                onClick={() => setProvider('llama')}
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
+                  provider === 'llama' 
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' 
+                    : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
+                }`}
+              >
+                <Brain size={20} />
+                <span className="text-sm font-medium">Llama</span>
               </button>
             </div>
           </div>

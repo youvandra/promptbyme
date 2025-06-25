@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import { useSecureStorage } from '../hooks/useSecureStorage'
+import { Brain } from 'lucide-react'
 
 export interface FlowStep {
   id: string
@@ -27,7 +28,7 @@ export interface PromptFlow {
 }
 
 interface ApiSettings {
-  provider: 'openai' | 'anthropic' | 'google'
+  provider: 'openai' | 'anthropic' | 'google' | 'llama'
   apiKey: string
   model: string
   temperature: number
@@ -587,7 +588,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       // For demo purposes, we'll use the Supabase Edge Function
       try {
         const { data, error } = await supabase.functions.invoke('run-prompt-flow', {
-          body: {
+          body: { 
             provider: apiSettings.provider,
             apiKey: apiSettings.apiKey,
             model: apiSettings.model,
@@ -616,8 +617,8 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   updateApiSettings: (settings) => {
     set(state => ({
       apiSettings: { 
-        ...state.apiSettings, 
-        ...settings 
+        ...state.apiSettings,
+        ...settings
       }
     }))
     

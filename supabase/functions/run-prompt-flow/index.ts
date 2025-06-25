@@ -46,6 +46,9 @@ Deno.serve(async (req: Request) => {
       case "google":
         response = await callGemini(apiKey, model || "gemini-pro", prompt, temperature, maxTokens);
         break;
+      case "llama":
+        response = await callLlama(apiKey, model || "llama-3-8b-instruct", prompt, temperature, maxTokens);
+        break;
       default:
         throw new Error(`Unsupported provider: ${provider}`);
     }
@@ -150,4 +153,33 @@ async function callGemini(apiKey: string, model: string, prompt: string, tempera
 
   const data = await response.json();
   return data.candidates[0]?.content?.parts[0]?.text || "";
+}
+
+// Llama API call
+async function callLlama(apiKey: string, model: string, prompt: string, temperature = 0.7, maxTokens = 1000) {
+  // The exact endpoint will depend on where you're accessing Llama (Meta, Replicate, etc.)
+  // This is a generic implementation that works with most Llama API providers
+  const llamaEndpoint = "https://api.llama-api.com/v1/chat/completions"; // Replace with actual endpoint
+  
+  const response = await fetch(llamaEndpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      temperature,
+      max_tokens: maxTokens,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(`Llama API error: ${error.error?.message || response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || data.generation || "";
 }
