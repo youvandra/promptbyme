@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   Menu, 
   Plus, Trash2, ArrowUp, ArrowDown, Edit3, Save, Eye, EyeOff, Play, Settings,
-  Folder, Import, ChevronRight, ChevronDown, MoreVertical, X, Pencil,
+  Folder, Import, ChevronRight, ChevronDown, MoreVertical, X, Pencil, Wand2,
   Check, 
   AlertCircle,
   Copy,
@@ -25,6 +25,7 @@ import { FlowApiSettingsModal } from '../../components/prompt-flow/FlowApiSettin
 import { useFlowStore, PromptFlow, FlowStep } from '../../store/flowStore'
 import { supabase } from '../../lib/supabase'
 import { PromptSelectionModal } from '../../components/prompts/PromptSelectionModal'
+import { VariableFillModal } from '../../components/prompts/VariableFillModal'
 
 export const PromptFlowPage: React.FC = () => {
   const navigate = useNavigate()
@@ -39,6 +40,8 @@ export const PromptFlowPage: React.FC = () => {
   const [editingPromptTitle, setEditingPromptTitle] = useState('')
   const [editingPromptContent, setEditingPromptContent] = useState('')
   const [showPromptMenu, setShowPromptMenu] = useState<string | null>(null)
+  const [showVariableModal, setShowVariableModal] = useState(false)
+  const [selectedPromptForVariables, setSelectedPromptForVariables] = useState<{id: string, title: string, content: string} | null>(null)
   const [editingFlowName, setEditingFlowName] = useState(false)
   const [apiKey, setApiKey] = useState('')
   const [newName, setNewName] = useState('')
@@ -253,6 +256,36 @@ export const PromptFlowPage: React.FC = () => {
         console.error('Failed to save prompt:', error)
         setToast({ message: 'Failed to save prompt', type: 'error' })
       })
+  }
+
+  const handleFillVariables = (promptId: string) => {
+    if (!selectedFlow) return
+
+    const step = selectedFlow.steps.find(p => p.id === promptId)
+    if (!step) return
+
+    // Check if content has variables
+    const hasVariables = /\{\{([^}]+)\}\}/.test(step.prompt_content || '')
+    
+    if (!hasVariables) {
+      setToast({ message: 'This prompt does not contain any variables', type: 'error' })
+      return
+    }
+
+    setSelectedPromptForVariables({
+      id: promptId,
+      title: step.step_title,
+      content: step.prompt_content || ''
+    })
+    setShowVariableModal(true)
+    setShowPromptMenu(null)
+  }
+
+  const handleVariablesFilled = (filledContent: string) => {
+    // Copy the filled content to clipboard
+    copyToClipboard(filledContent)
+    setShowVariableModal(false)
+    setSelectedPromptForVariables(null)
   }
 
   const handleCancelEdit = () => {
@@ -696,6 +729,28 @@ export const PromptFlowPage: React.FC = () => {
                                                         onClick={(e) => {
                                                           e.stopPropagation()
                                                           setShowPromptMenu(null)
+                                                          handleEditPrompt(step.id)
+                                                        }}
+                                                        className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm"
+                                                      >
+                                                        <Edit3 size={14} />
+                                                        <span>Edit</span>
+                                                      </button>
+                                                      <button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation()
+                                                          setShowPromptMenu(null)
+                                                          handleFillVariables(step.id)
+                                                        }}
+                                                        className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm"
+                                                      >
+                                                        <Wand2 size={14} />
+                                                        <span>Fill Variables</span>
+                                                      </button>
+                                                      <button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation()
+                                                          setShowPromptMenu(null)
                                                           handleMovePrompt(step.id, 'up')
                                                         }}
                                                         disabled={step.order_index === 0}
@@ -951,6 +1006,18 @@ export const PromptFlowPage: React.FC = () => {
         isOpen={showPromptModal}
         onClose={() => setShowPromptModal(false)}
         onSelectPrompt={handlePromptSelected}
+      />
+
+      {/* Variable Fill Modal */}
+      <VariableFillModal
+        isOpen={showVariableModal}
+        onClose={() => {
+          setShowVariableModal(false)
+          setSelectedPromptForVariables(null)
+        }}
+        promptContent={selectedPromptForVariables?.content || ''}
+        promptTitle={selectedPromptForVariables?.title}
+        onVariablesFilled={handleVariablesFilled}
       />
 
       {/* API Settings Modal */}
