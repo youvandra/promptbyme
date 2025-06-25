@@ -12,6 +12,7 @@ import {
   ArrowRight,
   ChevronDown,
   ChevronUp,
+  Copy,
   Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
