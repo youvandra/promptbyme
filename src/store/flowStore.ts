@@ -482,16 +482,16 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   executeFlow: async (flowId, variables = {}) => {
     try {
       set({ executing: true })
-      
+
       const { selectedFlow, apiSettings } = get()
       if (!selectedFlow || selectedFlow.id !== flowId) {
         throw new Error('Selected flow does not match the flow to execute')
       }
-      
+
       if (!apiSettings.apiKey) {
         throw new Error('API key is required. Please configure your API settings.')
       }
-      
+
       // Clear previous outputs
       set(state => ({
         selectedFlow: state.selectedFlow ? {
@@ -504,16 +504,17 @@ export const useFlowStore = create<FlowState>((set, get) => ({
           }))
         } : null
       }))
-      
+
       // Sort steps by order_index
       const steps = [...selectedFlow.steps].sort((a, b) => a.order_index - b.order_index)
-      
+
       // Execute steps in sequence
       let context = { ...variables }
-      
+      let previousStepOutput = '';
+
       for (let i = 0; i < steps.length; i++) {
         const step = steps[i]
-        
+
         // Mark step as running
         set(state => ({
           selectedFlow: state.selectedFlow ? {
@@ -523,14 +524,15 @@ export const useFlowStore = create<FlowState>((set, get) => ({
             )
           } : null
         }))
-        
+
         try {
           // Execute the step
-          const output = await get().executeStep(step.id, context)
-          
+          const output = await get().executeStep(step.id, context, previousStepOutput)
+
           // Add output to context for next steps
           context[`step_${i+1}_output`] = output
-          
+          previousStepOutput = output;
+
           // Update step with output
           set(state => ({
             selectedFlow: state.selectedFlow ? {
@@ -565,17 +567,17 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     }
   },
   
-  executeStep: async (stepId, variables = {}) => {
+  executeStep: async (stepId: string, variables = {}, previousOutput = '') => {
     try {
       const { selectedFlow, apiSettings } = get()
       if (!selectedFlow) throw new Error('No flow selected')
-      
+
       const step = selectedFlow.steps.find(s => s.id === stepId)
       if (!step) throw new Error('Step not found')
-      
+
       // Replace variables in prompt content
       let content = step.prompt_content || ''
-      
+
       // Replace {{variable}} placeholders with values from context
       for (const [key, value] of Object.entries(variables)) {
         const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g')
@@ -584,8 +586,13 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       
       // Call the appropriate API based on provider
       let response
-      
-      // Call the AI API directly
+
+      // Add previous step output as reference if available
+      if (previousOutput && step.order_index > 0) {
+        content = `Reference from previous step:\n${previousOutput}\n\n${content}`;
+      }
+
+      // Call the AI API
       try {
         const { provider, apiKey, model, temperature, maxTokens } = get().apiSettings;
         const response = await callAI({
