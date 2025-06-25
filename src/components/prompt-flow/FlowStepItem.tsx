@@ -1,3 +1,4 @@
+import { marked } from 'marked';
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, Edit3, Trash2, Play, Copy, Wand2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
