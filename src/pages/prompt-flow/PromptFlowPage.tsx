@@ -555,14 +555,6 @@ export const PromptFlowPage: React.FC = () => {
                                 <Import size={12} />
                                 <span>Import</span>
                               </button>
-                              <button
-                                onClick={handleCreateNewPrompt}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
-                                title="Create new prompt"
-                              >
-                                <Plus size={12} />
-                                <span>Create</span>
-                              </button>
                             </div>
                           </div>
                           
@@ -578,13 +570,6 @@ export const PromptFlowPage: React.FC = () => {
                                   >
                                     <Import size={12} />
                                     <span>Import from Gallery</span>
-                                  </button>
-                                  <button
-                                    onClick={handleCreateNewPrompt}
-                                    className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
-                                  >
-                                    <Plus size={12} />
-                                    <span>Create New Prompt</span>
                                   </button>
                                 </div>
                               </div>
