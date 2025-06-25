@@ -146,6 +146,9 @@ export const FlowStepItem: React.FC<FlowStepItemProps> = ({
                 <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-emerald-300 mb-2">Output</h4>
                   <pre className="text-zinc-300 text-sm whitespace-pre-wrap">
+                    <div className="text-zinc-300 text-sm bg-zinc-800/30 p-4 rounded-lg border border-zinc-700/30 max-h-[400px] overflow-y-auto prose prose-invert prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: marked(step.output || '') }}
+                     />
                     {step.output}
                   </pre>
                 </div>
