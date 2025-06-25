@@ -58,8 +58,8 @@ interface FlowState {
   reorderStep: (stepId: string, newIndex: number) => Promise<void>
   
   // Execution
-  executeFlow: (flowId: string, variables?: Record<string, string>) => Promise<void>
-  executeStep: (stepId: string, variables?: Record<string, string>) => Promise<string>
+  executeFlow: (flowId: string) => Promise<void>
+  executeStep: (stepId: string) => Promise<string>
   updateApiSettings: (settings: Partial<ApiSettings>) => Promise<void>
   clearOutputs: () => void
 }
@@ -600,7 +600,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     }
   },
   
-  executeFlow: async (flowId, variables = {}) => {
+  executeFlow: async (flowId) => {
     try {
       set({ executing: true })
 
@@ -629,8 +629,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       // Sort steps by order_index
       const steps = [...selectedFlow.steps].sort((a, b) => a.order_index - b.order_index)
 
-      // Execute steps in sequence
-      let context = { ...variables }
+      // Execute steps in sequence      
       let previousStepOutput = '';
 
       for (let i = 0; i < steps.length; i++) {
@@ -648,10 +647,9 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
         try {
           // Execute the step
-          const output = await get().executeStep(step.id, context, previousStepOutput)
+          const output = await get().executeStep(step.id, previousStepOutput)
 
           // Add output to context for next steps
-          context[`step_${i+1}_output`] = output
           previousStepOutput = output;
 
           // Update step with output
@@ -688,7 +686,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     }
   },
   
-  executeStep: async (stepId: string, variables = {}, previousOutput = '') => {
+  executeStep: async (stepId: string, previousOutput = '') => {
     try {
       const { selectedFlow, apiSettings } = get()
       if (!selectedFlow) throw new Error('No flow selected')
@@ -700,8 +698,8 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       // Use custom_content if available, otherwise fall back to prompt_content
       let content = step.custom_content || step.prompt_content || ''
 
-      // Replace {{variable}} placeholders with values from context
-      for (const [key, value] of Object.entries(variables)) {
+      // Replace {{variable}} placeholders with values from step variables
+      for (const [key, value] of Object.entries(step.variables || {})) {
         const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g')
         content = content.replace(regex, value)
       }

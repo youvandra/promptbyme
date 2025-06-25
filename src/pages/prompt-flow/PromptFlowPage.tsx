@@ -34,7 +34,6 @@ export const PromptFlowPage: React.FC = () => {
   const [newFlowDescription, setNewFlowDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [selectedFlowId, setSelectedFlowId] = useState<string | null>(null);
-  const [flowVariables, setFlowVariables] = useState<Record<string, string>>({});
   
   const { user, loading: authLoading } = useAuthStore();
   const { 
@@ -129,7 +128,7 @@ export const PromptFlowPage: React.FC = () => {
     if (!selectedFlow) return;
     
     try {
-      await executeFlow(selectedFlow.id, flowVariables);
+      await executeFlow(selectedFlow.id);
       setToast({ message: 'Flow executed successfully', type: 'success' });
     } catch (error: any) {
       console.error('Failed to execute flow:', error);
@@ -402,40 +401,6 @@ export const PromptFlowPage: React.FC = () => {
                   </div>
                   
                   {/* Variables Section */}
-                  {selectedFlow.steps.length > 0 && (
-                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
-                      <h3 className="text-lg font-semibold text-white mb-4">
-                        Flow Variables
-                      </h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {/* Extract all variables from all steps */}
-                        {Array.from(new Set(
-                          selectedFlow.steps.flatMap(step => {
-                            const content = step.custom_content || step.prompt_content || '';
-                            const matches = content.match(/\{\{([^}]+)\}\}/g) || [];
-                            return matches.map(match => match.replace(/[{}]/g, ''));
-                          })
-                        )).map(varName => (
-                          <div key={varName} className="space-y-1">
-                            <label className="block text-sm text-zinc-400">
-                              {`{{${varName}}}`}
-                            </label>
-                            <input
-                              type="text"
-                              value={flowVariables[varName] || ''}
-                              onChange={(e) => setFlowVariables({
-                                ...flowVariables,
-                                [varName]: e.target.value
-                              })}
-                              placeholder={`Enter value for ${varName}`}
-                              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                   
                   {/* Steps List */}
                   <div className="space-y-2">
