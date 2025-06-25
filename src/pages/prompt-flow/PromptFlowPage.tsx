@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   Menu, 
   Plus, Trash2, ArrowUp, ArrowDown, Edit3, Save, Eye, EyeOff, Play, Settings,
-  Folder, Import, ChevronRight, ChevronDown, MoreVertical, X, Pencil,
+  Folder, Import, ChevronRight, ChevronDown, MoreVertical, X, Pencil, 
   Check, 
   AlertCircle,
   Copy,
@@ -20,10 +20,8 @@ import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
-import { FlowApiSettingsModal } from '../../components/prompt-flow/FlowApiSettingsModal'
 import { useFlowStore, PromptFlow, FlowStep } from '../../store/flowStore'
 import { supabase } from '../../lib/supabase'
-import { PromptSelectionModal } from '../../components/prompts/PromptSelectionModal'
 
 export const PromptFlowPage: React.FC = () => {
   const navigate = useNavigate()
@@ -34,16 +32,11 @@ export const PromptFlowPage: React.FC = () => {
   const [newFlowDescription, setNewFlowDescription] = useState('')
   const [isCreatingFlow, setIsCreatingFlow] = useState(false)
   const [showPromptModal, setShowPromptModal] = useState(false)
-  const [editingPromptId, setEditingPromptId] = useState<string | null>(null)
-  const [editingPromptTitle, setEditingPromptTitle] = useState('')
-  const [editingPromptContent, setEditingPromptContent] = useState('')
-  const [showPromptMenu, setShowPromptMenu] = useState<string | null>(null)
   const [editingFlowName, setEditingFlowName] = useState(false)
   const [newName, setNewName] = useState('')
   const [showApiSettingsModal, setShowApiSettingsModal] = useState(false)
   
   const { user, loading: authLoading } = useAuthStore()
-  const { prompts, fetchUserPrompts } = usePromptStore()
   const { 
     flows, 
     selectedFlow, 
@@ -66,10 +59,9 @@ export const PromptFlowPage: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      fetchUserPrompts(user.id)
       fetchFlows()
     }
-  }, [user, fetchUserPrompts, fetchFlows])
+  }, [user, fetchFlows])
 
   // Set initial flow name when editing
   useEffect(() => {
@@ -143,103 +135,6 @@ export const PromptFlowPage: React.FC = () => {
         console.error('Failed to delete flow:', error)
         setToast({ message: 'Failed to delete flow', type: 'error' })
       })
-  }
-
-  const handleAddPrompt = () => {
-    setShowPromptModal(true)
-  }
-
-  const handlePromptSelected = (prompt: any) => {
-    if (!selectedFlow) return
-
-    addStep(selectedFlow.id, prompt.id, prompt.title || 'Untitled Prompt', prompt.content)
-      .then(() => {
-        setToast({ message: 'Prompt added to flow', type: 'success' })
-      })
-      .catch(error => {
-        console.error('Failed to add prompt:', error)
-        setToast({ message: 'Failed to add prompt', type: 'error' })
-      })
-      .finally(() => {
-        setShowPromptModal(false)
-      })
-  }
-
-  const handleCreateNewPrompt = () => {
-    if (!selectedFlow) return
-
-    // Create a new empty prompt in the database first
-    const { createPrompt } = usePromptStore.getState()
-    const { user } = useAuthStore.getState()
-
-    if (!user) {
-      setToast({ message: 'You must be logged in to create prompts', type: 'error' })
-      return
-    }
-
-    createPrompt({
-      user_id: user.id,
-      title: 'New Prompt',
-      content: '',
-      access: 'private',
-      tags: [],
-    })
-      .then((promptData) => {
-        // Now add this prompt to the flow
-        return addStep(selectedFlow.id, promptData.id, promptData.title || 'New Prompt', promptData.content)
-      })
-      .then(() => {
-        setToast({ message: 'New prompt created and added to flow', type: 'success' })
-      })
-      .catch(error => {
-        console.error('Failed to create new prompt:', error)
-        setToast({ message: 'Failed to create new prompt', type: 'error' })
-      })
-  }
-
-  const handleEditPrompt = (promptId: string) => {
-    if (!selectedFlow) return
-
-    const step = selectedFlow.steps.find(p => p.id === promptId)
-    if (!step) return
-
-    setEditingPromptId(promptId)
-    setEditingPromptTitle(step.step_title)
-    setEditingPromptContent(step.prompt_content || '')
-  }
-
-  const handleSavePrompt = () => {
-    if (!selectedFlow || !editingPromptId) return
-
-    // First update the prompt in the database
-    const step = selectedFlow.steps.find(p => p.id === editingPromptId)
-    if (!step) return
-
-    const { updatePrompt } = usePromptStore.getState()
-
-    // Update the step title in the flow
-    updateStep(editingPromptId, {
-      step_title: editingPromptTitle
-    })
-      .then(() => {
-        // Also update the prompt content in the prompts table
-        return updatePrompt(step.prompt_id, {
-          title: editingPromptTitle,
-          content: editingPromptContent
-        })
-      })
-      .then(() => {
-        setEditingPromptId(null)
-        setToast({ message: 'Prompt saved successfully', type: 'success' })
-      })
-      .catch(error => {
-        console.error('Failed to save prompt:', error)
-        setToast({ message: 'Failed to save prompt', type: 'error' })
-      })
-  }
-
-  const handleCancelEdit = () => {
-    setEditingPromptId(null)
   }
 
   const handleDeletePrompt = (promptId: string) => {
@@ -547,14 +442,6 @@ export const PromptFlowPage: React.FC = () => {
                           <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-semibold text-white">Prompts</h2>
                             <div className="flex items-center gap-2">
-                              <button
-                                onClick={handleAddPrompt}
-                                className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
-                                title="Import from gallery"
-                              >
-                                <Import size={12} />
-                                <span>Import</span>
-                              </button>
                             </div>
                           </div>
                           
@@ -564,13 +451,6 @@ export const PromptFlowPage: React.FC = () => {
                               <div className="text-center py-8 bg-zinc-800/20 rounded-lg border border-zinc-800/50">
                                 <p className="text-zinc-500 mb-2">No prompts in this flow</p>
                                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-                                  <button
-                                    onClick={handleAddPrompt}
-                                    className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg transition-all duration-200 text-xs"
-                                  >
-                                    <Import size={12} />
-                                    <span>Import from Gallery</span>
-                                  </button>
                                 </div>
                               </div>
                             ) : (
@@ -578,168 +458,127 @@ export const PromptFlowPage: React.FC = () => {
                                 .sort((a, b) => a.order_index - b.order_index)
                                 .map((step) => (
                                   <div
-                                    key={step.id}
+                                    key={step.id} 
                                     className={`bg-zinc-800/30 border rounded-lg transition-all duration-200 ${
-                                      editingPromptId === step.id
-                                        ? 'border-indigo-500/50'
-                                        : 'border-zinc-700/50 hover:border-zinc-600/50'
+                                      'border-zinc-700/50 hover:border-zinc-600/50'
                                     }`}
                                   >
-                                    {editingPromptId === step.id ? (
-                                      // Editing mode
-                                      <div className="p-4">
-                                        <input
-                                          type="text"
-                                          value={editingPromptTitle}
-                                          onChange={(e) => setEditingPromptTitle(e.target.value)}
-                                          placeholder="Prompt title"
-                                          className="w-full bg-zinc-700/50 border border-zinc-600/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 mb-3"
-                                        />
-                                        <textarea
-                                          value={editingPromptContent}
-                                          onChange={(e) => setEditingPromptContent(e.target.value)}
-                                          placeholder="Prompt content"
-                                          rows={6}
-                                          className="w-full bg-zinc-700/50 border border-zinc-600/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 mb-3 font-mono text-sm"
-                                        />
-                                        <div className="flex justify-end gap-2">
-                                          <button
-                                            onClick={handleCancelEdit}
-                                            className="px-3 py-1.5 text-zinc-400 hover:text-white transition-colors text-sm"
-                                          >
-                                            Cancel
-                                          </button>
-                                          <button
-                                            onClick={handleSavePrompt}
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all duration-200 text-sm"
-                                          >
-                                            <Save size={14} />
-                                            <span>Save</span>
-                                          </button>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      // View mode
-                                      <div>
-                                        <div className="flex items-center justify-between p-3 border-b border-zinc-700/30">
-                                          <div className="flex items-center gap-2">
-                                            <div className="w-6 h-6 bg-indigo-600/30 rounded-full flex items-center justify-center text-indigo-400 text-xs font-medium">
-                                              {step.order_index + 1}
-                                            </div>
-                                            <h3 className="text-sm font-medium text-white">{step.step_title}</h3>
+                                    <div>
+                                      <div className="flex items-center justify-between p-3 border-b border-zinc-700/30">
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-6 h-6 bg-indigo-600/30 rounded-full flex items-center justify-center text-indigo-400 text-xs font-medium">
+                                            {step.order_index + 1}
                                           </div>
-                                          <div className="flex items-center">
+                                          <h3 className="text-sm font-medium text-white">{step.step_title}</h3>
+                                        </div>
+                                        <div className="flex items-center">
+                                          <button
+                                            onClick={() => handleTogglePromptExpansion(step.id)}
+                                            className="p-1 text-zinc-400 hover:text-white transition-colors"
+                                          >
+                                            {step.isExpanded ? (
+                                              <ChevronDown size={16} />
+                                            ) : (
+                                              <ChevronRight size={16} />
+                                            )}
+                                          </button>
+                                          <div className="relative">
                                             <button
-                                              onClick={() => handleTogglePromptExpansion(step.id)}
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                setShowPromptMenu(showPromptMenu === step.id ? null : step.id)
+                                              }}
                                               className="p-1 text-zinc-400 hover:text-white transition-colors"
                                             >
-                                              {step.isExpanded ? (
-                                                <ChevronDown size={16} />
-                                              ) : (
-                                                <ChevronRight size={16} />
-                                              )}
+                                              <MoreVertical size={16} />
                                             </button>
-                                            <div className="relative">
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation()
-                                                  setShowPromptMenu(showPromptMenu === step.id ? null : step.id)
-                                                }}
-                                                className="p-1 text-zinc-400 hover:text-white transition-colors"
-                                              >
-                                                <MoreVertical size={16} />
-                                              </button>
-                                              
-                                              <AnimatePresence>
-                                                {showPromptMenu === step.id && (
-                                                  <motion.div
-                                                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                    className="absolute top-full right-0 mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-10 w-40"
-                                                  >
-                                                    <div className="py-1">
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          setShowPromptMenu(null)
-                                                          handleMovePrompt(step.id, 'up')
-                                                        }}
-                                                        disabled={step.order_index === 0}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
-                                                      >
-                                                        <ArrowUp size={14} />
-                                                        <span>Move Up</span>
-                                                      </button>
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          setShowPromptMenu(null)
-                                                          handleMovePrompt(step.id, 'down')
-                                                        }}
-                                                        disabled={step.order_index === selectedFlow.steps.length - 1}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
-                                                      >
-                                                        <ArrowDown size={14} />
-                                                        <span>Move Down</span>
-                                                      </button>
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation()
-                                                          setShowPromptMenu(null)
-                                                          handleDeletePrompt(step.id)
-                                                        }}
-                                                        className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left text-sm"
-                                                      >
-                                                        <Trash2 size={14} />
-                                                        <span>Delete</span>
-                                                      </button>
-                                                    </div>
-                                                  </motion.div>
-                                                )}
-                                              </AnimatePresence>
-                                            </div>
+                                            
+                                            <AnimatePresence>
+                                              {showPromptMenu === step.id && (
+                                                <motion.div
+                                                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                  className="absolute top-full right-0 mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-10 w-40"
+                                                >
+                                                  <div className="py-1">
+                                                    <button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setShowPromptMenu(null)
+                                                        handleMovePrompt(step.id, 'up')
+                                                      }}
+                                                      disabled={step.order_index === 0}
+                                                      className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
+                                                    >
+                                                      <ArrowUp size={14} />
+                                                      <span>Move Up</span>
+                                                    </button>
+                                                    <button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setShowPromptMenu(null)
+                                                        handleMovePrompt(step.id, 'down')
+                                                      }}
+                                                      disabled={step.order_index === selectedFlow.steps.length - 1}
+                                                      className="w-full flex items-center gap-2 px-3 py-2 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-colors text-left text-sm disabled:text-zinc-500 disabled:hover:bg-transparent"
+                                                    >
+                                                      <ArrowDown size={14} />
+                                                      <span>Move Down</span>
+                                                    </button>
+                                                    <button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        setShowPromptMenu(null)
+                                                        handleDeletePrompt(step.id)
+                                                      }}
+                                                      className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-left text-sm"
+                                                    >
+                                                      <Trash2 size={14} />
+                                                </motion.div>
+                                              )}
+                                            </AnimatePresence>
                                           </div>
                                         </div>
-                                        
-                                        <AnimatePresence>
-                                          {step.isExpanded && (
-                                            <motion.div
-                                              initial={{ height: 0, opacity: 0 }}
-                                              animate={{ height: 'auto', opacity: 1 }}
-                                              exit={{ height: 0, opacity: 0 }}
-                                              transition={{ duration: 0.2 }}
-                                              className="overflow-hidden"
-                                            >
-                                              <div className="p-3 bg-zinc-800/50 border-t border-zinc-700/30">
-                                                <pre className="text-xs text-zinc-300 font-mono whitespace-pre-wrap">
-                                                  {step.prompt_content || "No content available"}
-                                                </pre>
-                                                
-                                                {/* Output display */}
-                                                {step.output && (
-                                                  <div className="mt-3 pt-3 border-t border-zinc-700/30">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                      <h4 className="text-xs font-medium text-emerald-400">Output</h4>
-                                                      <button
-                                                        onClick={() => copyToClipboard(step.output || '')}
-                                                        className="p-1 text-zinc-500 hover:text-white transition-colors"
-                                                        title="Copy output"
-                                                      >
-                                                        <Copy size={12} />
-                                                      </button>
-                                                    </div>
-                                                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-lg p-2 text-xs text-emerald-300 font-mono whitespace-pre-wrap">
-                                                      {step.output}
-                                                    </div>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            </motion.div>
-                                          )}
-                                        </AnimatePresence>
                                       </div>
-                                    )}
+                                      
+                                      <AnimatePresence>
+                                        {step.isExpanded && (
+                                          <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="overflow-hidden"
+                                          >
+                                            <div className="p-3 bg-zinc-800/50 border-t border-zinc-700/30">
+                                              <pre className="text-xs text-zinc-300 font-mono whitespace-pre-wrap">
+                                                {step.prompt_content || "No content available"}
+                                              </pre>
+                                              
+                                              {/* Output display */}
+                                              {step.output && (
+                                                <div className="mt-3 pt-3 border-t border-zinc-700/30">
+                                                  <div className="flex items-center justify-between mb-2">
+                                                    <h4 className="text-xs font-medium text-emerald-400">Output</h4>
+                                                    <button
+                                                      onClick={() => copyToClipboard(step.output || '')}
+                                                      className="p-1 text-zinc-500 hover:text-white transition-colors"
+                                                      title="Copy output"
+                                                    >
+                                                      <Copy size={12} />
+                                                    </button>
+                                                  </div>
+                                                  <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-lg p-2 text-xs text-emerald-300 font-mono whitespace-pre-wrap">
+                                                    {step.output}
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
                                   </div>
                                 ))
                             )}
@@ -921,13 +760,6 @@ export const PromptFlowPage: React.FC = () => {
       />
 
       {/* API Settings Modal */}
-      <FlowApiSettingsModal
-        isOpen={showApiSettingsModal}
-        onClose={() => setShowApiSettingsModal(false)}
-        settings={apiSettings}
-        onSave={handleSaveApiSettings}
-      />
-
       {/* Toast */}
       {toast && (
         <Toast
