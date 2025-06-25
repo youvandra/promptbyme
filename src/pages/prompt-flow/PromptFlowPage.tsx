@@ -4,8 +4,7 @@ import {
   Menu, 
   Plus, Trash2, ArrowUp, ArrowDown, Edit3, Save, Eye, EyeOff, Play, Settings,
   Folder, Import, ChevronRight, ChevronDown, MoreVertical, Pencil,
-  Copy,
-  Settings
+  Copy
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Toast } from '../../components/ui/Toast'
