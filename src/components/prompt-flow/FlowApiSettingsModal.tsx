@@ -14,8 +14,8 @@ interface ApiSettings {
 interface FlowApiSettingsModalProps {
   isOpen: boolean
   onClose: () => void
-  settings: ApiSettings
-  onSave: (settings: ApiSettings) => void
+  settings: any
+  onSave: (settings: any) => Promise<void> | void
 }
 
 export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
@@ -42,28 +42,30 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
     setMaxTokens(settings.maxTokens)
   }, [settings])
 
-  const handleSave = async () => {
-    setSaving(true)
-    try {
-      // Securely save API key
-      if (apiKey) {
-        await setSecureItem(`flow_api_key_${provider}`, apiKey)
-      }
-      
-      // Save settings
-      onSave({
-        provider,
-        apiKey,
-        model,
-        temperature,
-        maxTokens
+  const handleSave = () => {
+    if (!apiKey.trim()) {
+      setError('API key is required')
+      return
+    }
+
+    const savePromise = onSave({
+      provider,
+      apiKey: apiKey.trim(),
+      model,
+      temperature,
+      maxTokens
+    })
+    
+    // Handle both sync and async onSave
+    if (savePromise && typeof savePromise.then === 'function') {
+      savePromise.then(() => {
+        onClose()
+      }).catch(error => {
+        console.error('Failed to save settings:', error)
+        setError('Failed to save settings')
       })
-      
+    } else {
       onClose()
-    } catch (error) {
-      console.error('Failed to save API settings:', error)
-    } finally {
-      setSaving(false)
     }
   }
 
