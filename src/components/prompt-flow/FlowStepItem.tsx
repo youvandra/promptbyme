@@ -87,7 +87,7 @@ export const FlowStepItem: React.FC<FlowStepItemProps> = ({
           >
             <Copy size={16} />
             {copied && (
-              <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white text-xs py-1 px-2 rounded">
+              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white text-xs py-1 px-2 rounded">
                 Copied!
               </span>
             )}
