@@ -502,23 +502,6 @@ export const PromptFlowPage: React.FC = () => {
                           return (
                             <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-lg p-6 text-center">
                               <p className="text-zinc-500 mb-4">Run the flow to see the final output here</p>
-                              <button
-                                onClick={handleExecuteFlow}
-                                disabled={executing || selectedFlow.steps.length === 0}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
-                              >
-                                {executing ? (
-                                  <>
-                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                    <span>Running...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Play size={16} />
-                                    <span>Run Flow</span>
-                                  </>
-                                )}
-                              </button>
                             </div>
                           );
                         }
