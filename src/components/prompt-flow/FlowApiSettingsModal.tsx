@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { X, Save, Key, Thermometer, Zap, Server, Bot, MessageSquare, Sparkles, Brain } from 'lucide-react'
+import { X, Save, Key, Thermometer, Zap, Server, Bot, MessageSquare, Sparkles, Brain, Cpu } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useSecureStorage } from '../../hooks/useSecureStorage'
 
 interface ApiSettings {
-  provider: 'openai' | 'anthropic' | 'google' | 'llama'
+  provider: 'openai' | 'anthropic' | 'google' | 'llama' | 'groq'
   apiKey: string
   model: string
   temperature: number
@@ -97,6 +97,13 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
           { id: 'llama-3-8b-instruct', name: 'Llama 3 (8B) Instruct' },
           { id: 'llama-3-70b-instruct', name: 'Llama 3 (70B) Instruct' }
         ]
+      case 'groq':
+        return [
+          { id: 'llama3-8b-8192', name: 'Llama 3 (8B)' },
+          { id: 'llama3-70b-8192', name: 'Llama 3 (70B)' },
+          { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' },
+          { id: 'gemma-7b-it', name: 'Gemma 7B' }
+        ]
       default:
         return []
     }
@@ -113,6 +120,8 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
         return <Sparkles size={20} className="text-blue-400" />
       case 'llama':
         return <Brain size={20} className="text-amber-400" />
+      case 'groq':
+        return <Cpu size={20} className="text-emerald-400" />
       default:
         return <Server size={20} className="text-indigo-400" />
     }
@@ -202,6 +211,18 @@ export const FlowApiSettingsModal: React.FC<FlowApiSettingsModalProps> = ({
               >
                 <Brain size={20} />
                 <span className="text-sm font-medium">Llama</span>
+              </button>
+              
+              <button
+                onClick={() => setProvider('groq')}
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all duration-200 ${
+                  provider === 'groq' 
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
+                    : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
+                }`}
+              >
+                <Cpu size={20} />
+                <span className="text-sm font-medium">Groq</span>
               </button>
             </div>
           </div>

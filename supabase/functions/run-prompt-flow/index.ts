@@ -49,6 +49,9 @@ Deno.serve(async (req: Request) => {
       case "llama":
         response = await callLlama(apiKey, model || "llama-3-8b-instruct", prompt, temperature, maxTokens);
         break;
+      case "groq":
+        response = await callGroq(apiKey, model || "llama3-8b-8192", prompt, temperature, maxTokens);
+        break;
       default:
         throw new Error(`Unsupported provider: ${provider}`);
     }
@@ -71,7 +74,7 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Network request failed. This may be due to Supabase Edge Function network restrictions. Please ensure outbound network requests are enabled for the following domains in your Supabase project settings: api.openai.com, api.anthropic.com, generativelanguage.googleapis.com, api.llama-api.com",
+          error: "Network request failed. This may be due to Supabase Edge Function network restrictions. Please ensure outbound network requests are enabled for the following domains in your Supabase project settings: api.openai.com, api.anthropic.com, generativelanguage.googleapis.com, api.llama-api.com, api.groq.com",
           errorType: "NETWORK_ERROR",
           troubleshooting: {
             step1: "Go to your Supabase project dashboard",
@@ -225,6 +228,38 @@ async function callLlama(apiKey: string, model: string, prompt: string, temperat
 
     const data = await response.json();
     return data.choices?.[0]?.message?.content || data.generation || "";
+  } catch (error) {
+    if (error.name === "TypeError" && error.message.includes("fetch")) {
+      throw new Error("Failed to fetch - Network request blocked. Please check Supabase Edge Function network settings.");
+    }
+    throw error;
+  }
+}
+
+// Groq API call with enhanced error handling
+async function callGroq(apiKey: string, model: string, prompt: string, temperature = 0.7, maxTokens = 1000) {
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        temperature,
+        max_tokens: maxTokens,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`Groq API error: ${error.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0]?.message?.content || "";
   } catch (error) {
     if (error.name === "TypeError" && error.message.includes("fetch")) {
       throw new Error("Failed to fetch - Network request blocked. Please check Supabase Edge Function network settings.");
