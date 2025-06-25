@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   Menu, 
-  Plus, Trash2, ArrowUp, ArrowDown, Edit3, Save, Eye, EyeOff, Play, Settings,
+  Plus, X, Trash2, ArrowUp, ArrowDown, Edit3, Save, Eye, EyeOff, Play, Settings,
   Folder, Import, ChevronRight, ChevronDown, MoreVertical, Pencil,
   Copy
 } from 'lucide-react'
