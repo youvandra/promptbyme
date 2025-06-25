@@ -79,20 +79,6 @@ export const FlowStepItem: React.FC<FlowStepItemProps> = ({
             <Edit3 size={16} />
           </button>
           
-          {/* Copy Button */}
-          <button
-            onClick={copyToClipboard}
-            className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded transition-colors relative"
-            title="Copy content"
-          >
-            <Copy size={16} />
-            {copied && (
-              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white text-xs py-1 px-2 rounded">
-                Copied!
-              </span>
-            )}
-          </button>
-          
           {/* Execute Button */}
           <button
             onClick={() => onExecute(step.id)}
