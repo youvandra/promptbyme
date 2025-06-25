@@ -413,7 +413,7 @@ export const PromptFlowPage: React.FC = () => {
                   {/* Variables Section */}
                   
                   {/* Steps List */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 mb-8">
                     <h3 className="text-lg font-semibold text-white">
                       Flow Steps
                     </h3>
@@ -482,6 +482,90 @@ export const PromptFlowPage: React.FC = () => {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Final Output Section - Standalone */}
+                  {selectedFlow.steps.length > 0 && (
+                    <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <Zap className="text-indigo-400" size={20} />
+                        Final Flow Output
+                      </h3>
+                      
+                      {(() => {
+                        // Get the last step based on order_index
+                        const sortedSteps = [...selectedFlow.steps].sort((a, b) => a.order_index - b.order_index);
+                        const lastStep = sortedSteps[sortedSteps.length - 1];
+                        
+                        if (!lastStep || !lastStep.output) {
+                          return (
+                            <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-lg p-6 text-center">
+                              <p className="text-zinc-500 mb-4">Run the flow to see the final output here</p>
+                              <button
+                                onClick={handleExecuteFlow}
+                                disabled={executing || selectedFlow.steps.length === 0}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
+                              >
+                                {executing ? (
+                                  <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <span>Running...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Play size={16} />
+                                    <span>Run Flow</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <div className="space-y-4">
+                            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-sm font-medium text-emerald-300">Result</h4>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(lastStep.output || '');
+                                    setToast({ message: 'Output copied to clipboard', type: 'success' });
+                                  }}
+                                  className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded transition-colors"
+                                  title="Copy output"
+                                >
+                                  <Copy size={16} />
+                                </button>
+                              </div>
+                              <pre className="text-zinc-300 text-sm whitespace-pre-wrap bg-zinc-800/30 p-4 rounded-lg border border-zinc-700/30 max-h-[400px] overflow-y-auto">
+                                {lastStep.output}
+                              </pre>
+                            </div>
+                            
+                            <div className="flex items-center justify-end">
+                              <button
+                                onClick={handleExecuteFlow}
+                                disabled={executing}
+                                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
+                              >
+                                {executing ? (
+                                  <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <span>Running...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Play size={16} />
+                                    <span>Run Again</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
               ) : flows.length > 0 ? (
                 <div className="text-center py-12">
