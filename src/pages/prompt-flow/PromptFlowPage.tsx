@@ -519,7 +519,7 @@ export const PromptFlowPage: React.FC = () => {
                                   className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded transition-colors"
                                   title="Copy output"
                                 >
-                                  dangerouslySetInnerHTML={{ __html: marked.parse(lastStep.output || '') }}
+                                  <Copy size={16} />
                                 </button>
                               </div>
                               <div 
