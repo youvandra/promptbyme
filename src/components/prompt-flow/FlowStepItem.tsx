@@ -79,16 +79,6 @@ export const FlowStepItem: React.FC<FlowStepItemProps> = ({
             <Edit3 size={16} />
           </button>
           
-          {/* Execute Button */}
-          <button
-            onClick={() => onExecute(step.id)}
-            disabled={isExecuting || step.isRunning}
-            className="p-1.5 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded transition-colors disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-zinc-400"
-            title="Execute step"
-          >
-            <Play size={16} />
-          </button>
-          
           {/* Delete Button */}
           <button
             onClick={() => onDelete(step.id)}
