@@ -512,7 +512,7 @@ export const PromptFlowPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={handleRunFlow}
-                            disabled={isRunningFlow || selectedFlow.steps.length === 0 || !apiSettings.apiKey}
+                            disabled={isRunningFlow || selectedFlow.steps.length === 0}
                             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-lg transition-all duration-200 text-sm"
                           >
                             {isRunningFlow ? (

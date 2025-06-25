@@ -27,7 +27,6 @@ export interface PromptFlow {
 
 interface ApiSettings {
   provider: 'openai' | 'anthropic' | 'google' | 'llama' | 'groq'
-  apiKey: string
   model: string
   temperature: number
   maxTokens: number
@@ -57,40 +56,15 @@ interface FlowState {
   executeFlow: (flowId: string, variables?: Record<string, string>) => Promise<void>
   executeStep: (stepId: string, variables?: Record<string, string>) => Promise<string>
   updateApiSettings: (settings: Partial<ApiSettings>) => Promise<void>
-  loadApiKey: () => Promise<void>
   clearOutputs: () => void
-}
-
-// Helper function to get secure storage
-const getSecureStorage = () => {
-  const getSecureItem = (key: string): string | null => {
-    try {
-      const item = localStorage.getItem(key)
-      return item
-    } catch (error) {
-      console.error('Error getting secure item:', error)
-      return null
-    }
-  }
-  
-  const setSecureItem = (key: string, value: string): void => {
-    try {
-      localStorage.setItem(key, value)
-    } catch (error) {
-      console.error('Error setting secure item:', error)
-    }
-  }
-  
-  return { getSecureItem, setSecureItem }
 }
 
 export const useFlowStore = create<FlowState>((set, get) => ({
   flows: [],
   selectedFlow: null,
   apiSettings: {
-    provider: localStorage.getItem('flow_api_provider') as ApiSettings['provider'] || 'openai',
-    apiKey: '',
-    model: localStorage.getItem('flow_api_model') || 'gpt-3.5-turbo',
+    provider: localStorage.getItem('flow_api_provider') as ApiSettings['provider'] || 'groq',
+    model: localStorage.getItem('flow_api_model') || 'llama3-8b-8192',
     temperature: parseFloat(localStorage.getItem('flow_api_temperature') || '0.7'),
     maxTokens: parseInt(localStorage.getItem('flow_api_max_tokens') || '1000')
   },
@@ -100,9 +74,6 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   fetchFlows: async () => {
     set({ loading: true })
     try {
-      // Load API key when fetching flows
-      await get().loadApiKey()
-      
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('User not authenticated')
 
@@ -514,14 +485,6 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         throw new Error('Selected flow does not match the flow to execute')
       }
       
-      // Ensure API key is loaded
-      await get().loadApiKey()
-      const currentSettings = get().apiSettings
-      
-      if (!currentSettings.apiKey) {
-        throw new Error('API key is required')
-      }
-      
       // Clear previous outputs
       set(state => ({
         selectedFlow: state.selectedFlow ? {
@@ -529,7 +492,8 @@ export const useFlowStore = create<FlowState>((set, get) => ({
           steps: state.selectedFlow.steps.map(step => ({
             ...step,
             output: undefined,
-            isRunning: false
+            isRunning: false,
+            isExpanded: false
           }))
         } : null
       }))
@@ -600,11 +564,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       if (!selectedFlow) throw new Error('No flow selected')
       
       const step = selectedFlow.steps.find(s => s.id === stepId)
-      if (!step) throw new Error('Step not found')
-      
-      // Ensure API key is loaded
-      await get().loadApiKey()
-      const currentSettings = get().apiSettings
+      if (!step) throw new Error('Step not found')      
       
       // Replace variables in prompt content
       let content = step.prompt_content || ''
@@ -622,12 +582,11 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       try {
         const { data, error } = await supabase.functions.invoke('run-prompt-flow', {
           body: { 
-            provider: currentSettings.provider,
-            apiKey: currentSettings.apiKey,
-            model: currentSettings.model,
+            provider: get().apiSettings.provider,
+            model: get().apiSettings.model,
             prompt: content,
-            temperature: currentSettings.temperature,
-            maxTokens: currentSettings.maxTokens
+            temperature: get().apiSettings.temperature,
+            maxTokens: get().apiSettings.maxTokens
           }
         })
         
@@ -648,8 +607,6 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   },
   
   updateApiSettings: async (settings) => {
-    const { getSecureItem, setSecureItem } = getSecureStorage()
-    
     set(state => ({
       apiSettings: { 
         ...state.apiSettings,
@@ -657,34 +614,11 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       }
     }))
     
-    // Save API settings to localStorage (except the API key which is stored encrypted)
+    // Save API settings to localStorage
     if (settings.provider) localStorage.setItem('flow_api_provider', settings.provider)
     if (settings.model) localStorage.setItem('flow_api_model', settings.model)
     if (settings.temperature) localStorage.setItem('flow_api_temperature', settings.temperature.toString())
     if (settings.maxTokens) localStorage.setItem('flow_api_max_tokens', settings.maxTokens.toString())
-    
-    // Store API key securely
-    if (settings.apiKey) {
-      const provider = settings.provider || get().apiSettings.provider
-      setSecureItem(`flow_api_key_${provider}`, settings.apiKey)
-    }
-  },
-  
-  loadApiKey: async () => {
-    const { getSecureItem } = getSecureStorage()
-    const { apiSettings } = get()
-    
-    // Load API key for current provider
-    const apiKey = getSecureItem(`flow_api_key_${apiSettings.provider}`)
-    
-    if (apiKey && apiKey !== apiSettings.apiKey) {
-      set(state => ({
-        apiSettings: {
-          ...state.apiSettings,
-          apiKey
-        }
-      }))
-    }
   },
   
   clearOutputs: () => {
@@ -699,6 +633,4 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       } : null
     }))
   }
-}
-)
-)
+}))
