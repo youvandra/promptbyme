@@ -11,8 +11,6 @@ export interface FlowStep {
   created_at?: string
   prompt_content?: string
   prompt_title?: string
-  custom_content?: string
-  variables?: Record<string, string>
   output?: string
   isExpanded?: boolean
   isRunning?: boolean
@@ -53,7 +51,6 @@ interface FlowState {
   // Step operations
   addStep: (flowId: string, promptId: string, title: string, content: string) => Promise<void>
   updateStep: (stepId: string, updates: Partial<Omit<FlowStep, 'id' | 'flow_id'>>) => Promise<void>
-  updateStepContent: (stepId: string, customContent: string, variables: Record<string, string>) => Promise<void>
   deleteStep: (stepId: string) => Promise<void>
   reorderStep: (stepId: string, newIndex: number) => Promise<void>
   
@@ -95,25 +92,22 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       // For each flow, fetch its steps
       const flowsWithSteps = await Promise.all((flows || []).map(async (flow) => {
         const { data: steps, error: stepsError } = await supabase
-          .from('flow_steps as fs')
+          .from('flow_steps')
           .select(`
-            fs.id,
-            fs.flow_id,
-            fs.prompt_id,
-            fs.order_index,
-            fs.step_title,
-            fs.created_at,
-            pfs.custom_content,
-            pfs.variables,
-            prompts:fs.prompt_id (
+            id,
+            flow_id,
+            prompt_id,
+            order_index,
+            step_title,
+            created_at,
+            prompts (
               id,
               title,
               content
             )
           `)
-          .eq('fs.flow_id', flow.id)
-          .order('fs.order_index')
-          .left_join('prompt_flow_step as pfs', 'fs.id', 'pfs.flow_step_id')
+          .eq('flow_id', flow.id)
+          .order('order_index')
 
         if (stepsError) {
           console.error(`Error fetching steps for flow ${flow.id}:`, stepsError)
@@ -128,9 +122,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
           order_index: step.order_index,
           step_title: step.step_title,
           created_at: step.created_at,
-          prompt_content: step.prompts?.content || '', 
-          custom_content: step.custom_content || '',
-          variables: step.variables || {},
+          prompt_content: step.prompts?.content || '',
           prompt_title: step.prompts?.title || '',
           isExpanded: false
         }))
@@ -520,16 +512,6 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       let context = { ...variables }
       let previousStepOutput = '';
 
-      // Function to get the actual content to use for a step
-      const getStepContent = (step: FlowStep) => {
-        // If custom content exists, use it
-        if (step.custom_content) {
-          return step.custom_content;
-        }
-        // Otherwise use the original prompt content
-        return step.prompt_content || '';
-      };
-
       for (let i = 0; i < steps.length; i++) {
         const step = steps[i]
 
@@ -544,11 +526,8 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         }))
 
         try {
-          // Get the content to use (custom or original)
-          const stepContent = getStepContent(step);
-          
-          // Execute the step with the appropriate content
-          const output = await get().executeStep(step.id, context, previousStepOutput, stepContent)
+          // Execute the step
+          const output = await get().executeStep(step.id, context, previousStepOutput)
 
           // Add output to context for next steps
           context[`step_${i+1}_output`] = output
@@ -588,7 +567,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     }
   },
   
-  executeStep: async (stepId: string, variables = {}, previousOutput = '', overrideContent = '') => {
+  executeStep: async (stepId: string, variables = {}, previousOutput = '') => {
     try {
       const { selectedFlow, apiSettings } = get()
       if (!selectedFlow) throw new Error('No flow selected')
@@ -597,8 +576,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       if (!step) throw new Error('Step not found')
 
       // Replace variables in prompt content
-      // Use override content if provided, otherwise use step's prompt content
-      let content = overrideContent || step.prompt_content || ''
+      let content = step.prompt_content || ''
 
       // Replace {{variable}} placeholders with values from context
       for (const [key, value] of Object.entries(variables)) {
@@ -702,87 +680,6 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         console.error('Failed to securely store API key:', error);
         // Fallback to storing in memory only
       }
-    }
-  },
-
-  updateStepContent: async (stepId: string, customContent: string, variables: Record<string, string>) => {
-    try {
-      // Check if a record already exists for this step
-      const { data: existingRecord, error: checkError } = await supabase
-        .from('prompt_flow_step')
-        .select('id')
-        .eq('flow_step_id', stepId)
-        .maybeSingle()
-
-      if (checkError) {
-        console.error('Error checking for existing prompt flow step:', checkError)
-        throw checkError
-      }
-
-      let result
-      if (existingRecord) {
-        // Update existing record
-        result = await supabase
-          .from('prompt_flow_step')
-          .update({
-            custom_content: customContent,
-            variables: variables
-          })
-          .eq('id', existingRecord.id)
-      } else {
-        // Create new record
-        result = await supabase
-          .from('prompt_flow_step')
-          .insert({
-            flow_step_id: stepId,
-            custom_content: customContent,
-            variables: variables
-          })
-      }
-
-      if (result.error) {
-        console.error('Error updating prompt flow step:', result.error)
-        throw result.error
-      }
-
-      // Update local state
-      set(state => {
-        const updatedFlows = state.flows.map(flow => {
-          const stepIndex = flow.steps.findIndex(s => s.id === stepId)
-          if (stepIndex >= 0) {
-            const updatedSteps = [...flow.steps]
-            updatedSteps[stepIndex] = {
-              ...updatedSteps[stepIndex],
-              custom_content: customContent,
-              variables: variables
-            }
-            return { ...flow, steps: updatedSteps }
-          }
-          return flow
-        })
-
-        let updatedSelectedFlow = state.selectedFlow
-        if (state.selectedFlow) {
-          const stepIndex = state.selectedFlow.steps.findIndex(s => s.id === stepId)
-          if (stepIndex >= 0) {
-            const updatedSteps = [...state.selectedFlow.steps]
-            updatedSteps[stepIndex] = {
-              ...updatedSteps[stepIndex],
-              custom_content: customContent,
-              variables: variables
-            }
-            updatedSelectedFlow = { ...state.selectedFlow, steps: updatedSteps }
-          }
-        }
-
-        return {
-          flows: updatedFlows,
-          selectedFlow: updatedSelectedFlow
-        }
-      })
-    } catch (error) {
-      console.error('Error updating step content:', error)
-      throw error
     }
   },
   
