@@ -220,7 +220,7 @@ export const PromptFlowPage: React.FC = () => {
   const handleEditPrompt = (promptId: string) => {
     if (!selectedFlow) return
 
-    const step = selectedFlow.steps.find(p => p.id === promptId)
+    const step = selectedFlow.steps.find(s => s.id === promptId)
     if (!step) return
 
     setEditingPromptId(promptId)
@@ -231,26 +231,54 @@ export const PromptFlowPage: React.FC = () => {
   const handleSavePrompt = () => {
     if (!selectedFlow || !editingPromptId) return
 
-    // First update the prompt in the database
     const step = selectedFlow.steps.find(p => p.id === editingPromptId)
     if (!step) return
 
-    const { updatePrompt } = usePromptStore.getState()
-
-    // Update the step title in the flow
+    // Get the necessary functions from the store
+    const { updatePrompt, createVersion } = usePromptStore.getState()
+    
+    // First, check if content has changed
+    const contentChanged = step.prompt_content !== editingPromptContent
+    const titleChanged = step.step_title !== editingPromptTitle
+    
+    // Start with updating the step title in the flow
     updateStep(editingPromptId, {
       step_title: editingPromptTitle
     })
-      .then(() => {
-        // Also update the prompt content in the prompts table
-        return updatePrompt(step.prompt_id, {
-          title: editingPromptTitle,
-          content: editingPromptContent
-        })
-      })
-      .then(() => {
+      .then(async () => {
+        // If content has changed, create a new version instead of just updating
+        if (contentChanged) {
+          try {
+            // Create a new version of the prompt
+            await createVersion(
+              step.prompt_id,
+              editingPromptTitle,
+              editingPromptContent,
+              `Updated from Prompt Flow: ${selectedFlow.name}`
+            )
+            setToast({ message: 'New prompt version created successfully', type: 'success' })
+          } catch (error) {
+            console.error('Failed to create prompt version:', error)
+            setToast({ message: 'Failed to create prompt version', type: 'error' })
+            throw error // Re-throw to be caught by the outer catch
+          }
+        } else if (titleChanged) {
+          // If only title changed, just update the prompt
+          try {
+            await updatePrompt(step.prompt_id, {
+              title: editingPromptTitle
+            })
+            setToast({ message: 'Prompt title updated successfully', type: 'success' })
+          } catch (error) {
+            console.error('Failed to update prompt title:', error)
+            setToast({ message: 'Failed to update prompt title', type: 'error' })
+            throw error
+          }
+        } else {
+          setToast({ message: 'No changes detected', type: 'success' })
+        }
+        
         setEditingPromptId(null)
-        setToast({ message: 'Prompt saved successfully', type: 'success' })
       })
       .catch(error => {
         console.error('Failed to save prompt:', error)
