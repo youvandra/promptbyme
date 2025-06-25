@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Menu, 
   Plus, 
-  Settings, 
+  Settings,
+  Edit,
   Play, 
   Save, 
   Trash2, 
@@ -19,6 +20,7 @@ import { BoltBadge } from '../../components/ui/BoltBadge';
 import { SideNavbar } from '../../components/navigation/SideNavbar';
 import { PromptSelectionModal } from '../../components/prompts/PromptSelectionModal';
 import { FlowApiSettingsModal } from '../../components/prompt-flow/FlowApiSettingsModal';
+import { FlowManagementModal } from '../../components/prompt-flow/FlowManagementModal';
 import { FlowStepItem } from '../../components/prompt-flow/FlowStepItem';
 import { useAuthStore } from '../../store/authStore';
 import { useFlowStore, FlowStep } from '../../store/flowStore';
@@ -34,6 +36,7 @@ export const PromptFlowPage: React.FC = () => {
   const [newFlowDescription, setNewFlowDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [selectedFlowId, setSelectedFlowId] = useState<string | null>(null);
+  const [showFlowManagementModal, setShowFlowManagementModal] = useState(false);
   
   const { user, loading: authLoading } = useAuthStore();
   const { 
@@ -312,7 +315,7 @@ export const PromptFlowPage: React.FC = () => {
                 <div className="flex items-center gap-3 flex-wrap">
                   {/* Flow Selection */}
                   {flows.length > 0 && (
-                    <div>
+                    <div className="flex items-center gap-2">
                       <select
                         value={selectedFlowId || ''}
                         onChange={(e) => handleFlowChange(e.target.value)}
@@ -324,6 +327,16 @@ export const PromptFlowPage: React.FC = () => {
                           </option>
                         ))}
                       </select>
+                      
+                      {selectedFlow && (
+                        <button
+                          onClick={() => setShowFlowManagementModal(true)}
+                          className="flex items-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200"
+                          title="Edit flow settings"
+                        >
+                          <Edit size={16} />
+                        </button>
+                      )}
                     </div>
                   )}
                   
@@ -596,6 +609,15 @@ export const PromptFlowPage: React.FC = () => {
         settings={apiSettings}
         onSave={handleSaveSettings}
       />
+
+      {/* Flow Management Modal */}
+      {selectedFlow && (
+        <FlowManagementModal
+          isOpen={showFlowManagementModal}
+          onClose={() => setShowFlowManagementModal(false)}
+          flowId={selectedFlow.id}
+        />
+      )}
 
       {/* Toast */}
       {toast && (
