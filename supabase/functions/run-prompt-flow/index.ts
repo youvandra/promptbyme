@@ -70,17 +70,31 @@ Deno.serve(async (req: Request) => {
     console.error("Error in run-prompt-flow function:", error);
 
     // Check if it's a network error and provide helpful guidance
-    if (error.message?.includes("Failed to fetch") || error.name === "TypeError") {
+    if (error.message?.includes("Failed to fetch") || 
+        error.message?.includes("Network request failed") ||
+        error.message?.includes("fetch") ||
+        error.name === "TypeError") {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Network request failed. This may be due to Supabase Edge Function network restrictions. Please ensure outbound network requests are enabled for the following domains in your Supabase project settings: api.openai.com, api.anthropic.com, generativelanguage.googleapis.com, api.llama-api.com, api.groq.com",
-          errorType: "NETWORK_ERROR",
+          error: "Network request blocked by Supabase Edge Function restrictions",
+          errorType: "NETWORK_RESTRICTION",
+          userMessage: "The AI API request was blocked due to network restrictions. Please configure your Supabase project to allow outbound requests.",
           troubleshooting: {
-            step1: "Go to your Supabase project dashboard",
-            step2: "Navigate to Edge Functions > Configuration",
-            step3: "Add the required API domains to the outbound network allowlist",
-            step4: "Redeploy the Edge Function if necessary"
+            title: "How to fix this issue:",
+            steps: [
+              "1. Go to your Supabase project dashboard",
+              "2. Navigate to 'Edge Functions' → 'Configuration'", 
+              "3. Add these domains to the 'Outbound Network Allowlist':",
+              "   • api.openai.com",
+              "   • api.anthropic.com", 
+              "   • generativelanguage.googleapis.com",
+              "   • api.llama-api.com",
+              "   • api.groq.com",
+              "4. Save the configuration",
+              "5. Redeploy the 'run-prompt-flow' Edge Function if necessary"
+            ],
+            note: "This is a one-time setup required for AI API integrations to work properly."
           }
         }),
         {
@@ -90,10 +104,27 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Handle API-specific errors
+    if (error.message?.includes("API error")) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: error.message,
+          errorType: "API_ERROR",
+          userMessage: "The AI provider returned an error. Please check your API key and try again."
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     return new Response(
       JSON.stringify({
         success: false,
         error: error.message || "An unexpected error occurred",
+        errorType: "UNKNOWN_ERROR"
       }),
       {
         status: 500,
@@ -129,7 +160,7 @@ async function callOpenAI(apiKey: string, model: string, prompt: string, tempera
     return data.choices[0]?.message?.content || "";
   } catch (error) {
     if (error.name === "TypeError" && error.message.includes("fetch")) {
-      throw new Error("Failed to fetch - Network request blocked. Please check Supabase Edge Function network settings.");
+      throw new Error("Network request failed - Outbound requests may be blocked by Supabase Edge Function configuration");
     }
     throw error;
   }
@@ -162,7 +193,7 @@ async function callAnthropic(apiKey: string, model: string, prompt: string, temp
     return data.content[0]?.text || "";
   } catch (error) {
     if (error.name === "TypeError" && error.message.includes("fetch")) {
-      throw new Error("Failed to fetch - Network request blocked. Please check Supabase Edge Function network settings.");
+      throw new Error("Network request failed - Outbound requests may be blocked by Supabase Edge Function configuration");
     }
     throw error;
   }
@@ -194,7 +225,7 @@ async function callGemini(apiKey: string, model: string, prompt: string, tempera
     return data.candidates[0]?.content?.parts[0]?.text || "";
   } catch (error) {
     if (error.name === "TypeError" && error.message.includes("fetch")) {
-      throw new Error("Failed to fetch - Network request blocked. Please check Supabase Edge Function network settings.");
+      throw new Error("Network request failed - Outbound requests may be blocked by Supabase Edge Function configuration");
     }
     throw error;
   }
@@ -230,7 +261,7 @@ async function callLlama(apiKey: string, model: string, prompt: string, temperat
     return data.choices?.[0]?.message?.content || data.generation || "";
   } catch (error) {
     if (error.name === "TypeError" && error.message.includes("fetch")) {
-      throw new Error("Failed to fetch - Network request blocked. Please check Supabase Edge Function network settings.");
+      throw new Error("Network request failed - Outbound requests may be blocked by Supabase Edge Function configuration");
     }
     throw error;
   }
@@ -262,7 +293,7 @@ async function callGroq(apiKey: string, model: string, prompt: string, temperatu
     return data.choices[0]?.message?.content || "";
   } catch (error) {
     if (error.name === "TypeError" && error.message.includes("fetch")) {
-      throw new Error("Failed to fetch - Network request blocked. Please check Supabase Edge Function network settings.");
+      throw new Error("Network request failed - Outbound requests may be blocked by Supabase Edge Function configuration");
     }
     throw error;
   }
