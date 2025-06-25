@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import { useSecureStorage } from '../hooks/useSecureStorage'
-import { Brain } from 'lucide-react'
 
 export interface FlowStep {
   id: string
@@ -28,7 +27,7 @@ export interface PromptFlow {
 }
 
 interface ApiSettings {
-  provider: 'openai' | 'anthropic' | 'google' | 'llama'
+  provider: 'openai' | 'anthropic' | 'google' | 'llama' | 'groq'
   apiKey: string
   model: string
   temperature: number
