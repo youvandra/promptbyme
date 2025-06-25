@@ -580,7 +580,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       
       // For demo purposes, we'll use the Supabase Edge Function
       try {
-        const { data, error } = await supabase.functions.invoke('run-prompt-flow', {
+        const response = await supabase.functions.invoke('run-prompt-flow', {
           body: { 
             provider: get().apiSettings.provider,
             model: get().apiSettings.model,
@@ -590,16 +590,52 @@ export const useFlowStore = create<FlowState>((set, get) => ({
           }
         })
         
-        if (error) throw new Error(error.message)
-        if (!data.success) throw new Error(data.error || 'Unknown error')
+        // Handle network-level errors (Edge Function not reachable)
+        if (response.error) {
+          console.error('Edge Function error:', response.error)
+          throw new Error(`Edge Function failed: ${response.error.message || 'Network error'}`)
+        }
         
-        response = data.response
+        // Handle application-level errors (API restrictions, etc.)
+        if (!response.data) {
+          throw new Error('No response data received from Edge Function')
+        }
+        
+        if (!response.data.success) {
+          const errorData = response.data
+          
+          // Handle network restriction errors with helpful guidance
+          if (errorData.errorType === 'NETWORK_RESTRICTION') {
+            throw new Error(`Network Configuration Required: ${errorData.userMessage}\n\nTo fix this:\n${errorData.troubleshooting.steps.join('\n')}`)
+          }
+          
+          // Handle API errors
+          if (errorData.errorType === 'API_ERROR') {
+            throw new Error(`AI Provider Error: ${errorData.userMessage}`)
+          }
+          
+          // Handle other errors
+          throw new Error(errorData.error || errorData.userMessage || 'Unknown error occurred')
+        }
+        
+        return response.data.response
       } catch (error) {
-        console.error('API call failed:', error)
-        throw new Error(`API call failed: ${error.message}`)
+        console.error('Step execution failed:', error)
+        
+        // Re-throw with more context if it's our custom error
+        if (error.message.includes('Network Configuration Required') || 
+            error.message.includes('AI Provider Error')) {
+          throw error
+        }
+        
+        // Handle generic fetch failures
+        if (error.message.includes('Failed to fetch') || 
+            error.message.includes('fetch')) {
+          throw new Error('Unable to connect to AI service. Please check your network connection and Supabase Edge Function configuration.')
+        }
+        
+        throw new Error(`Step execution failed: ${error.message}`)
       }
-      
-      return response
     } catch (error) {
       console.error('Error executing step:', error)
       throw error

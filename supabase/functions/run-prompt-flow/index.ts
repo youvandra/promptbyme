@@ -55,32 +55,37 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error("Error in run-prompt-flow function:", error);
 
-    // Check if it's a network error and provide helpful guidance
-    if (error.message?.includes("Failed to fetch") || 
-        error.message?.includes("Network request failed") ||
-        error.message?.includes("fetch") ||
-        error.name === "TypeError") {
+    // Enhanced network error detection and guidance
+    const isNetworkError = error.message?.includes("Failed to fetch") || 
+                          error.message?.includes("Network request failed") ||
+                          error.message?.includes("fetch") ||
+                          error.name === "TypeError" ||
+                          error.message?.includes("getaddrinfo ENOTFOUND") ||
+                          error.message?.includes("ECONNREFUSED") ||
+                          error.message?.includes("network");
+
+    if (isNetworkError) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Network request blocked by Supabase Edge Function restrictions",
+          error: "Outbound network requests are blocked by Supabase Edge Function configuration",
           errorType: "NETWORK_RESTRICTION",
-          userMessage: "The AI API request was blocked due to network restrictions. Please configure your Supabase project to allow outbound requests.",
+          userMessage: "AI API requests are blocked due to network restrictions. Please configure your Supabase project to allow outbound requests to AI providers.",
           troubleshooting: {
-            title: "How to fix this issue:",
+            title: "Required Configuration Steps:",
             steps: [
-              "1. Go to your Supabase project dashboard",
-              "2. Navigate to 'Edge Functions' → 'Configuration'", 
-              "3. Add these domains to the 'Outbound Network Allowlist':",
-              "   • api.openai.com",
-              "   • api.anthropic.com", 
-              "   • generativelanguage.googleapis.com",
-              "   • api.llama-api.com",
-              "   • api.groq.com",
-              "4. Save the configuration",
-              "5. Redeploy the 'run-prompt-flow' Edge Function if necessary"
+              "1. Open your Supabase project dashboard",
+              "2. Go to 'Edge Functions' → 'Configuration'", 
+              "3. Add these domains to 'Outbound Network Allowlist':",
+              "   • api.groq.com (required for current setup)",
+              "   • api.openai.com (for OpenAI)",
+              "   • api.anthropic.com (for Claude)", 
+              "   • generativelanguage.googleapis.com (for Gemini)",
+              "4. Click 'Save Configuration'",
+              "5. Wait 1-2 minutes for changes to take effect",
+              "6. Try running your prompt flow again"
             ],
-            note: "This is a one-time setup required for AI API integrations to work properly."
+            note: "This is a one-time configuration required for AI integrations. The setup enables secure outbound requests to AI providers."
           }
         }),
         {
@@ -256,30 +261,55 @@ async function callLlama(apiKey: string, model: string, prompt: string, temperat
 // Groq API call with enhanced error handling
 async function callGroq(apiKey: string, model: string, prompt: string, temperature = 0.7, maxTokens = 1000) {
   try {
+    // Validate API key
+    if (!apiKey || apiKey.trim() === '') {
+      throw new Error("Groq API key is missing or empty");
+    }
+
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
+        "User-Agent": "Supabase-Edge-Function/1.0",
       },
       body: JSON.stringify({
         model,
         messages: [{ role: "user", content: prompt }],
         temperature,
         max_tokens: maxTokens,
+        stream: false,
       }),
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`Groq API error: ${error.error?.message || response.statusText}`);
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error?.message || errorData.message || errorMessage;
+      } catch (parseError) {
+        // If we can't parse the error response, use the status text
+        console.warn("Could not parse error response:", parseError);
+      }
+      
+      throw new Error(`Groq API error: ${errorMessage}`);
     }
 
     const data = await response.json();
-    return data.choices[0]?.message?.content || "";
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error("Invalid response format from Groq API");
+    }
+    
+    return data.choices[0].message.content || "";
   } catch (error) {
-    if (error.name === "TypeError" && error.message.includes("fetch")) {
-      throw new Error("Network request failed - Outbound requests may be blocked by Supabase Edge Function configuration");
+    // Enhanced error detection for network issues
+    if (error.name === "TypeError" || 
+        error.message.includes("fetch") ||
+        error.message.includes("Failed to fetch") ||
+        error.message.includes("network")) {
+      throw new Error("Network request failed - Please check Supabase Edge Function outbound network configuration");
     }
     throw error;
   }
