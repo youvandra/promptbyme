@@ -14,7 +14,6 @@ import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
 import { FlowApiSettingsModal } from '../../components/prompt-flow/FlowApiSettingsModal'
 import { useFlowStore, PromptFlow, FlowStep } from '../../store/flowStore'
-import { FlowApiSettingsModal } from '../../components/prompt-flow/FlowApiSettingsModal'
 
 export const PromptFlowPage: React.FC = () => {
   const navigate = useNavigate()
