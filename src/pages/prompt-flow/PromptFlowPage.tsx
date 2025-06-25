@@ -317,7 +317,13 @@ export const PromptFlowPage: React.FC = () => {
 
   const handleSaveApiSettings = (settings: any) => {
     updateApiSettings(settings)
-    setToast({ message: 'API settings saved', type: 'success' })
+      .then(() => {
+        setToast({ message: 'API settings saved', type: 'success' })
+      })
+      .catch(error => {
+        console.error('Failed to save API settings:', error)
+        setToast({ message: 'Failed to save API settings', type: 'error' })
+      })
   }
 
   const copyToClipboard = async (text: string) => {

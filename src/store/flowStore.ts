@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
-import { useSecureStorage } from '../hooks/useSecureStorage'
 
 export interface FlowStep {
   id: string
@@ -57,8 +56,32 @@ interface FlowState {
   // Execution
   executeFlow: (flowId: string, variables?: Record<string, string>) => Promise<void>
   executeStep: (stepId: string, variables?: Record<string, string>) => Promise<string>
-  updateApiSettings: (settings: Partial<ApiSettings>) => void
+  updateApiSettings: (settings: Partial<ApiSettings>) => Promise<void>
+  loadApiKey: () => Promise<void>
   clearOutputs: () => void
+}
+
+// Helper function to get secure storage
+const getSecureStorage = () => {
+  const getSecureItem = (key: string): string | null => {
+    try {
+      const item = localStorage.getItem(key)
+      return item
+    } catch (error) {
+      console.error('Error getting secure item:', error)
+      return null
+    }
+  }
+  
+  const setSecureItem = (key: string, value: string): void => {
+    try {
+      localStorage.setItem(key, value)
+    } catch (error) {
+      console.error('Error setting secure item:', error)
+    }
+  }
+  
+  return { getSecureItem, setSecureItem }
 }
 
 export const useFlowStore = create<FlowState>((set, get) => ({
@@ -77,6 +100,9 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   fetchFlows: async () => {
     set({ loading: true })
     try {
+      // Load API key when fetching flows
+      await get().loadApiKey()
+      
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('User not authenticated')
 
@@ -488,7 +514,11 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         throw new Error('Selected flow does not match the flow to execute')
       }
       
-      if (!apiSettings.apiKey) {
+      // Ensure API key is loaded
+      await get().loadApiKey()
+      const currentSettings = get().apiSettings
+      
+      if (!currentSettings.apiKey) {
         throw new Error('API key is required')
       }
       
@@ -572,6 +602,10 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       const step = selectedFlow.steps.find(s => s.id === stepId)
       if (!step) throw new Error('Step not found')
       
+      // Ensure API key is loaded
+      await get().loadApiKey()
+      const currentSettings = get().apiSettings
+      
       // Replace variables in prompt content
       let content = step.prompt_content || ''
       
@@ -588,12 +622,12 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       try {
         const { data, error } = await supabase.functions.invoke('run-prompt-flow', {
           body: { 
-            provider: apiSettings.provider,
-            apiKey: apiSettings.apiKey,
-            model: apiSettings.model,
+            provider: currentSettings.provider,
+            apiKey: currentSettings.apiKey,
+            model: currentSettings.model,
             prompt: content,
-            temperature: apiSettings.temperature,
-            maxTokens: apiSettings.maxTokens
+            temperature: currentSettings.temperature,
+            maxTokens: currentSettings.maxTokens
           }
         })
         
@@ -613,7 +647,9 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     }
   },
   
-  updateApiSettings: (settings) => {
+  updateApiSettings: async (settings) => {
+    const { getSecureItem, setSecureItem } = getSecureStorage()
+    
     set(state => ({
       apiSettings: { 
         ...state.apiSettings,
@@ -626,6 +662,29 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     if (settings.model) localStorage.setItem('flow_api_model', settings.model)
     if (settings.temperature) localStorage.setItem('flow_api_temperature', settings.temperature.toString())
     if (settings.maxTokens) localStorage.setItem('flow_api_max_tokens', settings.maxTokens.toString())
+    
+    // Store API key securely
+    if (settings.apiKey) {
+      const provider = settings.provider || get().apiSettings.provider
+      setSecureItem(`flow_api_key_${provider}`, settings.apiKey)
+    }
+  },
+  
+  loadApiKey: async () => {
+    const { getSecureItem } = getSecureStorage()
+    const { apiSettings } = get()
+    
+    // Load API key for current provider
+    const apiKey = getSecureItem(`flow_api_key_${apiSettings.provider}`)
+    
+    if (apiKey && apiKey !== apiSettings.apiKey) {
+      set(state => ({
+        apiSettings: {
+          ...state.apiSettings,
+          apiKey
+        }
+      }))
+    }
   },
   
   clearOutputs: () => {
