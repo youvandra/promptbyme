@@ -75,9 +75,23 @@ export const FlowStepItem: React.FC<FlowStepItemProps> = ({
           <button
             onClick={() => setShowEditor(true)}
             className="p-1.5 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded transition-colors"
-            title="Edit content"
+            title="Edit step"
           >
             <Edit3 size={16} />
+          </button>
+          
+          {/* Run Step Button */}
+          <button
+            onClick={() => onExecute(step.id)}
+            disabled={isExecuting || step.isRunning}
+            className="p-1.5 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded transition-colors disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-zinc-400"
+            title="Run this step"
+          >
+            {step.isRunning ? (
+              <div className="w-4 h-4 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" />
+            ) : (
+              <Play size={16} />
+            )}
           </button>
           
           {/* Delete Button */}
@@ -147,7 +161,7 @@ export const FlowStepItem: React.FC<FlowStepItemProps> = ({
                 <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-emerald-300 mb-2">Output</h4>
                     <div className="text-zinc-300 text-sm bg-zinc-800/30 p-4 rounded-lg border border-zinc-700/30 max-h-[400px] overflow-y-auto prose prose-invert prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: marked(step.output || '') }}
+                        dangerouslySetInnerHTML={{ __html: marked.parse(step.output || '') }}
                      />
                 </div>
               )}
