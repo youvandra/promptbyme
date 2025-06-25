@@ -11,6 +11,8 @@ export interface FlowStep {
   created_at?: string
   prompt_content?: string
   prompt_title?: string
+  custom_content?: string
+  variables?: Record<string, string>
   output?: string
   isExpanded?: boolean
   isRunning?: boolean
@@ -51,6 +53,7 @@ interface FlowState {
   // Step operations
   addStep: (flowId: string, promptId: string, title: string, content: string) => Promise<void>
   updateStep: (stepId: string, updates: Partial<Omit<FlowStep, 'id' | 'flow_id'>>) => Promise<void>
+  updateFlowStepContent: (stepId: string, customContent: string, variables?: Record<string, string>) => Promise<void>
   deleteStep: (stepId: string) => Promise<void>
   reorderStep: (stepId: string, newIndex: number) => Promise<void>
   
@@ -114,6 +117,27 @@ export const useFlowStore = create<FlowState>((set, get) => ({
           return { ...flow, steps: [] }
         }
 
+        // Fetch custom content and variables from prompt_flow_step
+        const stepIds = steps?.map(step => step.id) || []
+        let customContentMap: Record<string, { custom_content?: string, variables?: Record<string, string> }> = {}
+        
+        if (stepIds.length > 0) {
+          const { data: customSteps, error: customStepsError } = await supabase
+            .from('prompt_flow_step')
+            .select('flow_step_id, custom_content, variables')
+            .in('flow_step_id', stepIds)
+          
+          if (!customStepsError && customSteps) {
+            customContentMap = customSteps.reduce((acc, step) => {
+              acc[step.flow_step_id] = {
+                custom_content: step.custom_content,
+                variables: step.variables
+              }
+              return acc
+            }, {} as Record<string, { custom_content?: string, variables?: Record<string, string> }>)
+          }
+        }
+
         // Transform steps to include prompt content
         const transformedSteps = (steps || []).map(step => ({
           id: step.id,
@@ -124,6 +148,8 @@ export const useFlowStore = create<FlowState>((set, get) => ({
           created_at: step.created_at,
           prompt_content: step.prompts?.content || '',
           prompt_title: step.prompts?.title || '',
+          custom_content: customContentMap[step.id]?.custom_content || step.prompts?.content || '',
+          variables: customContentMap[step.id]?.variables || {},
           isExpanded: false
         }))
 
@@ -244,10 +270,25 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
       if (error) throw error
 
+      // Create an entry in prompt_flow_step with the original content
+      const { error: stepContentError } = await supabase
+        .from('prompt_flow_step')
+        .insert([{
+          flow_step_id: data.id,
+          custom_content: content,
+          variables: {}
+        }])
+
+      if (stepContentError) {
+        console.error('Error creating flow step content:', stepContentError)
+      }
+
       const newStep: FlowStep = {
         ...data,
         prompt_content: content,
         prompt_title: title,
+        custom_content: content,
+        variables: {},
         isExpanded: false
       }
 
@@ -327,6 +368,86 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     }
   },
   
+  updateFlowStepContent: async (stepId, customContent, variables = {}) => {
+    try {
+      // First, check if an entry exists in prompt_flow_step
+      const { data: existingData, error: checkError } = await supabase
+        .from('prompt_flow_step')
+        .select('id')
+        .eq('flow_step_id', stepId)
+        .maybeSingle()
+
+      if (checkError) throw checkError
+
+      let updateError
+      
+      if (existingData) {
+        // Update existing entry
+        const { error } = await supabase
+          .from('prompt_flow_step')
+          .update({
+            custom_content: customContent,
+            variables: variables
+          })
+          .eq('flow_step_id', stepId)
+        
+        updateError = error
+      } else {
+        // Create new entry
+        const { error } = await supabase
+          .from('prompt_flow_step')
+          .insert([{
+            flow_step_id: stepId,
+            custom_content: customContent,
+            variables: variables
+          }])
+        
+        updateError = error
+      }
+
+      if (updateError) throw updateError
+
+      // Update local state
+      set(state => {
+        // Update both flows and selectedFlow
+        const updatedFlows = state.flows.map(flow => {
+          const stepIndex = flow.steps.findIndex(s => s.id === stepId)
+          if (stepIndex >= 0) {
+            const updatedSteps = [...flow.steps]
+            updatedSteps[stepIndex] = { 
+              ...updatedSteps[stepIndex], 
+              custom_content: customContent,
+              variables: variables
+            }
+            return { ...flow, steps: updatedSteps }
+          }
+          return flow
+        })
+        
+        let updatedSelectedFlow = state.selectedFlow
+        if (state.selectedFlow) {
+          const stepIndex = state.selectedFlow.steps.findIndex(s => s.id === stepId)
+          if (stepIndex >= 0) {
+            const updatedSteps = [...state.selectedFlow.steps]
+            updatedSteps[stepIndex] = { 
+              ...updatedSteps[stepIndex], 
+              custom_content: customContent,
+              variables: variables
+            }
+            updatedSelectedFlow = { ...state.selectedFlow, steps: updatedSteps }
+          }
+        }
+
+        return { 
+          flows: updatedFlows,
+          selectedFlow: updatedSelectedFlow
+        }
+      })
+    } catch (error) {
+      console.error('Error updating flow step content:', error)
+      throw error
+    }
+  },
   deleteStep: async (stepId) => {
     try {
       const { error } = await supabase
@@ -576,7 +697,8 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       if (!step) throw new Error('Step not found')
 
       // Replace variables in prompt content
-      let content = step.prompt_content || ''
+      // Use custom_content if available, otherwise fall back to prompt_content
+      let content = step.custom_content || step.prompt_content || ''
 
       // Replace {{variable}} placeholders with values from context
       for (const [key, value] of Object.entries(variables)) {
