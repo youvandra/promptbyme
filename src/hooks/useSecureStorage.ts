@@ -87,3 +87,5 @@ export const useSecureStorage = () => {
   return {
     setSecureItem,
     getSecureItem
+  }
+}
