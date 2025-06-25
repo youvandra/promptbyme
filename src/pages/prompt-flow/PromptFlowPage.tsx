@@ -144,13 +144,11 @@ export const PromptFlowPage: React.FC = () => {
   const handleExecuteStep = async (stepId: string) => {
     try {
       const step = selectedFlow?.steps.find(s => s.id === stepId);
-      if (!step) {
-        throw new Error('Step not found');
-      }
+      if (!step) throw new Error('Step not found');
       
       // Mark step as running
       const updatedSteps = selectedFlow?.steps.map(s => 
-        s.id === stepId ? { ...s, isRunning: true } : s
+        s.id === stepId ? { ...s, isRunning: true, output: undefined } : s
       );
       
       if (selectedFlow && updatedSteps) {
@@ -159,7 +157,7 @@ export const PromptFlowPage: React.FC = () => {
         });
       }
       
-      const output = await executeStep(stepId);
+      const output = await executeStep(stepId, flowVariables);
       
       // Update step with output
       const finalSteps = selectedFlow?.steps.map(s => 
