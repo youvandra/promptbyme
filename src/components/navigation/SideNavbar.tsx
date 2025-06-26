@@ -4,7 +4,6 @@ import {
   Home,
   User, 
   BookOpen,
-  BookOpen,
   FolderOpen,
   Folder,
   LogOut, 
