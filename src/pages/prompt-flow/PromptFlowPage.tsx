@@ -209,6 +209,7 @@ export const PromptFlowPage: React.FC = () => {
       }
       
       const output = await executeStep(stepId, flowVariables);
+      const output = await executeStep(stepId, '');
       
       // Update step with output
       const finalSteps = selectedFlow?.steps.map(s => 
