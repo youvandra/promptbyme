@@ -757,7 +757,7 @@ export const PromptFlowPage: React.FC = () => {
             </div>
             
             <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-3 text-sm">
-              <p className="text-zinc-400 mb-2">Unset variables will appear as <span className="text-amber-400 font-mono">{{variable_name}}</span> in the output.</p>
+              <p className="text-zinc-400 mb-2">Unset variables will appear as <span className="text-amber-400 font-mono">{"{{variable_name}}"}</span> in the output.</p>
               <p className="text-zinc-400">You can set variables by clicking the edit button on each step.</p>
             </div>
           </div>
