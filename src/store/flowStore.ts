@@ -242,6 +242,9 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   
   selectFlow: async (id) => {
     try {
+      const { flows } = get()
+      const { data: authData } = await supabase.auth.getUser()
+      const user = authData?.user
       
       if (!user) {
         set({ selectedFlow: null })
@@ -249,9 +252,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       }
       
       // Find the flow and verify it belongs to the current user
-      const flow = flows.find(f => f.id === id)
-      const { data: authData } = await supabase.auth.getUser()
-      const user = authData?.user
+
       
       if (!user) throw new Error('User not authenticated')
       
