@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { marked } from 'marked';
 import { 
-  Menu, 
+  Menu,
+  AlertTriangle,
   Plus, 
   Settings,
   Edit,
@@ -24,6 +25,7 @@ import { PromptSelectionModal } from '../../components/prompts/PromptSelectionMo
 import { FlowApiSettingsModal } from '../../components/prompt-flow/FlowApiSettingsModal';
 import { FlowManagementModal } from '../../components/prompt-flow/FlowManagementModal';
 import { FlowStepItem } from '../../components/prompt-flow/FlowStepItem';
+import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { useAuthStore } from '../../store/authStore';
 import { useFlowStore, FlowStep } from '../../store/flowStore';
 
@@ -36,6 +38,7 @@ export const PromptFlowPage: React.FC = () => {
   const [showCreateFlow, setShowCreateFlow] = useState(false);
   const [newFlowName, setNewFlowName] = useState('');
   const [newFlowDescription, setNewFlowDescription] = useState('');
+  const [showUnsetVariablesConfirmModal, setShowUnsetVariablesConfirmModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedFlowId, setSelectedFlowId] = useState<string | null>(null);
   const [showFlowManagementModal, setShowFlowManagementModal] = useState(false);
@@ -94,6 +97,24 @@ export const PromptFlowPage: React.FC = () => {
     }
   }, [user, selectedFlow])
 
+  // Helper function to extract variables from content
+  const extractVariables = (content: string): string[] => {
+    const matches = content.match(/\{\{([^}]+)\}\}/g) || [];
+    return matches.map(match => match.replace(/[{}]/g, ''));
+  };
+
+  // Check if a step has unset variables
+  const hasUnsetVariables = (step: FlowStep): boolean => {
+    const content = step.custom_content || step.prompt_content || '';
+    const variables = extractVariables(content);
+    
+    if (variables.length === 0) return false;
+    
+    return variables.some(variable => {
+      return !step.variables || !step.variables[variable] || step.variables[variable].trim() === '';
+    });
+  };
+
   const handleCreateFlow = async () => {
     if (!newFlowName.trim()) return;
     
@@ -144,6 +165,15 @@ export const PromptFlowPage: React.FC = () => {
 
   const handleExecuteFlow = async () => {
     if (!selectedFlow) return;
+
+    // Check if any step has unset variables
+    const stepsWithUnsetVariables = selectedFlow.steps.filter(hasUnsetVariables);
+    
+    if (stepsWithUnsetVariables.length > 0) {
+      // Show confirmation modal instead of blocking execution
+      setShowUnsetVariablesConfirmModal(true);
+      return;
+    }
     
     try {
       await executeFlow(selectedFlow.id);
@@ -151,6 +181,14 @@ export const PromptFlowPage: React.FC = () => {
     } catch (error: any) {
       console.error('Failed to execute flow:', error);
       setToast({ message: error.message || 'Failed to execute flow', type: 'error' });
+    }
+  };
+
+  // Handle confirmation to run flow anyway with unset variables
+  const handleConfirmRunAnyway = async () => {
+    setShowUnsetVariablesConfirmModal(false);
+    if (selectedFlow) {
+      await executeFlow(selectedFlow.id);
     }
   };
 
@@ -701,6 +739,33 @@ export const PromptFlowPage: React.FC = () => {
           flowId={selectedFlow.id}
         />
       )}
+
+      {/* Confirmation Modal for Unset Variables */}
+      <ConfirmationModal
+        isOpen={showUnsetVariablesConfirmModal}
+        onClose={() => setShowUnsetVariablesConfirmModal(false)}
+        onConfirm={handleConfirmRunAnyway}
+        title="Unset Variables Detected"
+        message={
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="text-amber-400 flex-shrink-0 mt-1" size={20} />
+              <div>
+                <p className="mb-2">Some steps in this flow have variables that haven't been set.</p>
+                <p>Running the flow with unset variables may result in unexpected output or errors.</p>
+              </div>
+            </div>
+            
+            <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-3 text-sm">
+              <p className="text-zinc-400 mb-2">Unset variables will appear as <span className="text-amber-400 font-mono">{{variable_name}}</span> in the output.</p>
+              <p className="text-zinc-400">You can set variables by clicking the edit button on each step.</p>
+            </div>
+          </div>
+        }
+        confirmText="Run Anyway"
+        cancelText="Cancel"
+        variant="warning"
+      />
 
       {/* Toast */}
       {toast && (
