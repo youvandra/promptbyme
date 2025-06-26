@@ -9,6 +9,7 @@ import { PlaygroundPage } from './pages/playground/PlaygroundPage'
 import { ProjectSpacePage } from './pages/project-space/ProjectSpacePage'
 import { DashboardPage } from './pages/project-space/DashboardPage'
 import { PromptFlowPage } from './pages/prompt-flow/PromptFlowPage'
+import { DocsPage } from './pages/docs/DocsPage'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/playground" element={<PlaygroundPage />} />
         <Route path="/project-space" element={<DashboardPage />} />
         <Route path="/prompt-flow" element={<PromptFlowPage />} />
+        <Route path="/docs/*" element={<DocsPage />} />
        <Route path="/project/:projectId" element={<ProjectSpacePage />} />
         <Route path="/project/:projectId" element={<ProjectSpacePage />} />
         <Route path="/profile" element={<ProfilePage />} />
