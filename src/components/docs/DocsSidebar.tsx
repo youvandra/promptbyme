@@ -117,18 +117,16 @@ export const DocsSidebar: React.FC<DocsSidebarProps> = ({ isOpen, onToggle, curr
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-zinc-800/50">
-          <div className="flex items-center gap-2">
-            <BookOpen className="text-indigo-400" size={20} />
-            <h2 className="text-lg font-semibold text-white">Documentation</h2>
-          </div>
-          <button
-            onClick={onToggle}
-            className="md:hidden p-1 text-zinc-400 hover:text-white transition-colors"
-          >
           <Link to="/" className="flex items-center gap-2">
             <BookOpen className="text-indigo-400" size={20} />
             <h2 className="text-lg font-semibold text-white">promptby.me</h2>
           </Link>
+          <button
+            onClick={onToggle}
+            className="md:hidden p-1 text-zinc-400 hover:text-white transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {/* Mobile toggle button - fixed to the side when sidebar is closed */}
