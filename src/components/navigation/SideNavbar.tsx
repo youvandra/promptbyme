@@ -288,7 +288,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
 
         {/* Bottom Section - Sign Out, User Profile - Fixed at bottom */}
         {user && (
-          <>
             {/* Sign Out Button */}
             <div className="p-2 border-b border-zinc-800/30">
               <button
@@ -484,7 +483,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                 </div>
               </Link>
             </div>
-          </>
+          </div>
         )}
       </div>
     </>
