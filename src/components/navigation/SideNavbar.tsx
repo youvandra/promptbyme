@@ -296,7 +296,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                   }
                 `}
               >
-                <Play size={18} className={location.pathname === '/docs' ? 'text-white' : ''} />
+                <BookOpen size={18} className={location.pathname === '/docs' ? 'text-white' : ''} />
                 <span className="font-medium text-sm">Docs</span>
               </Link>
             </div>
