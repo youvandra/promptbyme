@@ -44,7 +44,6 @@ export const PromptFlowPage: React.FC = () => {
   const { 
     flows, 
     selectedFlow,
-    selectedFlow, 
     loading, 
     executing,
     apiSettings,
