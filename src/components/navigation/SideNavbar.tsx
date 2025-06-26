@@ -13,8 +13,7 @@ import {
   Bell,
   Check,
   Users,
-  Clock,
-  BookOpen
+  Clock
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../store/authStore'
@@ -153,12 +152,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       icon: Folder,
       label: 'Prompt Flow',
       description: 'Sequential prompt chains'
-    },
-    {
-      path: '/docs',
-      icon: BookOpen,
-      label: 'Documentation',
-      description: 'Learn how to use the app'
     }
   ]
 
