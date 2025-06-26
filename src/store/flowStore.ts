@@ -246,6 +246,16 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       const { data: authData } = await supabase.auth.getUser()
       const user = authData?.user
       
+      if (!user) {
+        set({ selectedFlow: null })
+        throw new Error('User not authenticated')
+      }
+      
+      // Find the flow and verify it belongs to the current user
+      const flow = flows.find(f => f.id === id)
+      const { data: authData } = await supabase.auth.getUser()
+      const user = authData?.user
+      
       if (!user) throw new Error('User not authenticated')
       
       // Find the flow and verify it belongs to the current user
@@ -255,12 +265,22 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       // Security check: Ensure the flow belongs to the current user
       if (flow.user_id !== user.id) {
         console.error('Attempted to select a flow that does not belong to the current user')
+        set({ selectedFlow: null })
+        throw new Error('Unauthorized: You do not have access to this flow')
+      }
+      
+      // Security check: Ensure the flow belongs to the current user
+      if (flow.user_id !== user.id) {
+        console.error('Attempted to select a flow that does not belong to the current user')
+        set({ selectedFlow: null })
         throw new Error('Unauthorized: You do not have access to this flow')
       }
       
       set({ selectedFlow: flow })
     } catch (error) {
       console.error('Error selecting flow:', error)
+      // Ensure selectedFlow is null in case of any error
+      set({ selectedFlow: null })
       throw error
     }
   },
