@@ -616,7 +616,7 @@ Use {{variable_name}} for dynamic content`)}
               <ol className="list-decimal pl-6 space-y-2 my-4">
                 <li>Open the prompt editor</li>
                 <li>Type your prompt content</li>
-                <li>Add variables using the {{variable_name}} syntax</li>
+                <li>Add variables using the {"{{variable_name}}"} syntax</li>
                 <li>Use descriptive variable names that indicate their purpose</li>
               </ol>
               
@@ -680,7 +680,7 @@ Additional context: {{context}}`)}
               
               <h2 className="text-2xl font-semibold text-white mt-8 mb-4">Variable Best Practices</h2>
               <ul className="list-disc pl-6 space-y-2 my-4">
-                <li><strong className="text-white">Descriptive Names</strong> - Use clear, descriptive variable names (e.g., {{customer_name}} instead of {{name}})</li>
+                <li><strong className="text-white">Descriptive Names</strong> - Use clear, descriptive variable names (e.g., {"{{customer_name}}"} instead of {"{{name}}"})</li>
                 <li><strong className="text-white">Consistent Formatting</strong> - Use snake_case or camelCase consistently for variable names</li>
                 <li><strong className="text-white">Documentation</strong> - Include examples or descriptions of expected values in your prompt</li>
                 <li><strong className="text-white">Default Values</strong> - In your prompt, suggest default values where appropriate</li>
@@ -1446,7 +1446,7 @@ Additional context: {{context}}`)}
                     <div>
                       <h4 className="text-lg font-medium text-white mb-2">How do I use variables in my prompts?</h4>
                       <p>
-                        Variables are added using double curly braces syntax: {{variable_name}}. When you use a prompt with 
+                        Variables are added using double curly braces syntax: {"{{variable_name}}"}. When you use a prompt with 
                         variables, you'll be prompted to fill in values for each variable.
                       </p>
                     </div>
