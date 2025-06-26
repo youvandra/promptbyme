@@ -284,7 +284,7 @@ export const DocsContent: React.FC<DocsContentProps> = ({ section }) => {
                     </div>
                     <div>
                       <strong className="text-white">Use Variables</strong>
-                      <p className="text-zinc-400">Add dynamic elements to your prompts with {{variable_name}} syntax.</p>
+                      <p className="text-zinc-400">Add dynamic elements to your prompts with "{{variable_name}}"" syntax.</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-2">
