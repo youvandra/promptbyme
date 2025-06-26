@@ -125,8 +125,10 @@ export const DocsSidebar: React.FC<DocsSidebarProps> = ({ isOpen, onToggle, curr
             onClick={onToggle}
             className="md:hidden p-1 text-zinc-400 hover:text-white transition-colors"
           >
-            <X size={20} />
-          </button>
+          <Link to="/" className="flex items-center gap-2">
+            <BookOpen className="text-indigo-400" size={20} />
+            <h2 className="text-lg font-semibold text-white">promptby.me</h2>
+          </Link>
         </div>
 
         {/* Mobile toggle button - fixed to the side when sidebar is closed */}
