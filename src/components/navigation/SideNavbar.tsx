@@ -273,23 +273,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                   <div className="flex-1">
                     <p className="font-medium text-sm">{item.label}</p>
                     <p className="text-xs opacity-70">{item.description}</p>
-              
-              {/* Docs Link - Below Playground */}
-              <div className="p-2 border-b border-zinc-800/30">
-                <Link
-                  to="/docs"
-                  className={`
-                    group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 w-full
-                    ${location.pathname.startsWith('/docs')
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' 
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                    }
-                  `}
-                >
-                  <BookOpen size={18} className={location.pathname.startsWith('/docs') ? 'text-white' : ''} />
-                  <span className="font-medium text-sm">Docs</span>
-                </Link>
-              </div>
                   </div>
                 </Link>
               )
