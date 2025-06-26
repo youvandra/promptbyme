@@ -11,7 +11,24 @@ import {
   Play,
   Folder,
   Layers,
-  Users
+  Users,
+  FileQuestion, 
+  AlertTriangle, 
+  Rocket, 
+  Plus, 
+  Minus, 
+  FileText, 
+  Layout, 
+  Mail, 
+  MessageSquare, 
+  Globe, 
+  Edit, 
+  Save, 
+  EyeOff,
+  Code,
+  Eye,
+  Settings,
+  BookOpen
 } from 'lucide-react'
 
 interface DocsContentProps {
@@ -1618,24 +1635,3 @@ Additional context: {{context}}`)}
     </div>
   )
 }
-
-// Import missing components
-import { 
-  FileQuestion, 
-  AlertTriangle, 
-  Rocket, 
-  Plus, 
-  Minus, 
-  FileText, 
-  Layout, 
-  Mail, 
-  MessageSquare, 
-  Globe, 
-  Edit, 
-  Save, 
-  EyeOff,
-  Code,
-  Eye,
-  Settings,
-  BookOpen
-} from 'lucide-react'
