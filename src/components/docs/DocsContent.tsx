@@ -606,7 +606,7 @@ Use {{variable_name}} for dynamic content`)}
                 <p className="mb-4">Variables use double curly braces syntax:</p>
                 {renderCodeBlock('{{variable_name}}')}
                 <p className="mt-4">For example, a prompt with variables might look like:</p>
-                {renderCodeBlock(`Write a {{tone}} email to {{recipient}} about {{topic}}.`)}
+                {renderCodeBlock('Write a {{tone}} email to {{recipient}} about {{topic}}.')}
               </div>
               
               <h2 className="text-2xl font-semibold text-white mt-8 mb-4">Creating Prompts with Variables</h2>
