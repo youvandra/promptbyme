@@ -242,9 +242,6 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   
   selectFlow: async (id) => {
     try {
-      const { flows } = get()
-      const { data: authData } = await supabase.auth.getUser()
-      const user = authData?.user
       
       if (!user) {
         set({ selectedFlow: null })
