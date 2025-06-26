@@ -118,7 +118,6 @@ export const DocsSidebar: React.FC<DocsSidebarProps> = ({ isOpen, onToggle, curr
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-zinc-800/50">
           <Link to="/" className="flex items-center gap-2">
-            <BookOpen className="text-indigo-400" size={20} />
             <h2 className="text-lg font-semibold text-white">promptby.me</h2>
           </Link>
           <button
