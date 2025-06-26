@@ -81,12 +81,13 @@ export const PlaygroundPage: React.FC = () => {
   const handlePromptSelected = (prompt: any) => {
     const hasVariables = /\{\{([^}]+)\}\}/.test(prompt.content)
     
+    // Set the selected prompt first, regardless of whether it has variables
+    setSelectedPrompt({ id: prompt.id, title: prompt.title, content: prompt.content })
+    
     if (hasVariables) {
-      setShowVariableOnlyModal(true)
       setShowVariableOnlyModal(true)
     } else {
       setPromptInput(prompt.content)
-      setSelectedPrompt({ id: prompt.id, title: prompt.title, content: prompt.content })
     }
   }
 
@@ -496,7 +497,10 @@ export const PlaygroundPage: React.FC = () => {
       {/* Variable Fill Modal */}
       <VariableFillOnlyModal
         isOpen={showVariableOnlyModal}
-        onClose={() => setShowVariableOnlyModal(false)}
+        onClose={() => {
+          setShowVariableOnlyModal(false)
+          // Don't clear selectedPrompt when closing without filling
+        }}
         promptContent={selectedPrompt?.content || ''}
         promptTitle={selectedPrompt?.title}
         onVariablesFilled={handleVariablesFilled}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { X, Eye, Copy, CheckCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useClipboard } from '../../hooks/useClipboard'
 
 interface Variable {
   name: string
@@ -24,22 +25,27 @@ export const VariableFillOnlyModal: React.FC<VariableFillOnlyModalProps> = ({
   onVariablesFilled
 }) => {
   const [variables, setVariables] = useState<Variable[]>([])
-  const [copied, setCopied] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
+  const { copied, copyToClipboard } = useClipboard()
 
   // Extract variables from prompt content
   useEffect(() => {
     if (isOpen && promptContent) {
       const variableMatches = promptContent.match(/\{\{([^}]+)\}\}/g) || []
-      const uniqueVariables = Array.from(new Set(variableMatches))
-        .map(match => {
-          const name = match.replace(/[{}]/g, '')
-          return {
-            name,
-            value: '',
-            placeholder: `Enter ${name.toLowerCase().replace(/_/g, ' ')}`
-          }
-        })
+      const uniqueVarNames = Array.from(new Set(variableMatches.map(match => match.replace(/[{}]/g, ''))));
+      
+      // Create a map of existing variables to preserve values
+      const existingVarMap = variables.reduce((map, v) => {
+        map[v.name] = v.value;
+        return map;
+      }, {} as Record<string, string>);
+      
+      // Create new variables array, preserving existing values
+      const uniqueVariables = uniqueVarNames.map(name => ({
+        name,
+        value: existingVarMap[name] || '', // Preserve existing value if it exists
+        placeholder: `Enter ${name.toLowerCase().replace(/_/g, ' ')}`
+      }));
       
       setVariables(uniqueVariables)
       setPreviewMode(false)
@@ -47,6 +53,7 @@ export const VariableFillOnlyModal: React.FC<VariableFillOnlyModalProps> = ({
   }, [isOpen, promptContent])
 
   const updateVariable = (name: string, value: string) => {
+    console.log(`Updating variable: ${name} to value: ${value}`);
     setVariables(prev => 
       prev.map(variable => 
         variable.name === name ? { ...variable, value } : variable
@@ -64,6 +71,7 @@ export const VariableFillOnlyModal: React.FC<VariableFillOnlyModalProps> = ({
   }
 
   const handleApply = () => {
+    console.log("Applying variables:", variables);
     const filledPrompt = generateFilledPrompt()
     onVariablesFilled(filledPrompt)
   }
@@ -221,7 +229,10 @@ export const VariableFillOnlyModal: React.FC<VariableFillOnlyModalProps> = ({
                         <input
                           type="text"
                           value={variable.value}
-                          onChange={(e) => updateVariable(variable.name, e.target.value)}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            updateVariable(variable.name, newValue);
+                          }}
                           placeholder={variable.placeholder}
                           className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                         />
@@ -315,6 +326,7 @@ export const VariableFillOnlyModal: React.FC<VariableFillOnlyModalProps> = ({
                   <button
                     onClick={handleApply}
                     className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105"
+                    type="button"
                   >
                     <Copy size={16} />
                     <span>Apply to Playground</span>
