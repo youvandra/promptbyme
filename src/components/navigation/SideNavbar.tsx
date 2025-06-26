@@ -155,6 +155,12 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       description: 'Sequential prompt chains'
     },
     {
+      path: '/playground',
+      icon: Play,
+      label: 'Playground',
+      description: 'Test prompts with AI'
+    },
+    {
       path: '/docs',
       icon: BookOpen,
       label: 'Docs',
@@ -282,25 +288,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
 
         {/* Bottom Section - Sign Out, User Profile - Fixed at bottom */}
         {user && (
-          <div className="mt-auto border-t border-zinc-800/50 flex-shrink-0">
-            {/* Playground Link - Above Sign Out */}
-            <div className="p-2 border-b border-zinc-800/30">
-              <Link
-                to="/playground"
-                onClick={onToggle}
-                className={`
-                  group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 w-full
-                  ${location.pathname === '/playground'
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                  }
-                `}
-              >
-                <Play size={18} className={location.pathname === '/playground' ? 'text-white' : ''} />
-                <span className="font-medium text-sm">Playground</span>
-              </Link>
-            </div>
-
             {/* Sign Out Button */}
             <div className="p-2 border-b border-zinc-800/30">
               <button
