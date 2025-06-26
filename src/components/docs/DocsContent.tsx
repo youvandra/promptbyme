@@ -284,7 +284,7 @@ export const DocsContent: React.FC<DocsContentProps> = ({ section }) => {
                     </div>
                     <div>
                       <strong className="text-white">Use Variables</strong>
-                      <p className="text-zinc-400">Add dynamic elements to your prompts with "{{variable_name}}"" syntax.</p>
+                      <p className="text-zinc-400">Add dynamic elements to your prompts with {"{{variable_name}}"} syntax.</p>
                     </div>
                   </li>
                   <li className="flex items-start gap-2">
@@ -362,7 +362,7 @@ export const DocsContent: React.FC<DocsContentProps> = ({ section }) => {
                 <h4 className="text-lg font-medium text-white mb-2">Editor Features</h4>
                 <ul className="list-disc pl-6 space-y-2">
                   <li><strong className="text-white">Markdown Support</strong> - Use markdown syntax for formatting</li>
-                  <li><strong className="text-white">Variable Placeholders</strong> - Add {{variable_name}} for dynamic content</li>
+                  <li><strong className="text-white">Variable Placeholders</strong> - Add {"{{variable_name}}"} for dynamic content</li>
                   <li><strong className="text-white">Version History</strong> - Track changes and revert when needed</li>
                   <li><strong className="text-white">Public/Private Toggle</strong> - Control who can see your prompts</li>
                   <li><strong className="text-white">Folder Organization</strong> - Assign prompts to folders</li>
