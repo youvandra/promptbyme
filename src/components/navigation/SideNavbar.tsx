@@ -154,12 +154,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       label: 'Prompt Flow',
       description: 'Sequential prompt chains'
     },
-    {
-      path: '/docs',
-      icon: BookOpen,
-      label: 'Docs',
-      description: 'Documentation & guides'
-    }
   ]
 
   const isActive = (path: string) => location.pathname === path
