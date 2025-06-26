@@ -1633,5 +1633,6 @@ import {
   Globe, 
   Edit, 
   Save, 
-  EyeOff
+  EyeOff,
+  Code
 } from 'lucide-react'
