@@ -5,7 +5,7 @@ import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { PromptSelectionModal } from '../../components/prompts/PromptSelectionModal'
-import { VariableFillModal } from '../../components/prompts/VariableFillModal'
+import { VariableFillOnlyModal } from '../../components/prompts/VariableFillOnlyModal'
 import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
 
@@ -27,8 +27,7 @@ export const PlaygroundPage: React.FC = () => {
   const [output, setOutput] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [showPromptModal, setShowPromptModal] = useState(false)
-  const [showVariableModal, setShowVariableModal] = useState(false)
-  const [pendingPromptContent, setPendingPromptContent] = useState('')
+  const [showVariableOnlyModal, setShowVariableOnlyModal] = useState(false)
   
   const { user, loading: authLoading, initialize } = useAuthStore()
   const { fetchUserPrompts } = usePromptStore()
@@ -83,9 +82,8 @@ export const PlaygroundPage: React.FC = () => {
     const hasVariables = /\{\{([^}]+)\}\}/.test(prompt.content)
     
     if (hasVariables) {
-      setPendingPromptContent(prompt.content)
-      setSelectedPrompt({ id: prompt.id, title: prompt.title, content: prompt.content })
-      setShowVariableModal(true)
+      setShowVariableOnlyModal(true)
+      setShowVariableOnlyModal(true)
     } else {
       setPromptInput(prompt.content)
       setSelectedPrompt({ id: prompt.id, title: prompt.title, content: prompt.content })
@@ -94,8 +92,7 @@ export const PlaygroundPage: React.FC = () => {
 
   const handleVariablesFilled = (filledContent: string) => {
     setPromptInput(filledContent)
-    setShowVariableModal(false)
-    setPendingPromptContent('')
+    setShowVariableOnlyModal(false)
   }
 
   const generateResponse = async () => {
@@ -497,10 +494,10 @@ export const PlaygroundPage: React.FC = () => {
       />
 
       {/* Variable Fill Modal */}
-      <VariableFillModal
-        isOpen={showVariableModal}
-        onClose={() => setShowVariableModal(false)}
-        promptContent={pendingPromptContent}
+      <VariableFillOnlyModal
+        isOpen={showVariableOnlyModal}
+        onClose={() => setShowVariableOnlyModal(false)}
+        promptContent={selectedPrompt?.content || ''}
         promptTitle={selectedPrompt?.title}
         onVariablesFilled={handleVariablesFilled}
       />
