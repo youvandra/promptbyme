@@ -43,6 +43,7 @@ export const PromptFlowPage: React.FC = () => {
   const { user, loading: authLoading } = useAuthStore();
   const { 
     flows, 
+    selectedFlow,
     selectedFlow, 
     loading, 
     executing,
@@ -69,10 +70,15 @@ export const PromptFlowPage: React.FC = () => {
   // Select first flow if none selected
   useEffect(() => {
     if (!loading && flows.length > 0 && !selectedFlow) {
-      selectFlow(flows[0].id);
-      setSelectedFlowId(flows[0].id);
+      // Find flows that belong to the current user
+      const userFlows = flows.filter(flow => flow.user_id === user?.id)
+      
+      if (userFlows.length > 0) {
+        selectFlow(userFlows[0].id)
+        setSelectedFlowId(userFlows[0].id)
+      }
     }
-  }, [loading, flows, selectedFlow, selectFlow]);
+  }, [loading, flows, selectedFlow, selectFlow, user])
 
   // Update selectedFlowId when selectedFlow changes
   useEffect(() => {
@@ -80,6 +86,14 @@ export const PromptFlowPage: React.FC = () => {
       setSelectedFlowId(selectedFlow.id);
     }
   }, [selectedFlow]);
+
+  // Reset selected flow when user changes
+  useEffect(() => {
+    if (user && selectedFlow && selectedFlow.user_id !== user.id) {
+      // Reset selection if the current flow doesn't belong to the user
+      setSelectedFlowId(null)
+    }
+  }, [user, selectedFlow])
 
   const handleCreateFlow = async () => {
     if (!newFlowName.trim()) return;
@@ -323,7 +337,7 @@ export const PromptFlowPage: React.FC = () => {
                         onChange={(e) => handleFlowChange(e.target.value)}
                         className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                       >
-                        {flows.map((flow) => (
+                        {flows.filter(flow => flow.user_id === user?.id).map((flow) => (
                           <option key={flow.id} value={flow.id}>
                             {flow.name}
                           </option>
