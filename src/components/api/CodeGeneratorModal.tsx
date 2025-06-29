@@ -996,7 +996,7 @@ def run_flow():
                                 className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
                                 title={showAiProviderKey ? "Hide API key" : "Show API key"}
                               >
-                                {showAiProviderKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                                {truncateContent(showAiProviderKey,20) ? <EyeOff size={16} /> : <Eye size={16} />}
                               </button>
                               {aiProviderApiKey && (
                                 <button
