@@ -4,6 +4,23 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/authStore'
 
+// Function to determine color based on action type
+const getActionColorClass = (action: string) => {
+  if (action.includes('Created') || action.includes('Added')) {
+    return 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400';
+  } else if (action.includes('Updated') || action.includes('Role')) {
+    return 'bg-blue-500/10 border-blue-500/30 text-blue-400';
+  } else if (action.includes('Deleted') || action.includes('Removed')) {
+    return 'bg-red-500/10 border-red-500/30 text-red-400';
+  } else if (action.includes('Invited')) {
+    return 'bg-purple-500/10 border-purple-500/30 text-purple-400';
+  } else if (action.includes('Connection')) {
+    return 'bg-amber-500/10 border-amber-500/30 text-amber-400';
+  } else {
+    return 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400';
+  }
+};
+
 interface ProjectLog {
   id: string
   project_id: string
@@ -261,7 +278,7 @@ export const ProjectLogsModal: React.FC<ProjectLogsModalProps> = ({
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
                     <div className="flex items-center gap-3">
-                      <div className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/30 rounded-lg text-indigo-400 text-sm">
+                      <div className={`px-3 py-1 border rounded-lg text-sm ${getActionColorClass(log.action)}`}>
                         {log.action}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-zinc-400">
