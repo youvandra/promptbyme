@@ -6,6 +6,7 @@ import { Section } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardContent, CardFooter } from '../components/ui/Card';
 import { GlassPanel } from '../components/ui/GlassPanel';
+import { Layout } from '../components/layout/Layout';
 import { useAuthStore } from '../store/authStore';
 import { useEffect } from 'react';
 
@@ -186,6 +187,7 @@ export const PricingPage: React.FC = () => {
   ];
 
   return (
+    <Layout>
     <>
       {/* Hero Section */}
       <Section className="pt-32 md:pt-40">
@@ -435,5 +437,6 @@ export const PricingPage: React.FC = () => {
         </GlassPanel>
       </Section>
     </>
+    </Layout>
   );
 };
