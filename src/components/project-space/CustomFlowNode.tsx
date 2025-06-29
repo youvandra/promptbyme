@@ -48,8 +48,8 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       />
       
       {/* Node Content */}
-      <motion.div 
-        className={`w-[250px] h-[150px] ${getNodeColor()} backdrop-blur-sm border rounded-xl p-4 shadow-lg ${
+      <motion.div
+        className={`w-[250px] h-[150px] ${getNodeColor()} backdrop-blur-sm border rounded-xl p-4 shadow-lg flex flex-col items-start ${
           selected ? 'ring-2 ring-white/50' : ''
         }`}
         animate={{
@@ -59,7 +59,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       >
         <div className="flex items-center gap-2 mb-2">
           {getNodeIcon()}
-          <div className="text-white font-medium text-sm truncate flex-1">
+          <div className="text-white font-medium text-sm truncate flex-1 text-left">
             <span>{data.label || data.title}</span>
             
             {/* Show assignee if present */}
@@ -110,40 +110,6 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                 return (
                   <div className="flex items-center gap-1.5">
                     {assignedMember.avatar_url ? (
-                      <img 
-                        src={assignedMember.avatar_url} 
-                        alt={assignedMember.display_name || assignedMember.email}
-                        className="w-4 h-4 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-4 h-4 bg-indigo-600/30 rounded-full flex items-center justify-center">
-                        <span className="text-[8px] text-indigo-300">
-                          {(assignedMember.display_name || assignedMember.email).charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <span className="text-indigo-300">
-                      {assignedMember.display_name || assignedMember.email}
-                    </span>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-        </div>
-        
-        <div className="text-zinc-300 text-xs line-clamp-3 break-words overflow-y-auto flex-1">
-          {data.content}
-        </div>
-        
-        {/* Toolbar */}
-        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700/50 rounded-lg shadow-xl z-50 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <button
-            onClick={(e) => {
-            }}
-          >
-          </button>
-        </div>
       </motion.div>
       
       {/* Output Handle (bottom) */}
