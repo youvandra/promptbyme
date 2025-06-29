@@ -3,6 +3,7 @@ import { X, Search, Filter, Eye, Lock, GitFork, Heart, Plus } from 'lucide-react
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePromptStore } from '../../store/promptStore'
 import { useAuthStore } from '../../store/authStore'
+import { Database } from '../../lib/supabase'
 
 interface Prompt {
   id: string
@@ -14,6 +15,10 @@ interface Prompt {
   like_count?: number
   fork_count?: number
   original_prompt_id?: string | null
+  user?: {
+    display_name?: string
+    email?: string
+  }
 }
 
 interface PromptImportModalProps {
@@ -181,6 +186,11 @@ export const PromptImportModal: React.FC<PromptImportModalProps> = ({
                             <Eye size={10} className="text-emerald-400" />
                           )}
                           <span className={prompt.access === 'private' ? 'text-amber-400' : 'text-emerald-400'}>
+                            <p className="text-xs text-zinc-400">
+                              by {prompt.user?.display_name || 'Unknown'} • ID: {prompt.id.substring(0, 8)}...
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1">
                             {prompt.access}
                           </span>
                         </div>

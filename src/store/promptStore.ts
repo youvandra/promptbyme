@@ -48,9 +48,16 @@ export const usePromptStore = create<PromptState>()(
   fetchUserPrompts: async (userId: string) => {
     set({ loading: true })
     try {
+      // Update query to include user information
       const { data, error } = await supabase
         .from('prompts')
-        .select('*')
+        .select(`
+          *,
+          user:user_id (
+            display_name,
+            email
+          )
+        `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
 
@@ -75,9 +82,16 @@ export const usePromptStore = create<PromptState>()(
   fetchPublicPrompts: async () => {
     set({ loading: true })
     try {
+      // Update query to include user information
       const { data, error } = await supabase
         .from('prompts')
-        .select('*')
+        .select(`
+          *,
+          user:user_id (
+            display_name,
+            email
+          )
+        `)
         .eq('access', 'public')
         .order('created_at', { ascending: false })
 
@@ -104,13 +118,20 @@ export const usePromptStore = create<PromptState>()(
     
     // Check cache first
     if (cache.has(id)) {
-      return cache.get(id)!
+      return cache.get(id)!;
     }
     
     try {
+      // Update query to include user information
       const { data, error } = await supabase
         .from('prompts')
-        .select('*')
+        .select(`
+          *,
+          user:user_id (
+            display_name,
+            email
+          )
+        `)
         .eq('id', id)
         .single()
 
