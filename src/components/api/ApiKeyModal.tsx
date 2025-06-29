@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Key, Copy, Eye, EyeOff, CheckCircle, AlertCircle, Server } from 'lucide-react'
+import { X, Key, Copy, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
@@ -14,13 +14,10 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
   onClose
 }) => {
   const [pbmApiKey, setPbmApiKey] = useState<string | null>(null)
-  const [aiProviderKey, setAiProviderKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPbmKey, setShowPbmKey] = useState(false)
-  const [showAiProviderKey, setShowAiProviderKey] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [regeneratingPbmKey, setRegeneratingPbmKey] = useState(false)
-  const [savingAiProviderKey, setSavingAiProviderKey] = useState(false)
   
   const { user } = useAuthStore()
 
@@ -47,20 +44,6 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
         setPbmApiKey(pbmKeyData.key)
       } else {
         setPbmApiKey(null)
-      }
-
-      // Fetch AI provider API key
-      const { data: aiKeyData, error: aiKeyError } = await supabase
-        .from('api_keys')
-        .select('key')
-        .eq('user_id', user.id)
-        .eq('key_type', 'ai_provider_key')
-        .maybeSingle()
-
-      if (!aiKeyError && aiKeyData) {
-        setAiProviderKey(aiKeyData.key)
-      } else {
-        setAiProviderKey(null)
       }
     } catch (error) {
       console.error('Error fetching API keys:', error)
@@ -119,43 +102,6 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
     }
   }
 
-  const handleSaveAiProviderKey = async () => {
-    if (!user || !aiProviderKey) return
-    
-    setSavingAiProviderKey(true)
-    
-    try {
-      // Check if user already has this type of API key
-      const { data: existingKey } = await supabase
-        .from('api_keys')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('key_type', 'ai_provider_key')
-        .maybeSingle()
-      
-      if (existingKey) {
-        // Update existing key
-        await supabase
-          .from('api_keys')
-          .update({ key: aiProviderKey })
-          .eq('id', existingKey.id)
-      } else {
-        // Create new key
-        await supabase
-          .from('api_keys')
-          .insert([{ 
-            user_id: user.id, 
-            key: aiProviderKey,
-            key_type: 'ai_provider_key'
-          }])
-      }
-    } catch (error) {
-      console.error('Error saving AI provider API key:', error)
-    } finally {
-      setSavingAiProviderKey(false)
-    }
-  }
-
   const copyToClipboard = async (text: string, keyType: string) => {
     if (!text) return
     
@@ -201,7 +147,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
         {/* Content */}
         <div className="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
           <p className="text-zinc-300">
-            Manage your API keys for promptby.me and AI providers.
+            Manage your API keys for promptby.me.
           </p>
           
           {loading ? (
@@ -287,65 +233,6 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
                     </button>
                   </div>
                 )}
-              </div>
-
-              {/* AI Provider API Key Section */}
-              <div className="space-y-4 pt-6 border-t border-zinc-800/50">
-                <h3 className="text-lg font-medium text-white flex items-center gap-2">
-                  <Server size={18} className="text-emerald-400" />
-                  AI Provider API Key
-                </h3>
-                <p className="text-sm text-zinc-400">
-                  Store your AI provider API key (OpenAI, Anthropic, etc.) for use with prompt flows.
-                </p>
-                
-                <div className="relative">
-                  <div className="flex items-center">
-                    <input
-                      type={showAiProviderKey ? "text" : "password"}
-                      value={aiProviderKey || ''}
-                      onChange={(e) => setAiProviderKey(e.target.value)}
-                      placeholder="Enter your AI provider API key"
-                      className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
-                    />
-                    <div className="absolute right-2 flex items-center gap-2">
-                      <button
-                        onClick={() => setShowAiProviderKey(!showAiProviderKey)}
-                        className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                        title={showAiProviderKey ? "Hide API key" : "Show API key"}
-                      >
-                        {showAiProviderKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                      {aiProviderKey && (
-                        <button
-                          onClick={() => copyToClipboard(aiProviderKey, 'ai')}
-                          className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                          title="Copy to clipboard"
-                        >
-                          {copied === 'ai' ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={handleSaveAiProviderKey}
-                  disabled={savingAiProviderKey || !aiProviderKey}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200"
-                >
-                  {savingAiProviderKey ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Key size={16} />
-                      <span>Save API Key</span>
-                    </>
-                  )}
-                </button>
               </div>
               
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">

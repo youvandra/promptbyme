@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Code, X, Filter, Eye, EyeOff, GitFork, Heart, Plus, Thermometer, ChevronDown, ChevronUp, Zap, Copy, CheckCircle, AlertCircle, Server, ArrowLeft } from 'lucide-react'
+import { Search, Code, X, Filter, Eye, EyeOff, GitFork, Heart, Plus, Thermometer, ChevronDown, ChevronUp, Zap, Copy, CheckCircle, AlertCircle, Server, ArrowLeft, Key } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePromptStore } from '../../store/promptStore'
 import { useAuthStore } from '../../store/authStore'
@@ -53,6 +53,8 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
   const [maxTokens, setMaxTokens] = useState(1000)
   const [promptbyApiKey, setPromptbyApiKey] = useState<string | null>(null)
   const [aiProviderApiKey, setAiProviderApiKey] = useState<string | null>(null)
+  const [showAiProviderKey, setShowAiProviderKey] = useState(false)
+  const [savingAiProviderKey, setSavingAiProviderKey] = useState(false)
   const [codeType, setCodeType] = useState<'prompt' | 'flow'>(initialCodeType)
   const [activeTab, setActiveTab] = useState<'select' | 'configure'>('select')
   const [selectedForComparison, setSelectedForComparison] = useState<Set<string>>(new Set())
@@ -232,6 +234,43 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
 
   const truncateContent = (content: string, maxLength: number = 150) => {
     return content.length <= maxLength ? content : content.substring(0, maxLength) + '...'
+  }
+
+  const handleSaveAiProviderKey = async () => {
+    if (!user || !aiProviderApiKey) return
+    
+    setSavingAiProviderKey(true)
+    
+    try {
+      // Check if user already has this type of API key
+      const { data: existingKey } = await supabase
+        .from('api_keys')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('key_type', 'ai_provider_key')
+        .maybeSingle()
+      
+      if (existingKey) {
+        // Update existing key
+        await supabase
+          .from('api_keys')
+          .update({ key: aiProviderApiKey })
+          .eq('id', existingKey.id)
+      } else {
+        // Create new key
+        await supabase
+          .from('api_keys')
+          .insert([{ 
+            user_id: user.id, 
+            key: aiProviderApiKey,
+            key_type: 'ai_provider_key'
+          }])
+      }
+    } catch (error) {
+      console.error('Error saving AI provider API key:', error)
+    } finally {
+      setSavingAiProviderKey(false)
+    }
   }
 
   // Generate JavaScript code snippet for prompt
@@ -937,6 +976,62 @@ def run_flow():
                           <option value="groq">Groq</option>
                         </select>
                         
+                        {/* AI Provider API Key */}
+                        <div>
+                          <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
+                            <Key size={16} className="text-indigo-400" />
+                            API Key
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showAiProviderKey ? "text" : "password"}
+                              value={aiProviderApiKey || ''}
+                              onChange={(e) => setAiProviderApiKey(e.target.value)}
+                              placeholder={`Enter your ${selectedProvider} API key`}
+                              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                            />
+                            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                              <button
+                                onClick={() => setShowAiProviderKey(!showAiProviderKey)}
+                                className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                                title={showAiProviderKey ? "Hide API key" : "Show API key"}
+                              >
+                                {showAiProviderKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                              </button>
+                              {aiProviderApiKey && (
+                                <button
+                                  onClick={() => copyToClipboard(aiProviderApiKey, 'ai-key')}
+                                  className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                                  title="Copy to clipboard"
+                                >
+                                  {copied === 'ai-key' ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex justify-between mt-2">
+                            <p className="text-xs text-zinc-500">
+                              Your API key is stored securely and never sent to our servers.
+                            </p>
+                            <button
+                              onClick={handleSaveAiProviderKey}
+                              disabled={savingAiProviderKey || !aiProviderApiKey}
+                              className="flex items-center gap-1 px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/30 disabled:bg-zinc-700/20 text-indigo-400 disabled:text-zinc-500 text-xs rounded transition-all duration-200"
+                            >
+                              {savingAiProviderKey ? (
+                                <>
+                                  <div className="w-3 h-3 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                                  <span>Saving...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>Save Key</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        
                         {/* Advanced Options */}
                         <div>
                           <button
@@ -1045,7 +1140,7 @@ def run_flow():
                     <div className="mt-4 text-xs text-zinc-500">
                       <p>This code snippet demonstrates how to call the {codeType === 'prompt' ? 'run-prompt-api' : 'run-prompt-flow-api'} endpoint.</p>
                       {!aiProviderApiKey && (
-                        <p className="mt-1 text-amber-400">Note: You haven't set an AI provider API key yet. Go to API Keys to set one up.</p>
+                        <p className="mt-1 text-amber-400">Note: You haven't set an AI provider API key yet. Enter and save your API key above.</p>
                       )}
                     </div>
                   </div>
