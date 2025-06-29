@@ -1,24 +1,41 @@
 import React, { useState, useEffect } from 'react'
-import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink } from 'lucide-react'
+import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink, Cpu, Thermometer, Zap } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { ApiKeyModal } from '../../components/api/ApiKeyModal'
 import { ApiDocsModal } from '../../components/api/ApiDocsModal'
-import { CodeGeneratorModal } from '../../components/api/CodeGeneratorModal'
+import { PromptSelectorModal } from '../../components/api/PromptSelectorModal'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
+
+interface Prompt {
+  id: string
+  title?: string
+  content: string
+  access: 'public' | 'private'
+  created_at: string
+  views?: number
+  like_count?: number
+  fork_count?: number
+  original_prompt_id?: string | null
+}
 
 export const ApiPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showApiKeyModal, setShowApiKeyModal] = useState(false)
   const [showApiDocsModal, setShowApiDocsModal] = useState(false)
-  const [showCodeGeneratorModal, setShowCodeGeneratorModal] = useState(false)
+  const [showPromptSelectorModal, setShowPromptSelectorModal] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [apiKey, setApiKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python'>('javascript')
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'anthropic' | 'google' | 'llama' | 'groq'>('openai')
+  const [selectedModel, setSelectedModel] = useState<string>('gpt-4o')
+  const [temperature, setTemperature] = useState(0.7)
+  const [maxTokens, setMaxTokens] = useState(1000)
+  const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null)
+  const [generatedCode, setGeneratedCode] = useState<string>('')
   
   const { user, loading: authLoading } = useAuthStore()
 
@@ -27,6 +44,34 @@ export const ApiPage: React.FC = () => {
       fetchApiKey()
     }
   }, [user])
+
+  // Update model when provider changes
+  useEffect(() => {
+    switch (selectedProvider) {
+      case 'openai':
+        setSelectedModel('gpt-4o')
+        break
+      case 'anthropic':
+        setSelectedModel('claude-3-opus-20240229')
+        break
+      case 'google':
+        setSelectedModel('gemini-pro')
+        break
+      case 'llama':
+        setSelectedModel('llama-3-70b-instruct')
+        break
+      case 'groq':
+        setSelectedModel('llama3-8b-8192')
+        break
+    }
+  }, [selectedProvider])
+
+  // Generate code when parameters change
+  useEffect(() => {
+    if (selectedPrompt) {
+      generateCode()
+    }
+  }, [selectedPrompt, selectedLanguage, selectedProvider, selectedModel, temperature, maxTokens, apiKey])
 
   const fetchApiKey = async () => {
     if (!user) return
@@ -59,6 +104,159 @@ export const ApiPage: React.FC = () => {
       setTimeout(() => setCopied(null), 2000)
     } catch (err) {
       console.error('Failed to copy:', err)
+    }
+  }
+
+  const handlePromptSelected = (prompt: Prompt) => {
+    setSelectedPrompt(prompt)
+    generateCode(prompt)
+  }
+
+  const generateCode = (promptObj = selectedPrompt) => {
+    if (!promptObj) return
+
+    let code = ''
+    if (selectedLanguage === 'javascript') {
+      code = generateJsCode(promptObj)
+    } else {
+      code = generatePythonCode(promptObj)
+    }
+
+    setGeneratedCode(code)
+  }
+
+  // Generate JavaScript code
+  const generateJsCode = (prompt: Prompt): string => {
+    // Extract variables from prompt content
+    const variableMatches = prompt.content.match(/\{\{([^}]+)\}\}/g) || []
+    const uniqueVariables = Array.from(new Set(variableMatches.map(match => match.replace(/[{}]/g, ''))))
+    
+    let variablesObj = '{}'
+    if (uniqueVariables.length > 0) {
+      variablesObj = `{\n    ${uniqueVariables.map(v => `${v}: "${v}Value"`).join(',\n    ')}\n  }`
+    }
+    
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+    
+    return `async function runPrompt() {
+  // Your promptby.me API key
+  const promptbyApiKey = "${apiKey || 'YOUR_PROMPTBY_ME_API_KEY'}";
+  
+  const response = await fetch("${supabaseUrl}/functions/v1/run-prompt-api", {
+    method: "POST",
+    headers: {
+      "Authorization": \`Bearer \${promptbyApiKey}\`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      prompt_id: "${prompt.id}",
+      variables: ${variablesObj},
+      api_key: "YOUR_AI_PROVIDER_API_KEY",
+      provider: "${selectedProvider}",
+      model: "${selectedModel}",
+      temperature: ${temperature},
+      max_tokens: ${maxTokens}
+    })
+  });
+  
+  const data = await response.json();
+  
+  if (data.success) {
+    console.log("AI Response:", data.output);
+    return data.output;
+  } else {
+    console.error("Error:", data.error);
+    throw new Error(data.error);
+  }
+}`
+  }
+
+  // Generate Python code
+  const generatePythonCode = (prompt: Prompt): string => {
+    // Extract variables from prompt content
+    const variableMatches = prompt.content.match(/\{\{([^}]+)\}\}/g) || []
+    const uniqueVariables = Array.from(new Set(variableMatches.map(match => match.replace(/[{}]/g, ''))))
+    
+    let variablesDict = '{}'
+    if (uniqueVariables.length > 0) {
+      variablesDict = `{\n        ${uniqueVariables.map(v => `"${v}": "${v}_value"`).join(',\n        ')}\n    }`
+    }
+    
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+    
+    return `import requests
+import json
+
+def run_prompt():
+    # Your promptby.me API key
+    promptby_api_key = "${apiKey || 'YOUR_PROMPTBY_ME_API_KEY'}"
+    
+    url = "${supabaseUrl}/functions/v1/run-prompt-api"
+    
+    headers = {
+        "Authorization": f"Bearer {promptby_api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "prompt_id": "${prompt.id}",
+        "variables": ${variablesDict},
+        "api_key": "YOUR_AI_PROVIDER_API_KEY",
+        "provider": "${selectedProvider}",
+        "model": "${selectedModel}",
+        "temperature": ${temperature},
+        "max_tokens": ${maxTokens}
+    }
+    
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+    
+    if data.get("success"):
+        print("AI Response:", data["output"])
+        return data["output"]
+    else:
+        print("Error:", data.get("error"))
+        raise Exception(data.get("error"))`
+  }
+
+  const getProviderModels = () => {
+    switch (selectedProvider) {
+      case 'openai':
+        return [
+          { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
+          { id: 'gpt-4', name: 'GPT-4' },
+          { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
+          { id: 'gpt-4o', name: 'GPT-4o' }
+        ]
+      case 'anthropic':
+        return [
+          { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' },
+          { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet' },
+          { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' }
+        ]
+      case 'google':
+        return [
+          { id: 'gemini-pro', name: 'Gemini Pro' },
+          { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
+          { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' }
+        ]
+      case 'llama':
+        return [
+          { id: 'llama-2-7b-chat', name: 'Llama 2 (7B) Chat' },
+          { id: 'llama-2-13b-chat', name: 'Llama 2 (13B) Chat' },
+          { id: 'llama-2-70b-chat', name: 'Llama 2 (70B) Chat' },
+          { id: 'llama-3-8b-instruct', name: 'Llama 3 (8B) Instruct' },
+          { id: 'llama-3-70b-instruct', name: 'Llama 3 (70B) Instruct' }
+        ]
+      case 'groq':
+        return [
+          { id: 'llama3-8b-8192', name: 'Llama 3 (8B)' },
+          { id: 'llama3-70b-8192', name: 'Llama 3 (70B)' },
+          { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' },
+          { id: 'gemma-7b-it', name: 'Gemma 7B' }
+        ]
+      default:
+        return []
     }
   }
 
@@ -164,7 +362,7 @@ export const ApiPage: React.FC = () => {
                   {loading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-                      <span className="text-zinc-400">Loading...</span>
+                      <span className="text-zinc-400">Loading API key...</span>
                     </div>
                   ) : apiKey ? (
                     <div className="flex items-center gap-3">
@@ -201,25 +399,50 @@ export const ApiPage: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="flex flex-col md:flex-row gap-6">
-                  <div className="flex-1">
-                    <button
-                      onClick={() => setShowCodeGeneratorModal(true)}
-                      className="w-full flex items-center justify-center gap-2 p-6 bg-zinc-800/30 border border-zinc-700/30 hover:border-indigo-500/50 hover:bg-zinc-800/50 rounded-xl transition-all duration-200"
-                    >
-                      <div className="text-center">
-                        <div className="w-12 h-12 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                          <Code size={24} className="text-indigo-400" />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column - Prompt Selection */}
+                  <div className="lg:col-span-1">
+                    {selectedPrompt ? (
+                      <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4 mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-white font-medium text-sm">
+                            {selectedPrompt.title || 'Selected Prompt'}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <div className={`px-2 py-0.5 rounded text-xs ${
+                              selectedPrompt.access === 'private' 
+                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            }`}>
+                              {selectedPrompt.access}
+                            </div>
+                          </div>
                         </div>
-                        <h3 className="text-white font-medium mb-2">Choose Your Prompt</h3>
-                        <p className="text-zinc-400 text-sm">Select from your saved prompts to generate API code</p>
+                        <p className="text-zinc-300 text-sm mb-2 line-clamp-2">
+                          {selectedPrompt.content.substring(0, 100)}...
+                        </p>
+                        <div className="text-xs text-zinc-500">
+                          ID: {selectedPrompt.id}
+                        </div>
                       </div>
+                    ) : (
+                      <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-6 text-center">
+                        <p className="text-zinc-400 mb-4">No prompt selected</p>
+                      </div>
+                    )}
+                    
+                    <button
+                      onClick={() => setShowPromptSelectorModal(true)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200"
+                    >
+                      {selectedPrompt ? 'Change Prompt' : 'Select Prompt'}
                     </button>
                   </div>
                   
-                  <div className="flex-1">
-                    <div className="h-full flex flex-col">
-                      <div className="mb-4">
+                  {/* Middle Column - Settings */}
+                  <div className="lg:col-span-1">
+                    <div className="space-y-4">
+                      <div>
                         <label className="block text-sm font-medium text-zinc-300 mb-2">
                           Programming Language
                         </label>
@@ -263,6 +486,92 @@ export const ApiPage: React.FC = () => {
                           <option value="llama">Llama</option>
                           <option value="groq">Groq</option>
                         </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-zinc-300 mb-2">
+                          Model
+                        </label>
+                        <select
+                          value={selectedModel}
+                          onChange={(e) => setSelectedModel(e.target.value)}
+                          className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                        >
+                          {getProviderModels().map(model => (
+                            <option key={model.id} value={model.id}>{model.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
+                          <Thermometer size={16} className="text-indigo-400" />
+                          Temperature: {temperature}
+                        </label>
+                        <input
+                          type="range"
+                          min="0"
+                          max="2"
+                          step="0.1"
+                          value={temperature}
+                          onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                          className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider"
+                        />
+                        <div className="flex justify-between text-xs text-zinc-500 mt-1">
+                          <span>Focused</span>
+                          <span>Creative</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
+                          <Zap size={16} className="text-indigo-400" />
+                          Max Tokens
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="8000"
+                          value={maxTokens}
+                          onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+                          className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Right Column - Generated Code */}
+                  <div className="lg:col-span-1">
+                    <div className="h-full flex flex-col">
+                      <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-sm font-medium text-zinc-300">
+                          Generated Code
+                        </h3>
+                        {generatedCode && (
+                          <button
+                            onClick={() => copyToClipboard(generatedCode, 'code')}
+                            className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                            title="Copy to clipboard"
+                          >
+                            {copied === 'code' ? (
+                              <CheckCircle size={16} className="text-emerald-400" />
+                            ) : (
+                              <Copy size={16} />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-4 overflow-auto">
+                        {selectedPrompt ? (
+                          <pre className="text-xs text-indigo-300 font-mono whitespace-pre-wrap">
+                            {generatedCode}
+                          </pre>
+                        ) : (
+                          <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
+                            <p>Select a prompt to generate code</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -310,10 +619,11 @@ export const ApiPage: React.FC = () => {
         onClose={() => setShowApiDocsModal(false)}
       />
       
-      {/* Code Generator Modal */}
-      <CodeGeneratorModal
-        isOpen={showCodeGeneratorModal}
-        onClose={() => setShowCodeGeneratorModal(false)}
+      {/* Prompt Selector Modal */}
+      <PromptSelectorModal
+        isOpen={showPromptSelectorModal}
+        onClose={() => setShowPromptSelectorModal(false)}
+        onSelectPrompt={handlePromptSelected}
       />
 
       <BoltBadge />
