@@ -578,6 +578,17 @@ useEffect(() => {
                     </div>
                     
                     <div className="flex items-center gap-2">
+                      
+                      {/* Invite Member Button - only show for admins */}
+                      {selectedProject && (currentUserRole === 'admin' || selectedProject.user_id === user.id) && (
+                        <button
+                          onClick={() => setShowInviteModal(true)}
+                          className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
+                        >
+                          <UserPlus size={14} className="text-indigo-400" />
+                          <span>Invite</span>
+                        </button>
+                      )}
                       {/* Team Members Display - only show if project exists */}
                       {selectedProject && (
                         <>
@@ -598,16 +609,6 @@ useEffect(() => {
                             </button>
                           )}
                         </>
-                      )}
-                      {/* Invite Member Button - only show for admins */}
-                      {selectedProject && (currentUserRole === 'admin' || selectedProject.user_id === user.id) && (
-                        <button
-                          onClick={() => setShowInviteModal(true)}
-                          className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
-                        >
-                          <UserPlus size={14} className="text-indigo-400" />
-                          <span>Invite</span>
-                        </button>
                       )}
                     </div>
                   </div>
