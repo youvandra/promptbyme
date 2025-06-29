@@ -782,6 +782,7 @@ useEffect(() => {
           setSelectedNode(null)
         }}
         node={selectedNode}
+        currentUserRole={currentUserRole}
         onSave={handleNodeSave}
       />
 

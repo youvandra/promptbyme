@@ -122,6 +122,16 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                     No content defined
                   </div>
                 )}
+                
+                {/* Show assignee if present */}
+                {node.metadata?.assignTo && (
+                  <div className="mt-4 flex items-center gap-2 text-sm">
+                    <span className="text-zinc-400">Assigned to:</span>
+                    <span className="text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-md">
+                      {node.metadata.assignTo}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

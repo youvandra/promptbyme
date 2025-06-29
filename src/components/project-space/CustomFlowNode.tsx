@@ -62,6 +62,13 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           <div className="text-white font-medium text-sm truncate flex-1">
             {data.label || data.title}
           </div>
+          
+          {/* Show assignee if present */}
+          {data.nodeData.metadata?.assignTo && (
+            <div className="mt-2 text-xs text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-md inline-block">
+              Assigned to: {data.nodeData.metadata.assignTo}
+            </div>
+          )}
         </div>
         
         <div className="text-zinc-300 text-xs line-clamp-3 break-words overflow-y-auto flex-1">

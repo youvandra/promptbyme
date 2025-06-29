@@ -7,6 +7,7 @@ interface NodeEditorModalProps {
   isOpen: boolean
   onClose: () => void
   node: FlowNode | null
+  currentUserRole?: string | null
   onSave: (nodeId: string, updates: Partial<FlowNode>) => Promise<void>
 }
 
@@ -41,16 +42,19 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
   isOpen,
   onClose,
   node,
+  currentUserRole,
   onSave
 }) => {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [assignTo, setAssignTo] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (node && isOpen) {
       setTitle(node.title)
       setContent(node.content)
+      setAssignTo(node.metadata?.assignTo || '')
     }
   }, [node, isOpen])
 
@@ -61,7 +65,11 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
     try {
       await onSave(node.id, {
         title: title.trim(),
-        content: content.trim()
+        content: content.trim(),
+        metadata: {
+          ...node.metadata,
+          assignTo: assignTo.trim() || undefined
+        }
       })
       onClose()
     } catch (error) {
@@ -127,6 +135,22 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
               autoFocus
             />
           </div>
+          
+          {/* Assign To - Only visible for admins */}
+          {currentUserRole === 'admin' && (
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Assign To <span className="text-zinc-500">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={assignTo}
+                onChange={(e) => setAssignTo(e.target.value)}
+                placeholder="Enter assignee name"
+                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+              />
+            </div>
+          )}
 
           {/* Content */}
           <div>
