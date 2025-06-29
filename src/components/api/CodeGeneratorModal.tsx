@@ -985,7 +985,13 @@ def run_flow():
                           <div className="relative">
                             <input
                               type={showAiProviderKey ? "text" : "password"}
-                              value={aiProviderApiKey || ''}
+                              value={
+                                showAiProviderKey
+                                  ? aiProviderApiKey
+                                  : aiProviderApiKey
+                                    ? aiProviderApiKey.slice(0, 4) + "••••••" + aiProviderApiKey.slice(-4)
+                                    : ''
+                              }
                               onChange={(e) => setAiProviderApiKey(e.target.value)}
                               placeholder={`Enter your ${selectedProvider} API key`}
                               className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
