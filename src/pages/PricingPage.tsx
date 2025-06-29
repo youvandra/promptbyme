@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import * as Purchases from '@revenuecat/purchases-js';
+import Purchases from '@revenuecat/purchases-js';
 import { Check, X, HelpCircle, ArrowRight, Zap, XCircle } from 'lucide-react';
 import { Section } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
@@ -14,95 +14,23 @@ export const PricingPage: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const [offerings, setOfferings] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
   // Initialize RevenueCat SDK
   useEffect(() => {
     if (user) {
       try {
         // Configure RevenueCat with the user's ID as the appUserId
-        const purchasesInstance = Purchases.getSharedInstance();
-        purchasesInstance.configure({
+        Purchases.configure({
           apiKey: 'rcb_utECfCCZVOJKVPQcrykYAIchIDaO',
-          appUserId: user.id
+          appUserId: user.id,
         });
         
         console.log('RevenueCat SDK initialized successfully');
-        
-        // Fetch offerings
-        fetchOfferings();
       } catch (error) {
         console.error('Failed to initialize RevenueCat SDK:', error);
-        setError('Failed to initialize payment system. Please try again later.');
       }
     }
   }, [user]);
-  
-  // Function to fetch offerings from RevenueCat
-  const fetchOfferings = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const purchasesInstance = Purchases.getSharedInstance();
-      const offerings = await purchasesInstance.getOfferings();
-      
-      if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
-        setOfferings(offerings.current);
-        console.log('Offerings fetched successfully:', offerings.current);
-      } else {
-        setError('No subscription packages available at this time.');
-      }
-    } catch (e) {
-      console.error('Error fetching offerings:', e);
-      setError('Failed to load subscription options. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Function to display packages
-  const displayPackages = (packages: any[]) => {
-    return packages.map((pkg, index) => {
-      const product = pkg.product;
-      return {
-        ...plans[index],
-        monthlyPrice: product.price,
-        annualPrice: product.price * 10, // Assuming annual is 10x monthly for this example
-        productIdentifier: product.identifier
-      };
-    });
-  };
-  
-  // Function to handle purchase
-  const handlePurchase = async (productIdentifier: string) => {
-    if (!user) {
-      // Redirect to login or show login modal
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      const purchasesInstance = Purchases.getSharedInstance();
-      const { customerInfo } = await purchasesInstance.purchaseProduct(productIdentifier);
-      
-      if (customerInfo.entitlements.active['premium']) {
-        // User has active premium entitlement
-        console.log('Purchase successful!');
-        // Update UI or redirect user
-      }
-    } catch (e: any) {
-      if (!e.userCancelled) {
-        setError(`Purchase failed: ${e.message}`);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
   
   // Pricing plans
   const plans = [
@@ -423,27 +351,11 @@ export const PricingPage: React.FC = () => {
       <Section className="bg-gradient-to-b from-zinc-950 to-zinc-900">
         <GlassPanel className="p-8 md:p-12 max-w-4xl mx-auto text-center" glowEffect>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Upgrade Your Experience?
+            Ready to Get Started?
           </h2>
           <p className="text-zinc-300 text-lg mb-8 max-w-2xl mx-auto">
-            Join thousands of users creating and sharing powerful AI prompts with our premium features.
+            Choose the plan that's right for you and start creating beautiful, responsive websites today.
           </p>
-          
-          {/* Display error message if any */}
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 max-w-lg mx-auto">
-              <p className="text-red-300 text-sm">{error}</p>
-            </div>
-          )}
-          
-          {/* Loading indicator */}
-          {loading && (
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="w-5 h-5 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin" />
-              <span className="text-indigo-300">Loading subscription options...</span>
-            </div>
-          )}
-          
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" to="/contact">
               Get Started
