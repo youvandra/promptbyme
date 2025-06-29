@@ -82,11 +82,9 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         </div>
         
         {/* Node Content */}
-        {data.content && (
-          <div className="text-xs text-zinc-300 mt-2 flex-1 whitespace-pre-wrap w-full">
-            {data.content.length > 150 ? `${data.content.substring(0, 150)}...` : data.content}
-          </div>
-        )}
+        <div className="text-xs text-zinc-300 mt-2 whitespace-pre-wrap w-full max-h-[80px] overflow-hidden">
+          {data.content ? (data.content.length > 150 ? `${data.content.substring(0, 150)}...` : data.content) : ''}
+        </div>
       </motion.div>
       
       {/* Output Handle (bottom) */}
