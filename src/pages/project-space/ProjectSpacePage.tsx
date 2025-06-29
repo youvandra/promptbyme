@@ -89,6 +89,7 @@ export const ProjectSpacePage: React.FC = () => {
   const { 
     projects,
     selectedProject,
+    projectMembers,
     currentUserRole,
     loading,
     fetchProjects,
@@ -185,6 +186,7 @@ export const ProjectSpacePage: React.FC = () => {
          nodeData: node,
          type: node.type,
           activeNodeId: activeNodeId,
+        projectMembers: projectMembers,
          onEdit: (nodeId: string) => {
            const node = selectedProject?.nodes?.find(n => n.id === nodeId)
            if (node) {
@@ -783,6 +785,7 @@ useEffect(() => {
         }}
         node={selectedNode}
         currentUserRole={currentUserRole}
+        projectMembers={projectMembers}
         onSave={handleNodeSave}
       />
 
@@ -794,6 +797,7 @@ useEffect(() => {
           setSelectedNode(null)
         }}
         node={selectedNode}
+        projectMembers={projectMembers}
         onEdit={(nodeId) => {
           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
           if (node) {

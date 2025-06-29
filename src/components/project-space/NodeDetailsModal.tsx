@@ -7,6 +7,7 @@ interface NodeDetailsModalProps {
   isOpen: boolean
   onClose: () => void
   node: FlowNode | null
+  projectMembers?: ProjectMember[]
   onEdit?: (nodeId: string) => void
 }
 
@@ -41,6 +42,7 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
   isOpen,
   onClose,
   node,
+  projectMembers = [],
   onEdit
 }) => {
   if (!isOpen || !node) return null
@@ -128,7 +130,13 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                   <div className="mt-4 flex items-center gap-2 text-sm">
                     <span className="text-zinc-400">Assigned to:</span>
                     <span className="text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-md">
-                      {node.metadata.assignTo}
+                      {(() => {
+                        const assignedUserId = node.metadata.assignTo;
+                        const assignedMember = projectMembers.find(m => m.user_id === assignedUserId);
+                        return assignedMember ? 
+                          (assignedMember.display_name || assignedMember.email) : 
+                          'Unknown';
+                      })()}
                     </span>
                   </div>
                 )}

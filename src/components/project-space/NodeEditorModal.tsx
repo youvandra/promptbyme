@@ -8,6 +8,7 @@ interface NodeEditorModalProps {
   onClose: () => void
   node: FlowNode | null
   currentUserRole?: string | null
+  projectMembers?: ProjectMember[]
   onSave: (nodeId: string, updates: Partial<FlowNode>) => Promise<void>
 }
 
@@ -43,6 +44,7 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
   onClose,
   node,
   currentUserRole,
+  projectMembers = [],
   onSave
 }) => {
   const [title, setTitle] = useState('')
@@ -142,13 +144,21 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
               <label className="block text-sm font-medium text-zinc-300 mb-2">
                 Assign To <span className="text-zinc-500">(optional)</span>
               </label>
-              <input
-                type="text"
+              <select
                 value={assignTo}
                 onChange={(e) => setAssignTo(e.target.value)}
-                placeholder="Enter assignee name"
                 className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-              />
+              >
+                <option value="">Unassigned</option>
+                {projectMembers
+                  .filter(member => member.status === 'accepted')
+                  .map(member => (
+                    <option key={member.user_id} value={member.user_id}>
+                      {member.display_name || member.email}
+                    </option>
+                  ))
+                }
+              </select>
             </div>
           )}
 

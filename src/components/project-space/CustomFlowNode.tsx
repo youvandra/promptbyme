@@ -64,9 +64,17 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           </div>
           
           {/* Show assignee if present */}
-          {data.nodeData.metadata?.assignTo && (
+          {data.nodeData.metadata?.assignTo && data.projectMembers && (
             <div className="mt-2 text-xs text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-md inline-block">
-              Assigned to: {data.nodeData.metadata.assignTo}
+              Assigned to: {
+                (() => {
+                  const assignedUserId = data.nodeData.metadata.assignTo;
+                  const assignedMember = data.projectMembers.find(m => m.user_id === assignedUserId);
+                  return assignedMember ? 
+                    (assignedMember.display_name || assignedMember.email) : 
+                    'Unknown';
+                })()
+              }
             </div>
           )}
         </div>
