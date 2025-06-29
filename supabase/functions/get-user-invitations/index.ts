@@ -17,6 +17,12 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
+    console.log('Environment check:', {
+      hasUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+      url: supabaseUrl ? `${supabaseUrl.substring(0, 20)}...` : 'missing'
+    })
+    
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('Missing environment variables:', {
         hasUrl: !!supabaseUrl,
@@ -47,6 +53,7 @@ Deno.serve(async (req) => {
           }
         }
       )
+      console.log('Supabase client created successfully')
     } catch (clientError) {
       console.error('Failed to create Supabase client:', clientError)
       return new Response(
@@ -64,6 +71,7 @@ Deno.serve(async (req) => {
     // Get the authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('No authorization header provided')
       return new Response(
         JSON.stringify({
           success: false,
@@ -80,6 +88,7 @@ Deno.serve(async (req) => {
     const token = authHeader.replace('Bearer ', '')
     let user
     try {
+      console.log('Attempting to verify user token...')
       const { data: { user: authUser }, error: authError } = await supabaseClient.auth.getUser(token)
       
       if (authError || !authUser) {
@@ -96,6 +105,7 @@ Deno.serve(async (req) => {
         )
       }
       user = authUser
+      console.log('User authenticated successfully:', user.id)
     } catch (authError) {
       console.error('Authentication failed:', authError)
       return new Response(
@@ -111,6 +121,7 @@ Deno.serve(async (req) => {
     }
 
     // Get all pending invitations for the user
+    console.log('Fetching invitations for user:', user.id)
     const { data: invitations, error: invitationsError } = await supabaseClient
       .from('project_members')
       .select(`
@@ -131,7 +142,7 @@ Deno.serve(async (req) => {
       .order('created_at', { ascending: false })
 
     if (invitationsError) {
-      console.error('Database error:', invitationsError)
+      console.error('Database error fetching invitations:', invitationsError)
       return new Response(
         JSON.stringify({
           success: false,
@@ -144,36 +155,58 @@ Deno.serve(async (req) => {
       )
     }
 
+    console.log('Invitations fetched:', invitations?.length || 0)
+
     // Get inviter details from users table
-    const inviterIds = invitations?.map(inv => inv.invited_by_user_id).filter(Boolean) || []
+    const inviterIds = (invitations || [])
+      .map(inv => inv?.invited_by_user_id)
+      .filter(id => id != null && id !== undefined)
+    
     let inviters = []
     
     if (inviterIds.length > 0) {
+      console.log('Fetching inviter details for:', inviterIds.length, 'users')
       const { data: inviterData, error: inviterError } = await supabaseClient
         .from('users')
         .select('id, display_name, email')
         .in('id', inviterIds)
 
-      if (!inviterError) {
+      if (inviterError) {
+        console.error('Error fetching inviter details:', inviterError)
+        // Don't fail the entire request, just log the error
+      } else {
         inviters = inviterData || []
+        console.log('Inviter details fetched:', inviters.length)
       }
     }
 
-    // Format the response
+    // Format the response with defensive programming
     const formattedInvitations = (invitations || []).map(invitation => {
-      const inviter = inviters.find(inv => inv.id === invitation.invited_by_user_id)
-      
-      return {
-        id: invitation.id,
-        project_id: invitation.project_id,
-        project_name: invitation.flow_projects?.name || 'Unknown Project',
-        project_description: invitation.flow_projects?.description || null,
-        role: invitation.role,
-        status: invitation.status,
-        invited_by: inviter?.display_name || inviter?.email || 'Unknown',
-        invited_at: invitation.created_at
+      try {
+        if (!invitation) {
+          console.warn('Null invitation found, skipping')
+          return null
+        }
+
+        const inviter = inviters.find(inv => inv?.id === invitation.invited_by_user_id)
+        
+        return {
+          id: invitation.id || '',
+          project_id: invitation.project_id || '',
+          project_name: invitation.flow_projects?.name || 'Unknown Project',
+          project_description: invitation.flow_projects?.description || null,
+          role: invitation.role || 'viewer',
+          status: invitation.status || 'pending',
+          invited_by: inviter?.display_name || inviter?.email || 'Unknown',
+          invited_at: invitation.created_at || new Date().toISOString()
+        }
+      } catch (formatError) {
+        console.error('Error formatting invitation:', formatError, invitation)
+        return null
       }
-    })
+    }).filter(invitation => invitation !== null) // Remove any null entries
+
+    console.log('Formatted invitations:', formattedInvitations.length)
 
     return new Response(
       JSON.stringify({
