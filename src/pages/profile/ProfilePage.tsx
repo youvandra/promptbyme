@@ -43,7 +43,6 @@ export const ProfilePage: React.FC = () => {
   
   const { user, loading: authLoading, initialize } = useAuthStore()
   const { prompts, fetchUserPrompts, createPrompt } = usePromptStore()
-  const { prompts, fetchUserPrompts } = usePromptStore()
 
   useEffect(() => {
     initialize()
