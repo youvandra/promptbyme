@@ -12,7 +12,8 @@ import {
   Check,
   Users,
   Clock,
-  Code
+  Code,
+  FolderOpen
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../store/authStore'
