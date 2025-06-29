@@ -89,6 +89,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                       )}
                       <span className="text-indigo-300">
                         {assignedMember.display_name || assignedMember.email}
+                        {assignedMember.user_id === data.currentUserId ? " (You)" : ""}
                       </span>
                     </div>
                   );
