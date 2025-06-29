@@ -96,7 +96,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
               </div>
             )}
           </div>
-          
+        </div>
 
         <div className="text-zinc-300 text-xs line-clamp-3 break-words overflow-y-auto flex-1 text-left">
           {data.content}
