@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { X, Copy, Thermometer, CheckCircle, Code, Search, Filter, Eye, EyeOff, GitFork, Heart, Wand2, ChevronDown, ChevronUp, Zap } from 'lucide-react'
+import { X, Search, Filter, Eye, EyeOff, GitFork, Heart, Plus, Thermometer, ChevronDown, ChevronUp, Zap, Copy, CheckCircle, AlertCircle, Server } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePromptStore } from '../../store/promptStore'
 import { useAuthStore } from '../../store/authStore'
-import { supabase } from '../../lib/supabase'
 import { useFlowStore } from '../../store/flowStore'
 
 interface Prompt {
@@ -622,7 +621,7 @@ def run_flow():
                         <Filter className="text-zinc-500" size={18} />
                         <select
                           value={filterAccess}
-                          onChange={(e) => setFilterAccess(e.target.value as 'all' | 'public' | 'private')}
+                          onChange={(e) => setFilterAccess(e.target.value as any)}
                           className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                         >
                           <option value="all">All Prompts</option>
@@ -654,7 +653,7 @@ def run_flow():
                         {filteredPrompts.map((prompt) => (
                           <motion.div
                             key={prompt.id}
-                            className={`group relative bg-zinc-800/30 border rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-indigo-500/50 hover:bg-zinc-800/50 ${
+                            className={`group relative bg-zinc-800/30 border rounded-lg p-4 cursor-pointer transition-all duration-200 hover:border-indigo-500/50 hover:bg-zinc-800/50 ${
                               selectedPrompt?.id === prompt.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-zinc-700/50'
                             }`}
                             onClick={() => handlePromptSelect(prompt)}
@@ -746,7 +745,7 @@ def run_flow():
                         {filteredFlows.map((flow) => (
                           <motion.div
                             key={flow.id}
-                            className={`group relative bg-zinc-800/30 border rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-purple-500/50 hover:bg-zinc-800/50 ${
+                            className={`group relative bg-zinc-800/30 border rounded-lg p-4 cursor-pointer transition-all duration-200 hover:border-purple-500/50 hover:bg-zinc-800/50 ${
                               selectedFlow?.id === flow.id ? 'border-purple-500 bg-purple-500/10' : 'border-zinc-700/50'
                             }`}
                             onClick={() => handleFlowSelect(flow)}
@@ -812,8 +811,8 @@ def run_flow():
                 className="h-full flex flex-col md:flex-row"
               >
                 {/* Left Column - Configuration */}
-                <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-zinc-800/50 flex flex-col overflow-y-auto">
-                  <div className="p-6 space-y-6">
+                <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-zinc-800/50 flex flex-col">
+                  <div className="p-6 space-y-6 flex-1 overflow-y-auto">
                     <button
                       onClick={handleBackToSelection}
                       className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors mb-4"
@@ -1035,7 +1034,7 @@ def run_flow():
                       </button>
                     </div>
                     
-                    <div className="bg-zinc-800/50 p-4 rounded-lg h-[calc(100vh-300px)] overflow-auto">
+                    <div className="bg-zinc-800/50 p-4 rounded-lg overflow-auto">
                       <pre className="text-sm text-indigo-300 font-mono">
                         <code>{generateCode()}</code>
                       </pre>
