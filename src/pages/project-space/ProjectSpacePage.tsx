@@ -156,6 +156,7 @@ export const ProjectSpacePage: React.FC = () => {
  // Convert flow nodes to ReactFlow nodes
  useEffect(() => {
    if (selectedProject?.nodes) {
+    const { user } = useAuthStore.getState();
      const flowNodes = selectedProject.nodes.map(node => {       
        // Define node color based on type
        let nodeColor;
@@ -187,6 +188,7 @@ export const ProjectSpacePage: React.FC = () => {
          type: node.type,
           activeNodeId: activeNodeId,
         projectMembers: projectMembers,
+        currentUserId: user?.id,
          onEdit: (nodeId: string) => {
            const node = selectedProject?.nodes?.find(n => n.id === nodeId)
            if (node) {

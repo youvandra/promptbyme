@@ -4,6 +4,19 @@ import { Edit3, GitBranch, Target, Upload, Trash2, Maximize2 } from 'lucide-reac
 import { motion, AnimatePresence } from 'framer-motion'
 import { FlowNode, ProjectMember } from '../../store/projectSpaceStore'
 
+interface NodeData {
+  label: string;
+  content: string;
+  nodeData: FlowNode;
+  type: string;
+  activeNodeId: string | null;
+  projectMembers?: ProjectMember[];
+  currentUserId?: string;
+  onEdit: (nodeId: string) => void;
+  onDelete: (nodeId: string) => void;
+  onViewDetails: (nodeId: string) => void;
+}
+
 const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
   // Get the appropriate background color based on node type
@@ -35,6 +48,9 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <motion.div 
         className={`w-[250px] h-[150px] ${getNodeColor()} backdrop-blur-sm border rounded-xl p-4 shadow-lg flex flex-col items-start ${
           selected ? 'ring-2 ring-white/50' : ''
+        } ${
+          data.nodeData.metadata?.assignTo === data.currentUserId ? 
+          'ring-2 ring-indigo-400/70 animate-pulse shadow-lg shadow-indigo-500/30' : ''
         }`}
         onDoubleClick={() => data.onViewDetails(id)}
         animate={{
