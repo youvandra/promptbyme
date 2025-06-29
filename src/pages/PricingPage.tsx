@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import * as Purchases from '@revenuecat/purchases-js';
+import Purchases from '@revenuecat/purchases-js';
 import { Check, X, HelpCircle, ArrowRight, Zap, XCircle } from 'lucide-react';
 import { Section } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
