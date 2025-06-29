@@ -21,7 +21,7 @@ import 'reactflow/dist/style.css'
 import { 
   Menu, 
   Plus, 
-  Trash2, 
+  Trash2,
   Settings, 
   Share2, 
   Users, 
@@ -35,6 +35,7 @@ import {
   Mail,
   Check,
   Link,
+  Info,
   Layers,
   Edit
 } from 'lucide-react'
@@ -46,6 +47,7 @@ import CustomFlowNode from '../../components/project-space/CustomFlowNode'
 import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
+import { ProjectLogsModal } from '../../components/project-space/ProjectLogsModal'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -62,6 +64,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showNodeDetails, setShowNodeDetails] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
+  const [showLogsModal, setShowLogsModal] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [selectedNodeForToolbar, setSelectedNodeForToolbar] = useState<FlowNode | null>(null)
   const [isConnectingNodes, setIsConnectingNodes] = useState(false)
@@ -573,11 +576,24 @@ useEffect(() => {
                     <div className="flex items-center gap-2">
                       {/* Team Members Display - only show if project exists */}
                       {selectedProject && (
-                        <TeamMembersDisplay 
-                          onClick={() => setShowMembersModal(true)}
-                          projectId={selectedProject.id}
-                          currentUserRole={currentUserRole}
-                        />
+                        <>
+                          <TeamMembersDisplay 
+                            onClick={() => setShowMembersModal(true)}
+                            projectId={selectedProject.id}
+                            currentUserRole={currentUserRole}
+                          />
+                          
+                          {/* Logs Button - only show for admins */}
+                          {selectedProject && (currentUserRole === 'admin' || selectedProject.user_id === user.id) && (
+                            <button
+                              onClick={() => setShowLogsModal(true)}
+                              className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
+                            >
+                              <Info size={14} className="text-indigo-400" />
+                              <span>Logs</span>
+                            </button>
+                          )}
+                        </>
                       )}
                       {/* Invite Member Button - only show for admins */}
                       {selectedProject && (currentUserRole === 'admin' || selectedProject.user_id === user.id) && (
@@ -720,6 +736,12 @@ useEffect(() => {
         onClose={() => setShowMembersModal(false)}
         projectId={selectedProject?.id || ''}
         currentUserRole={currentUserRole}
+      />
+      
+      <ProjectLogsModal
+        isOpen={showLogsModal}
+        onClose={() => setShowLogsModal(false)}
+        projectId={selectedProject?.id || ''}
       />
       
       <AnimatePresence>

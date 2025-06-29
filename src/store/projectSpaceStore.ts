@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import { supabase } from '../lib/supabase'
 
+
 export interface FlowNode {
   id: string
   project_id: string
@@ -100,6 +101,9 @@ interface ProjectSpaceState {
   removeProjectMember: (projectId: string, memberUserId: string) => Promise<void>
   fetchUserInvitations: () => Promise<void>
   manageInvitation: (projectId: string, action: 'accept' | 'decline') => Promise<void>
+  
+  // Logging
+  logProjectAction: (projectId: string, action: string, details?: Record<string, any>) => Promise<void>
   
   // Real-time subscriptions
   subscribeToProject: (projectId: string) => () => void
@@ -379,7 +383,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
 
         // Update selected project if it matches
-        const { selectedProject } = get()
+        const { selectedProject, logProjectAction } = get()
         if (selectedProject?.id === projectId) {
           set({
             selectedProject: {
@@ -388,6 +392,13 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
             }
           })
         }
+
+        // Log the action
+        await logProjectAction(projectId, 'Node Created', {
+          nodeId: node.id,
+          nodeType: type,
+          nodeTitle
+        })
 
         return transformedNode
       } catch (error) {
@@ -445,7 +456,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         }
 
         // Update selected project if it contains this node
-        const { selectedProject } = get()
+        const { selectedProject, logProjectAction } = get()
         if (selectedProject?.nodes) {
           // Transform node to include position object
           const transformedNode: FlowNode = {
@@ -462,6 +473,13 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
               ...selectedProject,
               nodes: updatedNodes
             }
+          })
+          
+          // Log the action
+          await logProjectAction(selectedProject.id, 'Node Updated', {
+            nodeId,
+            nodeTitle: updates.title || node?.title,
+            nodeType: node?.type
           })
         }
       } catch (error) {
@@ -480,8 +498,11 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (error) throw error
 
         // Update selected project if it contains this node
-        const { selectedProject } = get()
+        const { selectedProject, logProjectAction } = get()
         if (selectedProject?.nodes) {
+          // Find the node before deleting it to log details
+          const nodeToDelete = selectedProject.nodes.find(n => n.id === nodeId)
+          
           const updatedNodes = selectedProject.nodes.filter(n => n.id !== nodeId)
           const updatedConnections = selectedProject.connections?.filter(c => 
             c.source_node_id !== nodeId && c.target_node_id !== nodeId
@@ -494,6 +515,15 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
               connections: updatedConnections
             }
           })
+          
+          // Log the action
+          if (nodeToDelete) {
+            await logProjectAction(selectedProject.id, 'Node Deleted', {
+              nodeId,
+              nodeTitle: nodeToDelete.title,
+              nodeType: nodeToDelete.type
+            })
+          }
         }
       } catch (error) {
         console.error('Error deleting node:', error)
@@ -609,7 +639,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (error) throw error
 
         // Update selected project if it matches
-        const { selectedProject } = get()
+        const { selectedProject, logProjectAction } = get()
         if (selectedProject?.id === projectId) {
           set({
             selectedProject: {
@@ -618,6 +648,13 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
             }
           })
         }
+
+        // Log the action
+        await logProjectAction(projectId, 'Connection Created', {
+          connectionId: connection.id,
+          sourceNodeId,
+          targetNodeId
+        })
         
         return connection
       } catch (error) {
@@ -636,8 +673,11 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (error) throw error
 
         // Update selected project
-        const { selectedProject } = get()
+        const { selectedProject, logProjectAction } = get()
         if (selectedProject?.connections) {
+          // Find the connection before deleting it to log details
+          const connectionToDelete = selectedProject.connections.find(c => c.id === connectionId)
+          
           const updatedConnections = selectedProject.connections.filter(c => c.id !== connectionId)
           
           set({
@@ -646,6 +686,15 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
               connections: updatedConnections
             }
           })
+          
+          // Log the action
+          if (connectionToDelete) {
+            await logProjectAction(selectedProject.id, 'Connection Deleted', {
+              connectionId,
+              sourceNodeId: connectionToDelete.source_node_id,
+              targetNodeId: connectionToDelete.target_node_id
+            })
+          }
         }
       } catch (error) {
         console.error('Error deleting connection:', error)
@@ -697,6 +746,13 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (!data.success) {
           throw new Error(data.error || 'Failed to send invitation')
         }
+        
+        // Log the action
+        const { logProjectAction } = get()
+        await logProjectAction(projectId, 'Member Invited', {
+          email,
+          role
+        })
 
         // Refresh project members
         await get().fetchProjectMembers(projectId)
@@ -721,6 +777,13 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (!data.success) {
           throw new Error(data.error || 'Failed to update member role')
         }
+        
+        // Log the action
+        const { logProjectAction } = get()
+        await logProjectAction(projectId, 'Member Role Updated', {
+          memberUserId,
+          newRole
+        })
 
         // Refresh project members
         await get().fetchProjectMembers(projectId)
@@ -744,6 +807,12 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (!data.success) {
           throw new Error(data.error || 'Failed to remove project member')
         }
+        
+        // Log the action
+        const { logProjectAction } = get()
+        await logProjectAction(projectId, 'Member Removed', {
+          memberUserId
+        })
 
         // Refresh project members
         await get().fetchProjectMembers(projectId)
@@ -808,6 +877,19 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
       } catch (error) {
         console.error(`Error ${action}ing invitation:`, error)
         throw error
+      }
+    },
+    
+    logProjectAction: async (projectId: string, action: string, details: Record<string, any> = {}) => {
+      try {
+        await supabase.rpc('log_project_action', {
+          project_uuid: projectId,
+          action_text: action,
+          details_json: details
+        })
+      } catch (error) {
+        console.error('Error logging project action:', error)
+        // Don't throw error to prevent disrupting the main operation
       }
     },
     
