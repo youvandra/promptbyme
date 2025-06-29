@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe, Download, FileText } from 'lucide-react'
+import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe, FileText } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
@@ -358,33 +358,35 @@ export const ProfilePage: React.FC = () => {
               {/* Page Header */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-white">
+                  <h1 className="text-3xl font-bold text-white mb-2">
                     Profile
                   </h1>
                   <p className="text-zinc-400">
                     Manage your account and preferences
                   </p>
                 </div>
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  disabled={saving}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 ${
-                    isEditing ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'
-                  } disabled:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto btn-hover disabled:transform-none shadow-md hover:shadow-lg ${
-                    isEditing ? 'hover:shadow-red-500/20' : 'hover:shadow-indigo-500/20'
-                  }`}
-                >
-                  {isEditing ? <X size={16} /> : <Settings size={16} />}
-                  <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
-                </button>
-                
-                <button
-                  onClick={() => setShowImportExportModal(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto btn-hover shadow-md hover:shadow-lg hover:shadow-zinc-500/10"
-                >
-                  <FileText size={16} className="text-indigo-400" />
-                  <span>Import/Export</span>
-                </button>
+                <div className="flex items-center gap-3 self-start lg:self-auto">
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    disabled={saving}
+                    className={`inline-flex items-center gap-2 px-4 py-2.5 ${
+                      isEditing ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'
+                    } disabled:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover disabled:transform-none shadow-md hover:shadow-lg ${
+                      isEditing ? 'hover:shadow-red-500/20' : 'hover:shadow-indigo-500/20'
+                    }`}
+                  >
+                    {isEditing ? <X size={16} /> : <Settings size={16} />}
+                    <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowImportExportModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover shadow-md hover:shadow-lg hover:shadow-zinc-500/10"
+                  >
+                    <FileText size={16} className="text-indigo-400" />
+                    <span>Import/Export</span>
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-8">
