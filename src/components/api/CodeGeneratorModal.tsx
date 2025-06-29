@@ -812,8 +812,8 @@ def run_flow():
                 className="h-full flex flex-col md:flex-row"
               >
                 {/* Left Column - Configuration */}
-                <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-zinc-800/50 flex flex-col">
-                  <div className="p-6 border-b border-zinc-800/50">
+                <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-zinc-800/50 flex flex-col overflow-y-auto">
+                  <div className="p-6 space-y-6">
                     <button
                       onClick={handleBackToSelection}
                       className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors mb-4"
