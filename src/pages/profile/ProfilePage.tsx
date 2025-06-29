@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe } from 'lucide-react'
+import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe, Download, FileUp, FileDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
+import { usePromptStore } from '../../store/promptStore'
 import { usePromptStore } from '../../store/promptStore'
 import { useClipboard } from '../../hooks/useClipboard'
 import { supabase } from '../../lib/supabase'
@@ -30,6 +31,7 @@ export const ProfilePage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const importFileInputRef = useRef<HTMLInputElement>(null)
   
   const { copied, copyToClipboard } = useClipboard()
   
@@ -41,6 +43,7 @@ export const ProfilePage: React.FC = () => {
   })
   
   const { user, loading: authLoading, initialize } = useAuthStore()
+  const { prompts, fetchUserPrompts, createPrompt } = usePromptStore()
   const { prompts, fetchUserPrompts } = usePromptStore()
 
   useEffect(() => {
@@ -50,6 +53,11 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     if (user) {
       fetchUserPrompts(user.id)
+    }
+  }, [user, fetchUserPrompts])
+
+  useEffect(() => {
+    if (user) {
       loadUserProfile()
     }
   }, [user, fetchUserPrompts])
@@ -258,6 +266,126 @@ export const ProfilePage: React.FC = () => {
     }
   }
 
+  const handleExportPrompts = async () => {
+    if (!user || prompts.length === 0) {
+      setToast({ message: 'No prompts to export', type: 'error' })
+      return
+    }
+
+    try {
+      // Prepare prompts data for export
+      const exportData = prompts.map(prompt => ({
+        title: prompt.title,
+        content: prompt.content,
+        access: prompt.access,
+        tags: prompt.tags,
+        notes: prompt.notes,
+        output_sample: prompt.output_sample,
+        // Don't include media_urls as they're specific to the user's storage
+      }))
+
+      // Create a JSON blob
+      const jsonString = JSON.stringify(exportData, null, 2)
+      const blob = new Blob([jsonString], { type: 'application/json' })
+      
+      // Create a download link
+      const url = URL.createObjectURL(blob)
+      const date = new Date().toISOString().split('T')[0]
+      const filename = `promptby_me_export_${date}.json`
+      
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      
+      // Clean up
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      setToast({ message: `${exportData.length} prompts exported successfully`, type: 'success' })
+    } catch (error) {
+      console.error('Error exporting prompts:', error)
+      setToast({ message: 'Failed to export prompts', type: 'error' })
+    }
+  }
+
+  const handleImportPrompts = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user || !event.target.files || event.target.files.length === 0) return
+    
+    const file = event.target.files[0]
+    if (file.type !== 'application/json') {
+      setToast({ message: 'Please select a JSON file', type: 'error' })
+      return
+    }
+    
+    try {
+      const reader = new FileReader()
+      
+      reader.onload = async (e) => {
+        try {
+          const content = e.target?.result as string
+          const importedPrompts = JSON.parse(content)
+          
+          if (!Array.isArray(importedPrompts)) {
+            throw new Error('Invalid import format. Expected an array of prompts.')
+          }
+          
+          let successCount = 0
+          let errorCount = 0
+          
+          for (const promptData of importedPrompts) {
+            try {
+              // Validate required fields
+              if (!promptData.content) {
+                errorCount++
+                continue
+              }
+              
+              // Create the prompt
+              await createPrompt({
+                user_id: user.id,
+                title: promptData.title || null,
+                content: promptData.content,
+                access: promptData.access || 'private',
+                tags: promptData.tags || [],
+                notes: promptData.notes || null,
+                output_sample: promptData.output_sample || null,
+              })
+              
+              successCount++
+            } catch (promptError) {
+              console.error('Error importing prompt:', promptError)
+              errorCount++
+            }
+          }
+          
+          if (successCount > 0) {
+            setToast({ 
+              message: `Successfully imported ${successCount} prompts${errorCount > 0 ? ` (${errorCount} failed)` : ''}`, 
+              type: 'success' 
+            })
+          } else {
+            setToast({ message: 'Failed to import any prompts', type: 'error' })
+          }
+        } catch (parseError) {
+          console.error('Error parsing import file:', parseError)
+          setToast({ message: 'Invalid JSON format in import file', type: 'error' })
+        }
+      }
+      
+      reader.readAsText(file)
+      
+      // Reset the file input
+      if (importFileInputRef.current) {
+        importFileInputRef.current.value = ''
+      }
+    } catch (error) {
+      console.error('Error importing prompts:', error)
+      setToast({ message: 'Failed to import prompts', type: 'error' })
+    }
+  }
+
   const handleCopyProfileLink = () => {
     if (!userProfile?.display_name) return
     const profileUrl = `${window.location.origin}/${userProfile.display_name}/`
@@ -363,10 +491,44 @@ export const ProfilePage: React.FC = () => {
                     Manage your account and preferences
                   </p>
                 </div>
+                
+                <div className="flex items-center gap-3">
+                  {/* Import/Export Buttons */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => importFileInputRef.current?.click()}
+                      className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-xl transition-all duration-200 text-sm"
+                      title="Import prompts from JSON file"
+                    >
+                      <FileUp size={16} className="text-indigo-400" />
+                      <span>Import</span>
+                    </button>
+                    
+                    <button
+                      onClick={handleExportPrompts}
+                      className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-xl transition-all duration-200 text-sm"
+                      title="Export prompts to JSON file"
+                    >
+                      <FileDown size={16} className="text-indigo-400" />
+                      <span>Export</span>
+                    </button>
+                    
+                    <input
+                      ref={importFileInputRef}
+                      type="file"
+                      accept="application/json"
+                      onChange={handleImportPrompts}
+                      className="hidden"
+                    />
+                  </h1>
+                  <p className="text-zinc-400">
+                    Manage your account and preferences
+                  </p>
+                </div>
                 <button
                   onClick={() => setIsEditing(!isEditing)}
                   disabled={saving}
-                  className={`inline-flex items-center gap-2 px-4 py-2 ${
+                  className={`inline-flex items-center gap-2 px-4 py-2 ml-2 ${
                     isEditing ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'
                   } disabled:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto btn-hover disabled:transform-none`}
                 >
