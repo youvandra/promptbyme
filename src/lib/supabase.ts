@@ -12,19 +12,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
-  },
-  global: {
-    fetch: (url, options = {}) => {
-      return fetch(url, {
-        ...options,
-        headers: {
-          ...options.headers,
-        }
-      }).catch(error => {
-        console.error('Supabase fetch error:', error)
-        throw new Error(`Network error: ${error.message}`)
-      })
-    }
   }
 })
 
