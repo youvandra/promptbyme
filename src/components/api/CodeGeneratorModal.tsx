@@ -52,6 +52,7 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
   const [temperature, setTemperature] = useState(0.7)
   const [maxTokens, setMaxTokens] = useState(1000)
   const [promptbyApiKey, setPromptbyApiKey] = useState<string | null>(null)
+  const [aiProviderApiKey, setAiProviderApiKey] = useState<string | null>(null)
   const [codeType, setCodeType] = useState<'prompt' | 'flow'>(initialCodeType)
   const [activeTab, setActiveTab] = useState<'select' | 'configure'>('select')
   
@@ -79,29 +80,44 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
       const url = import.meta.env.VITE_SUPABASE_URL || ''
       setSupabaseUrl(url)
       
-      // Fetch the user's promptby.me API key
-      fetchApiKey()
+      // Fetch the user's API keys
+      fetchApiKeys()
     }
   }, [isOpen, user, fetchUserPrompts, fetchFlows])
 
-  const fetchApiKey = async () => {
+  const fetchApiKeys = async () => {
     if (!user) return
     
     try {
-      const { data, error } = await supabase
+      // Fetch promptby.me API key
+      const { data: pbmKeyData, error: pbmKeyError } = await supabase
         .from('api_keys')
         .select('key')
         .eq('user_id', user.id)
         .eq('key_type', 'pbm_api_key')
         .maybeSingle()
 
-      if (!error && data) {
-        setPromptbyApiKey(data.key)
+      if (!pbmKeyError && pbmKeyData) {
+        setPromptbyApiKey(pbmKeyData.key)
       } else {
         setPromptbyApiKey(null)
       }
+
+      // Fetch AI provider API key
+      const { data: aiKeyData, error: aiKeyError } = await supabase
+        .from('api_keys')
+        .select('key')
+        .eq('user_id', user.id)
+        .eq('key_type', 'ai_provider_key')
+        .maybeSingle()
+
+      if (!aiKeyError && aiKeyData) {
+        setAiProviderApiKey(aiKeyData.key)
+      } else {
+        setAiProviderApiKey(null)
+      }
     } catch (error) {
-      console.error('Error fetching API key:', error)
+      console.error('Error fetching API keys:', error)
     }
   }
 
@@ -239,7 +255,7 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
     body: JSON.stringify({
       prompt_id: "${selectedPrompt.id}",
       variables: ${variablesObj},
-      api_key: "YOUR_AI_PROVIDER_API_KEY",
+      api_key: "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
       provider: "${selectedProvider}",
       model: "${selectedModel}",
       temperature: ${temperature},
@@ -281,7 +297,7 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
     body: JSON.stringify({
       flow_id: "${selectedFlow.id}",
       variables: ${variablesObj},
-      api_key: "YOUR_AI_PROVIDER_API_KEY",
+      api_key: "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
       provider: "${selectedProvider}",
       model: "${selectedModel}",
       temperature: ${temperature},
@@ -328,7 +344,7 @@ def run_prompt():
     payload = {
         "prompt_id": "${selectedPrompt.id}",
         "variables": ${variablesDict},
-        "api_key": "YOUR_AI_PROVIDER_API_KEY",
+        "api_key": "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
         "provider": "${selectedProvider}",
         "model": "${selectedModel}",
         "temperature": ${temperature},
@@ -372,7 +388,7 @@ def run_flow():
     payload = {
         "flow_id": "${selectedFlow.id}",
         "variables": ${variablesDict},
-        "api_key": "YOUR_AI_PROVIDER_API_KEY",
+        "api_key": "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
         "provider": "${selectedProvider}",
         "model": "${selectedModel}",
         "temperature": ${temperature},
@@ -406,7 +422,7 @@ def run_flow():
   -d '{
     "prompt_id": "${selectedPrompt.id}",
     "variables": ${variablesJson},
-    "api_key": "YOUR_AI_PROVIDER_API_KEY",
+    "api_key": "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
     "provider": "${selectedProvider}",
     "model": "${selectedModel}",
     "temperature": ${temperature},
@@ -429,7 +445,7 @@ def run_flow():
   -d '{
     "flow_id": "${selectedFlow.id}",
     "variables": ${variablesJson},
-    "api_key": "YOUR_AI_PROVIDER_API_KEY",
+    "api_key": "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
     "provider": "${selectedProvider}",
     "model": "${selectedModel}",
     "temperature": ${temperature},
@@ -1027,7 +1043,9 @@ def run_flow():
                     
                     <div className="mt-4 text-xs text-zinc-500">
                       <p>This code snippet demonstrates how to call the {codeType === 'prompt' ? 'run-prompt-api' : 'run-prompt-flow-api'} endpoint.</p>
-                      <p>Remember to replace "YOUR_AI_PROVIDER_API_KEY" with your actual API key.</p>
+                      {!aiProviderApiKey && (
+                        <p className="mt-1 text-amber-400">Note: You haven't set an AI provider API key yet. Go to API Keys to set one up.</p>
+                      )}
                     </div>
                   </div>
                 </div>
