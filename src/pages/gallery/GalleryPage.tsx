@@ -120,18 +120,24 @@ export const GalleryPage: React.FC = () => {
     }
   }
 
-  const handleSavePrompt = async (id: string, title: string, content: string, access: 'public' | 'private') => {
+  const handleSavePrompt = async (id: string, title: string, content: string, access: 'public' | 'private', notes?: string | null, outputSample?: string | null, mediaUrls?: string[] | null) => {
     try {
       const currentPrompt = prompts.find(p => p.id === id)
       if (currentPrompt && (currentPrompt.content !== content || currentPrompt.title !== title)) {
-        await createVersion(id, title, content, 'Updated via modal')
+        await createVersion(id, title, content, 'Updated via modal', notes, outputSample, mediaUrls)
         setToast({ message: 'New version created successfully', type: 'success' })
       } else {
-        await updatePrompt(id, { title: title || null, access })
+        await updatePrompt(id, { 
+          title: title || null, 
+          access,
+          notes: notes || null,
+          output_sample: outputSample || null,
+          media_urls: mediaUrls || null
+        })
         setToast({ message: 'Prompt updated successfully', type: 'success' })
       }
       
-      const updatedPrompt = { ...selectedPrompt, title, content, access }
+      const updatedPrompt = { ...selectedPrompt, title, content, access, notes, output_sample: outputSample, media_urls: mediaUrls }
       setSelectedPrompt(updatedPrompt)
     } catch (error) {
       setToast({ message: 'Failed to update prompt', type: 'error' })

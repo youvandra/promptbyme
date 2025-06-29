@@ -27,7 +27,7 @@ interface PromptState {
   fetchVersionHistory: (promptId: string) => Promise<PromptVersion[]>
   createPrompt: (prompt: Omit<Prompt, 'id' | 'created_at' | 'views' | 'like_count' | 'fork_count'>) => Promise<void>
   updatePrompt: (id: string, updates: Partial<Omit<Prompt, 'id' | 'created_at'>>) => Promise<void>
-  createVersion: (promptId: string, title: string, content: string, commitMessage?: string) => Promise<void>
+  createVersion: (promptId: string, title: string, content: string, commitMessage?: string, notes?: string | null, outputSample?: string | null, mediaUrls?: string[] | null) => Promise<void>
   revertToVersion: (promptId: string, versionNumber: number) => Promise<void>
   forkPrompt: (originalPromptId: string, userId: string, title?: string) => Promise<void>
   deletePrompt: (id: string) => Promise<void>
@@ -285,7 +285,7 @@ export const usePromptStore = create<PromptState>()(
     }
   },
 
-  createVersion: async (promptId: string, title: string, content: string, commitMessage?: string) => {
+  createVersion: async (promptId: string, title: string, content: string, commitMessage?: string, notes?: string | null, outputSample?: string | null, mediaUrls?: string[] | null) => {
     try {
       // Get the current prompt to increment version numbers
       const { prompts, cache } = get()
@@ -329,7 +329,10 @@ export const usePromptStore = create<PromptState>()(
           title: title || null,
           content,
           current_version: newVersionNumber,
-          total_versions: newTotalVersions
+          total_versions: newTotalVersions,
+          notes: notes || null,
+          output_sample: outputSample || null,
+          media_urls: mediaUrls || null
         })
         .eq('id', promptId)
         .select()
