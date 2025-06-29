@@ -34,7 +34,7 @@ export const ApiPage: React.FC = () => {
   const [copied, setCopied] = useState<string | null>(null)
   const [apiKey, setApiKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python'>('javascript')
+  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python' | 'curl'>('javascript')
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'anthropic' | 'google' | 'llama' | 'groq'>('openai')
   const [selectedModel, setSelectedModel] = useState<string>('gpt-4o')
   const [temperature, setTemperature] = useState(0.7)
@@ -149,8 +149,10 @@ export const ApiPage: React.FC = () => {
     let code = ''
     if (selectedLanguage === 'javascript') {
       code = generateJsCode(promptObj)
-    } else {
+    } else if (selectedLanguage === 'python') {
       code = generatePythonCode(promptObj)
+    } else if (selectedLanguage === 'curl') {
+      code = generateCurlCode(promptObj)
     }
 
     setGeneratedCode(code)
@@ -250,6 +252,34 @@ def run_prompt():
     else:
         print("Error:", data.get("error"))
         raise Exception(data.get("error"))`
+  }
+
+  // Generate cURL code
+  const generateCurlCode = (prompt: Prompt): string => {
+    // Create variables JSON with user-provided values or placeholders
+    let variablesJson = '{}'
+    if (extractedVariables.length > 0) {
+      const variableEntries = extractedVariables.map(variable => {
+        const value = variableValues[variable] || `${variable}Value`
+        return `      "${variable}": "${value}"`
+      })
+      variablesJson = `{\n${variableEntries.join(',\n')}\n    }`
+    }
+    
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+    
+    return `curl -X POST "${supabaseUrl}/functions/v1/run-prompt-api" \\
+  -H "Authorization: Bearer ${apiKey || 'YOUR_PROMPTBY_ME_API_KEY'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "prompt_id": "${prompt.id}",
+    "variables": ${variablesJson},
+    "api_key": "YOUR_AI_PROVIDER_API_KEY",
+    "provider": "${selectedProvider}",
+    "model": "${selectedModel}",
+    "temperature": ${temperature},
+    "max_tokens": ${maxTokens}
+  }'`
   }
 
   const getProviderModels = () => {
@@ -520,10 +550,10 @@ def run_prompt():
                         <label className="block text-sm font-medium text-zinc-300 mb-2">
                           Programming Language
                         </label>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-3 gap-2">
                           <button
                             onClick={() => setSelectedLanguage('javascript')}
-                            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-all duration-200 ${
+                            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 text-sm ${
                               selectedLanguage === 'javascript' 
                                 ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' 
                                 : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
@@ -534,13 +564,24 @@ def run_prompt():
                           
                           <button
                             onClick={() => setSelectedLanguage('python')}
-                            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-all duration-200 ${
+                            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 text-sm ${
                               selectedLanguage === 'python' 
                                 ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' 
                                 : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
                             }`}
                           >
                             <span>Python</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => setSelectedLanguage('curl')}
+                            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 text-sm ${
+                              selectedLanguage === 'curl' 
+                                ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' 
+                                : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
+                            }`}
+                          >
+                            <span>cURL</span>
                           </button>
                         </div>
                       </div>
