@@ -65,16 +65,35 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           
           {/* Show assignee if present */}
           {data.nodeData.metadata?.assignTo && data.projectMembers && (
-            <div className="mt-2 text-xs text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-md inline-block">
-              Assigned to: {
-                (() => {
-                  const assignedUserId = data.nodeData.metadata.assignTo;
-                  const assignedMember = data.projectMembers.find(m => m.user_id === assignedUserId);
-                  return assignedMember ? 
-                    (assignedMember.display_name || assignedMember.email) : 
-                    'Unknown';
-                })()
-              }
+            <div className="mt-2 text-xs flex items-center gap-1.5 bg-indigo-500/10 px-2 py-1 rounded-md inline-block">
+              <span>Assigned to:</span>
+              {(() => {
+                const assignedUserId = data.nodeData.metadata.assignTo;
+                const assignedMember = data.projectMembers.find(m => m.user_id === assignedUserId);
+                
+                if (!assignedMember) return <span>Unknown</span>;
+                
+                return (
+                  <div className="flex items-center gap-1.5">
+                    {assignedMember.avatar_url ? (
+                      <img 
+                        src={assignedMember.avatar_url} 
+                        alt={assignedMember.display_name || assignedMember.email}
+                        className="w-4 h-4 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-4 h-4 bg-indigo-600/30 rounded-full flex items-center justify-center">
+                        <span className="text-[8px] text-indigo-300">
+                          {(assignedMember.display_name || assignedMember.email).charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-indigo-300">
+                      {assignedMember.display_name || assignedMember.email}
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>

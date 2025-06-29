@@ -127,17 +127,35 @@ export const NodeDetailsModal: React.FC<NodeDetailsModalProps> = ({
                 
                 {/* Show assignee if present */}
                 {node.metadata?.assignTo && (
-                  <div className="mt-4 flex items-center gap-2 text-sm">
+                  <div className="mt-4 flex items-center gap-2 text-sm bg-indigo-500/10 p-2 rounded-lg">
                     <span className="text-zinc-400">Assigned to:</span>
-                    <span className="text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-md">
-                      {(() => {
-                        const assignedUserId = node.metadata.assignTo;
-                        const assignedMember = projectMembers.find(m => m.user_id === assignedUserId);
-                        return assignedMember ? 
-                          (assignedMember.display_name || assignedMember.email) : 
-                          'Unknown';
-                      })()}
-                    </span>
+                    {(() => {
+                      const assignedUserId = node.metadata.assignTo;
+                      const assignedMember = projectMembers.find(m => m.user_id === assignedUserId);
+                      
+                      if (!assignedMember) return <span className="text-indigo-300">Unknown</span>;
+                      
+                      return (
+                        <div className="flex items-center gap-2">
+                          {assignedMember.avatar_url ? (
+                            <img 
+                              src={assignedMember.avatar_url} 
+                              alt={assignedMember.display_name || assignedMember.email}
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-6 h-6 bg-indigo-600/30 rounded-full flex items-center justify-center">
+                              <span className="text-xs text-indigo-300">
+                                {(assignedMember.display_name || assignedMember.email).charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
+                          <span className="text-indigo-300">
+                            {assignedMember.display_name || assignedMember.email}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
