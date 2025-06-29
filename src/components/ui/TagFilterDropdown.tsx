@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Tag, ChevronDown, X, Check } from 'lucide-react'
+import { Tag, ChevronDown, X, Check, Filter } from 'lucide-react'
 import { APP_TAGS, APP_TAG_CATEGORIES, getAppTagById, type AppTag } from '../../lib/appTags'
 
 interface TagFilterDropdownProps {
@@ -61,10 +61,10 @@ export const TagFilterDropdown: React.FC<TagFilterDropdownProps> = ({
       {/* Dropdown trigger */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white hover:border-zinc-600/50 transition-all duration-200"
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white hover:border-indigo-500/30 hover:bg-zinc-800 transition-all duration-200"
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Tag size={16} className="text-indigo-400 flex-shrink-0" />
+          <Filter size={16} className="text-indigo-400 flex-shrink-0" />
           {selectedTagObject ? (
             <div className="flex items-center gap-2">
               <selectedTagObject.icon 
@@ -84,7 +84,7 @@ export const TagFilterDropdown: React.FC<TagFilterDropdownProps> = ({
               e.stopPropagation()
               onTagChange(null)
             }}
-            className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded-full transition-colors"
+            className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded-full transition-colors transform hover:scale-110"
           >
             <X size={14} />
           </button>
@@ -125,11 +125,11 @@ export const TagFilterDropdown: React.FC<TagFilterDropdownProps> = ({
                 onClick={() => handleTagSelect(null)}
                 className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left transition-colors ${
                   selectedTag === null 
-                    ? 'bg-indigo-600/20 text-indigo-300' 
+                    ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' 
                     : 'text-zinc-300 hover:bg-zinc-800/50 hover:text-white'
                 }`}
               >
-                <Tag size={16} className="text-indigo-400" />
+                <Filter size={16} className="text-indigo-400" />
                 <span className="text-sm">All Apps</span>
                 {selectedTag === null && (
                   <Check size={14} className="ml-auto text-indigo-400" />
