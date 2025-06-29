@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Folder, ChevronDown, ChevronRight } from 'lucide-react'
+import { Folder, ChevronDown, ChevronRight, FolderPlus } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useFolderStore } from '../../store/folderStore'
 
@@ -14,12 +14,14 @@ interface Folder {
 interface PromptFolderSelectorProps {
   selectedFolderId: string | null
   onFolderSelect: (folderId: string | null) => void
+  onNewFolderClick?: () => void
   className?: string
 }
 
 export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
   selectedFolderId,
   onFolderSelect,
+  onNewFolderClick,
   className = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -67,6 +69,13 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
   const handleFolderSelect = (folderId: string | null) => {
     onFolderSelect(folderId)
     setIsOpen(false)
+  }
+
+  const handleNewFolderClick = () => {
+    if (onNewFolderClick) {
+      onNewFolderClick()
+      setIsOpen(false)
+    }
   }
 
   const renderFolder = (folder: Folder, level: number = 0) => {
@@ -145,7 +154,7 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
           ) : (
             <>
               <Folder size={16} className="text-zinc-400" />
-              <span className="text-sm text-zinc-400">Select</span>
+              <span className="text-sm text-zinc-400">Select Folder</span>
             </>
           )}
         </div>
@@ -179,6 +188,15 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
 
               {/* Folder tree */}
               {folderTree.map(folder => renderFolder(folder))}
+              
+              {/* New Folder option */}
+              <div
+                className="flex items-center gap-2 px-3 py-2 mt-2 border-t border-zinc-800 rounded-lg cursor-pointer transition-colors hover:bg-zinc-800/50 text-indigo-400 hover:text-indigo-300"
+                onClick={handleNewFolderClick}
+              >
+                <FolderPlus size={16} />
+                <span className="text-sm">New Folder</span>
+              </div>
             </div>
           </motion.div>
         )}
