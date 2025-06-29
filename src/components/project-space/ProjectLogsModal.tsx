@@ -49,7 +49,7 @@ export const ProjectLogsModal: React.FC<ProjectLogsModalProps> = ({
         .from('team_audit_log')
         .select(`
           *,
-          users!team_audit_log_user_id_fkey (
+          users (
             display_name,
             email
           )
