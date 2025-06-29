@@ -23,8 +23,7 @@ export const PricingPage: React.FC = () => {
     if (user) {
       try {
         // Configure RevenueCat with the user's ID as the appUserId
-        const purchasesInstance = Purchases.getSharedInstance();
-        purchasesInstance.configure({
+        Purchases.configure({
           apiKey: 'rcb_utECfCCZVOJKVPQcrykYAIchIDaO',
           appUserId: user.id
         });
@@ -48,8 +47,7 @@ export const PricingPage: React.FC = () => {
     setError(null);
     
     try {
-      const purchasesInstance = Purchases.getSharedInstance();
-      const offerings = await purchasesInstance.getOfferings();
+      const offerings = await Purchases.getOfferings();
       
       if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
         setOfferings(offerings.current);
@@ -87,8 +85,7 @@ export const PricingPage: React.FC = () => {
     
     setLoading(true);
     try {
-      const purchasesInstance = Purchases.getSharedInstance();
-      const { customerInfo } = await purchasesInstance.purchaseProduct(productIdentifier);
+      const { customerInfo } = await Purchases.purchaseProduct(productIdentifier);
       
       if (customerInfo.entitlements.active['premium']) {
         // User has active premium entitlement
