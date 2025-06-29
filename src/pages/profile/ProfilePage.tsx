@@ -367,6 +367,14 @@ export const ProfilePage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3 self-start lg:self-auto">
                   <button
+                    onClick={() => setShowImportExportModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover shadow-md hover:shadow-lg hover:shadow-zinc-500/10"
+                  >
+                    <FileText size={16} className="text-indigo-400" />
+                    <span>Import/Export</span>
+                  </button>
+                  
+                  <button
                     onClick={() => setIsEditing(!isEditing)}
                     disabled={saving}
                     className={`inline-flex items-center gap-2 px-4 py-2.5 ${
@@ -377,14 +385,6 @@ export const ProfilePage: React.FC = () => {
                   >
                     {isEditing ? <X size={16} /> : <Settings size={16} />}
                     <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setShowImportExportModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover shadow-md hover:shadow-lg hover:shadow-zinc-500/10"
-                  >
-                    <FileText size={16} className="text-indigo-400" />
-                    <span>Import/Export</span>
                   </button>
                 </div>
               </div>
