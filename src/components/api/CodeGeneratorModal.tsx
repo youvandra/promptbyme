@@ -526,6 +526,8 @@ def run_flow():
 
   if (!isOpen) return null
 
+  const selectedCount = selectedForComparison.size
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -547,7 +549,7 @@ def run_flow():
               </h2>
               <p className="text-sm text-zinc-400">
                 {activeTab === 'select' 
-                  ? `Select a ${codeType} to generate code` 
+                  ? `Select a ${codeType}` 
                   : selectedPrompt 
                     ? `Configuring code for prompt: ${selectedPrompt.title || 'Untitled'}` 
                     : `Configuring code for flow: ${selectedFlow?.name || 'Untitled'}`}
@@ -600,7 +602,7 @@ def run_flow():
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.2 }}
-                className="h-full flex flex-col"
+                className="h-full flex flex-col overflow-y-auto"
               >
                 {/* Search and Filter */}
                 <div className="p-6 border-b border-zinc-800/50 flex-shrink-0">
@@ -808,7 +810,7 @@ def run_flow():
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
-                className="h-full flex flex-col md:flex-row"
+                className="h-full flex flex-col md:flex-row overflow-hidden"
               >
                 {/* Left Column - Configuration */}
                 <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-zinc-800/50 flex flex-col">
@@ -1015,7 +1017,7 @@ def run_flow():
                 </div>
                 
                 {/* Right Column - Code Output */}
-                <div className="w-full md:w-1/2 flex flex-col">
+                <div className="w-full md:w-1/2 flex flex-col overflow-y-auto">
                   <div className="p-6 flex-1 overflow-y-auto">
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-white">
