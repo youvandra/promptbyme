@@ -13,7 +13,8 @@ import {
   Users,
   Clock,
   Code,
-  FolderOpen
+  FolderOpen,
+  Folder
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../store/authStore'
