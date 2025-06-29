@@ -3,9 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   Home,
   User, 
-  BookOpen,
-  FolderOpen,
-  Folder,
   LogOut, 
   X,
   Menu,
@@ -212,15 +209,15 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Mobile overlay */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
           onClick={onToggle}
         />
       )}
-
-      {/* Sidebar - FIXED positioning to prevent scrolling */}
+    
+      {/* Sidebar */}
       <div 
         id="sidebar"
         className={`
@@ -230,7 +227,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
           lg:translate-x-0
         `}
       >
-        {/* Header - Fixed at top */}
+        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-zinc-800/50 flex-shrink-0">
           <div className="flex items-center gap-3">
             <img 
@@ -250,7 +247,17 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
           </button>
         </div>
 
-        {/* Navigation - Scrollable content */}
+        {/* Mobile toggle button - fixed to the side when sidebar is closed */}
+        <button
+          onClick={onToggle}
+          className={`md:hidden fixed top-20 left-0 bg-indigo-600 text-white p-2 rounded-r-lg shadow-lg z-40 transition-opacity duration-300 ${
+            isOpen ? 'opacity-0' : 'opacity-100'
+          }`}
+        >
+          <Menu size={20} />
+        </button>
+
+        {/* Navigation */}
         <nav className="flex-1 p-4 overflow-y-auto">
           <div className="space-y-1">
             {navItems.map((item) => {
@@ -285,23 +292,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
         {user && (
           <div className="mt-auto border-t border-zinc-800/50 flex-shrink-0">
             {/* Playground Link - Above Sign Out */}
-            <div className="p-2 border-b border-zinc-800/30">
-              <Link
-                to="/docs"
-                onClick={onToggle}
-                className={`
-                  group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 w-full
-                  ${location.pathname === '/docs'
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' 
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
-                  }
-                `}
-              >
-                <BookOpen size={18} className={location.pathname === '/docs' ? 'text-white' : ''} />
-                <span className="font-medium text-sm">Docs</span>
-              </Link>
-            </div>
-            
             <div className="p-2 border-b border-zinc-800/30">
               <Link
                 to="/playground"
