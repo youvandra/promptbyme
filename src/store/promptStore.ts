@@ -53,7 +53,7 @@ export const usePromptStore = create<PromptState>()(
         .from('prompts')
         .select(`
           *,
-          users (
+          user:user_id (
             display_name,
             email
           )
@@ -87,7 +87,7 @@ export const usePromptStore = create<PromptState>()(
         .from('prompts')
         .select(`
           *,
-          users (
+          user:user_id (
             display_name,
             email
           )
@@ -127,7 +127,7 @@ export const usePromptStore = create<PromptState>()(
         .from('prompts')
         .select(`
           *,
-          users (
+          user:user_id (
             display_name,
             email
           )
