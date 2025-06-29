@@ -6,7 +6,6 @@ import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
-import { usePromptStore } from '../../store/promptStore'
 import { useClipboard } from '../../hooks/useClipboard'
 import { supabase } from '../../lib/supabase'
 
