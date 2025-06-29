@@ -7,6 +7,9 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
+  // Record start time for duration calculation
+  const startTime = Date.now()
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -53,6 +56,28 @@ Deno.serve(async (req) => {
       .single()
 
     if (apiKeyError || !apiKeyData) {
+      // Log the failed authentication attempt
+      try {
+        const endTime = Date.now()
+        const duration = endTime - startTime
+        
+        await supabaseClient
+          .from('api_call_logs')
+          .insert({
+            user_id: '00000000-0000-0000-0000-000000000000', // placeholder for failed auth
+            endpoint: req.url,
+            method: req.method,
+            status: 401,
+            request_body: { error: 'Request body not logged for failed auth' },
+            response_body: { success: false, error: 'Invalid API key' },
+            duration_ms: duration,
+            ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+            user_agent: req.headers.get('user-agent') || 'unknown'
+          })
+      } catch (logError) {
+        console.error('Failed to log API call:', logError)
+      }
+      
       return new Response(
         JSON.stringify({
           success: false,
@@ -67,18 +92,86 @@ Deno.serve(async (req) => {
 
     userId = apiKeyData.user_id
 
-    // Parse request body
-    const { 
-      prompt_id, 
-      variables = {}, 
-      api_key, 
-      provider = 'groq', 
-      model = 'llama3-8b-8192', 
-      temperature = 0.7, 
-      max_tokens = 1000 
-    } = await req.json()
+    // Parse request body and prepare for logging
+    let requestBody
+    let promptId, variables, apiKey, provider, model, temperature, maxTokens
     
-    if (!prompt_id) {
+    try {
+      requestBody = await req.json()
+      promptId = requestBody.prompt_id
+      variables = requestBody.variables || {}
+      apiKey = requestBody.api_key
+      provider = requestBody.provider || 'groq'
+      model = requestBody.model || 'llama3-8b-8192'
+      temperature = requestBody.temperature || 0.7
+      maxTokens = requestBody.max_tokens || 1000
+      
+      // Create a safe copy of the request body for logging (redact API key)
+      const logRequestBody = {
+        ...requestBody,
+        api_key: apiKey ? 'sk_...redacted...' : undefined
+      }
+      
+      // Store this for logging later
+      requestBody = logRequestBody
+    } catch (parseError) {
+      // Log the parsing error
+      try {
+        const endTime = Date.now()
+        const duration = endTime - startTime
+        
+        await supabaseClient
+          .from('api_call_logs')
+          .insert({
+            user_id: userId,
+            endpoint: req.url,
+            method: req.method,
+            status: 400,
+            request_body: { error: 'Invalid JSON in request body' },
+            response_body: { success: false, error: 'Invalid JSON in request body' },
+            duration_ms: duration,
+            ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+            user_agent: req.headers.get('user-agent') || 'unknown'
+          })
+      } catch (logError) {
+        console.error('Failed to log API call:', logError)
+      }
+      
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid JSON in request body'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
+    }
+    
+    if (!promptId) {
+      // Log the missing prompt_id error
+      try {
+        const endTime = Date.now()
+        const duration = endTime - startTime
+        
+        await supabaseClient
+          .from('api_call_logs')
+          .insert({
+            user_id: userId,
+            endpoint: req.url,
+            method: req.method,
+            status: 400,
+            request_body: requestBody,
+            response_body: { success: false, error: 'Prompt ID is required' },
+            duration_ms: duration,
+            ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+            user_agent: req.headers.get('user-agent') || 'unknown'
+          })
+      } catch (logError) {
+        console.error('Failed to log API call:', logError)
+      }
+      
       return new Response(
         JSON.stringify({
           success: false,
@@ -91,7 +184,29 @@ Deno.serve(async (req) => {
       )
     }
 
-    if (!api_key) {
+    if (!apiKey) {
+      // Log the missing API key error
+      try {
+        const endTime = Date.now()
+        const duration = endTime - startTime
+        
+        await supabaseClient
+          .from('api_call_logs')
+          .insert({
+            user_id: userId,
+            endpoint: req.url,
+            method: req.method,
+            status: 400,
+            request_body: requestBody,
+            response_body: { success: false, error: 'AI provider API key is required' },
+            duration_ms: duration,
+            ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+            user_agent: req.headers.get('user-agent') || 'unknown'
+          })
+      } catch (logError) {
+        console.error('Failed to log API call:', logError)
+      }
+      
       return new Response(
         JSON.stringify({
           success: false,
@@ -108,10 +223,32 @@ Deno.serve(async (req) => {
     const { data: prompt, error: promptError } = await supabaseClient
       .from('prompts')
       .select('*')
-      .eq('id', prompt_id)
+      .eq('id', promptId)
       .single()
 
     if (promptError) {
+      // Log the prompt not found error
+      try {
+        const endTime = Date.now()
+        const duration = endTime - startTime
+        
+        await supabaseClient
+          .from('api_call_logs')
+          .insert({
+            user_id: userId,
+            endpoint: req.url,
+            method: req.method,
+            status: 404,
+            request_body: requestBody,
+            response_body: { success: false, error: 'Prompt not found' },
+            duration_ms: duration,
+            ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+            user_agent: req.headers.get('user-agent') || 'unknown'
+          })
+      } catch (logError) {
+        console.error('Failed to log API call:', logError)
+      }
+      
       return new Response(
         JSON.stringify({
           success: false,
@@ -126,6 +263,28 @@ Deno.serve(async (req) => {
 
     // Check if user has access to the prompt
     if (prompt.access !== 'public' && prompt.user_id !== userId) {
+      // Log the access denied error
+      try {
+        const endTime = Date.now()
+        const duration = endTime - startTime
+        
+        await supabaseClient
+          .from('api_call_logs')
+          .insert({
+            user_id: userId,
+            endpoint: req.url,
+            method: req.method,
+            status: 403,
+            request_body: requestBody,
+            response_body: { success: false, error: 'Access denied: This prompt is private' },
+            duration_ms: duration,
+            ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+            user_agent: req.headers.get('user-agent') || 'unknown'
+          })
+      } catch (logError) {
+        console.error('Failed to log API call:', logError)
+      }
+      
       return new Response(
         JSON.stringify({
           success: false,
@@ -148,6 +307,32 @@ Deno.serve(async (req) => {
     // Check if there are any unfilled variables
     const remainingVariables = processedContent.match(/\{\{([^}]+)\}\}/g)
     if (remainingVariables) {
+      // Log the missing variables error
+      try {
+        const endTime = Date.now()
+        const duration = endTime - startTime
+        
+        await supabaseClient
+          .from('api_call_logs')
+          .insert({
+            user_id: userId,
+            endpoint: req.url,
+            method: req.method,
+            status: 400,
+            request_body: requestBody,
+            response_body: { 
+              success: false, 
+              error: 'Missing variables: ' + remainingVariables.join(', '),
+              missingVariables: remainingVariables.map(v => v.replace(/[{}]/g, ''))
+            },
+            duration_ms: duration,
+            ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+            user_agent: req.headers.get('user-agent') || 'unknown'
+          })
+      } catch (logError) {
+        console.error('Failed to log API call:', logError)
+      }
+      
       return new Response(
         JSON.stringify({
           success: false,
@@ -163,35 +348,75 @@ Deno.serve(async (req) => {
 
     // Call the AI API based on the provider
     let aiResponse
+    let responseStatus = 200
+    let responseBody
+    
     try {
       switch (provider.toLowerCase()) {
         case 'openai':
-          aiResponse = await callOpenAI(api_key, model, processedContent, temperature, max_tokens)
+          aiResponse = await callOpenAI(apiKey, model, processedContent, temperature, maxTokens)
           break
         case 'anthropic':
-          aiResponse = await callAnthropic(api_key, model, processedContent, temperature, max_tokens)
+          aiResponse = await callAnthropic(apiKey, model, processedContent, temperature, maxTokens)
           break
         case 'google':
-          aiResponse = await callGoogle(api_key, model, processedContent, temperature, max_tokens)
+          aiResponse = await callGoogle(apiKey, model, processedContent, temperature, maxTokens)
           break
         case 'llama':
-          aiResponse = await callLlama(api_key, model, processedContent, temperature, max_tokens)
+          aiResponse = await callLlama(apiKey, model, processedContent, temperature, maxTokens)
           break
         case 'groq':
-          aiResponse = await callGroq(api_key, model, processedContent, temperature, max_tokens)
+          aiResponse = await callGroq(apiKey, model, processedContent, temperature, maxTokens)
           break
         default:
           throw new Error(`Unsupported provider: ${provider}`)
       }
+      
+      // Prepare success response
+      responseBody = {
+        success: true,
+        output: aiResponse,
+        prompt: {
+          id: prompt.id,
+          title: prompt.title,
+          processed_content: processedContent
+        }
+      }
     } catch (error) {
+      // Prepare error response
+      responseStatus = 500
+      responseBody = {
+        success: false,
+        error: `AI API error: ${error.message}`
+      }
+      
+      // Log the AI API error
+      try {
+        const endTime = Date.now()
+        const duration = endTime - startTime
+        
+        await supabaseClient
+          .from('api_call_logs')
+          .insert({
+            user_id: userId,
+            endpoint: req.url,
+            method: req.method,
+            status: responseStatus,
+            request_body: requestBody,
+            response_body: responseBody,
+            duration_ms: duration,
+            ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+            user_agent: req.headers.get('user-agent') || 'unknown'
+          })
+      } catch (logError) {
+        console.error('Failed to log API call:', logError)
+      }
+      
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: `AI API error: ${error.message}`
-        }),
+        JSON.stringify(responseBody),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
+          status: responseStatus,
         }
       )
     }
@@ -201,31 +426,79 @@ Deno.serve(async (req) => {
       await supabaseClient
         .from('prompts')
         .update({ views: (prompt.views || 0) + 1 })
-        .eq('id', prompt_id)
+        .eq('id', promptId)
     } catch (error) {
       console.error('Failed to increment view count:', error)
       // Don't fail the request if view count update fails
     }
 
+    // Calculate duration and log the successful API call
+    const endTime = Date.now()
+    const duration = endTime - startTime
+    
+    try {
+      await supabaseClient
+        .from('api_call_logs')
+        .insert({
+          user_id: userId,
+          endpoint: req.url,
+          method: req.method,
+          status: responseStatus,
+          request_body: requestBody,
+          response_body: responseBody,
+          duration_ms: duration,
+          ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+          user_agent: req.headers.get('user-agent') || 'unknown'
+        })
+    } catch (logError) {
+      console.error('Failed to log API call:', logError)
+      // Don't fail the request if logging fails
+    }
+
     // Return the AI response
     return new Response(
-      JSON.stringify({
-        success: true,
-        output: aiResponse,
-        prompt: {
-          id: prompt.id,
-          title: prompt.title,
-          processed_content: processedContent
-        }
-      }),
+      JSON.stringify(responseBody),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+        status: responseStatus,
       }
     )
 
   } catch (error) {
     console.error('Error in run-prompt-api function:', error)
+    
+    // Log the unexpected error
+    try {
+      const endTime = Date.now()
+      const duration = endTime - startTime
+      
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        }
+      )
+      
+      await supabaseClient
+        .from('api_call_logs')
+        .insert({
+          user_id: '00000000-0000-0000-0000-000000000000', // placeholder for unknown user
+          endpoint: req.url,
+          method: req.method,
+          status: 500,
+          request_body: { error: 'Request body not available due to unexpected error' },
+          response_body: { success: false, error: (error && error.message) || 'An unexpected error occurred' },
+          duration_ms: duration,
+          ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+          user_agent: req.headers.get('user-agent') || 'unknown'
+        })
+    } catch (logError) {
+      console.error('Failed to log API call:', logError)
+    }
     
     return new Response(
       JSON.stringify({

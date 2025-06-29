@@ -14,6 +14,8 @@ interface ApiLog {
   response_body: any
   duration_ms: number
   user_id: string
+  ip_address?: string
+  user_agent?: string
 }
 
 interface ApiLogsModalProps {
@@ -47,14 +49,13 @@ export const ApiLogsModal: React.FC<ApiLogsModalProps> = ({
     
     setLoading(true)
     try {
-      // In a real implementation, this would fetch from a logs table
-      // For now, we'll create mock data
-      const mockLogs: ApiLog[] = generateMockLogs()
+      // Build query with filters
+      let query = supabase
+        .from('api_call_logs')
+        .select('*')
+        .eq('user_id', user.id)
       
-      // Apply filters
-      let filteredLogs = [...mockLogs]
-      
-      // Date filter
+      // Apply date filter
       if (dateRange !== 'all') {
         const now = new Date()
         let cutoffDate = new Date()
@@ -67,115 +68,37 @@ export const ApiLogsModal: React.FC<ApiLogsModalProps> = ({
           cutoffDate.setMonth(now.getMonth() - 1)
         }
         
-        filteredLogs = filteredLogs.filter(log => new Date(log.timestamp) >= cutoffDate)
+        query = query.gte('timestamp', cutoffDate.toISOString())
       }
       
-      // Status filter
+      // Apply status filter
       if (statusFilter !== 'all') {
-        filteredLogs = filteredLogs.filter(log => {
-          if (statusFilter === 'success') return log.status >= 200 && log.status < 300
-          if (statusFilter === 'error') return log.status >= 400
-          return true
-        })
+        if (statusFilter === 'success') {
+          query = query.gte('status', 200).lt('status', 300)
+        } else if (statusFilter === 'error') {
+          query = query.gte('status', 400)
+        }
       }
       
-      // Sort
-      filteredLogs.sort((a, b) => {
-        const dateA = new Date(a.timestamp).getTime()
-        const dateB = new Date(b.timestamp).getTime()
-        return sortOrder === 'newest' ? dateB - dateA : dateA - dateB
-      })
+      // Apply sort order
+      if (sortOrder === 'newest') {
+        query = query.order('timestamp', { ascending: false })
+      } else {
+        query = query.order('timestamp', { ascending: true })
+      }
       
-      setLogs(filteredLogs)
+      const { data, error } = await query
+      
+      if (error) {
+        throw error
+      }
+      
+      setLogs(data || [])
     } catch (error) {
       console.error('Error fetching API logs:', error)
     } finally {
       setLoading(false)
     }
-  }
-
-  const generateMockLogs = (): ApiLog[] => {
-    const endpoints = [
-      '/functions/v1/run-prompt-api',
-      '/functions/v1/run-prompt-flow'
-    ]
-    
-    const methods = ['POST']
-    
-    const statuses = [
-      200, 200, 200, 200, 200, // 5x success (more common)
-      400, 401, 403, 500 // 4x error (less common)
-    ]
-    
-    const mockLogs: ApiLog[] = []
-    
-    // Generate logs for the past 30 days
-    const now = new Date()
-    for (let i = 0; i < 20; i++) {
-      const date = new Date()
-      date.setDate(now.getDate() - Math.floor(Math.random() * 30))
-      date.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60), Math.floor(Math.random() * 60))
-      
-      const endpoint = endpoints[Math.floor(Math.random() * endpoints.length)]
-      const method = methods[Math.floor(Math.random() * methods.length)]
-      const status = statuses[Math.floor(Math.random() * statuses.length)]
-      const duration = Math.floor(Math.random() * 2000) + 100 // 100-2100ms
-      
-      const requestBody = {
-        prompt_id: '866a99ae-8a5f-4648-a5ef-65375b028639',
-        variables: {
-          'story title': 'The Lost Kingdom',
-          'story_title': 'The Lost Kingdom'
-        },
-        api_key: 'sk_...redacted...',
-        provider: 'groq',
-        model: 'llama3-70b-8192',
-        temperature: 0.7,
-        max_tokens: 1000
-      }
-      
-      let responseBody
-      if (status >= 200 && status < 300) {
-        responseBody = {
-          success: true,
-          output: "Once upon a time in the kingdom of Eldoria, there lived a young prince named Alaric. The kingdom was known for its vast libraries and ancient knowledge, but it had been facing a terrible curse for centuries...",
-          prompt: {
-            id: '866a99ae-8a5f-4648-a5ef-65375b028639',
-            title: 'Fantasy Story Generator',
-            processed_content: "Create a fantasy story with the title 'The Lost Kingdom'. Include magical elements, a hero's journey, and an unexpected twist."
-          }
-        }
-      } else if (status === 401) {
-        responseBody = {
-          success: false,
-          error: 'Invalid API key'
-        }
-      } else if (status === 400) {
-        responseBody = {
-          success: false,
-          error: 'Missing required parameter: prompt_id'
-        }
-      } else {
-        responseBody = {
-          success: false,
-          error: 'An unexpected error occurred'
-        }
-      }
-      
-      mockLogs.push({
-        id: `log-${i}-${Date.now()}`,
-        timestamp: date.toISOString(),
-        endpoint,
-        status,
-        method,
-        request_body: requestBody,
-        response_body: responseBody,
-        duration_ms: duration,
-        user_id: user?.id || ''
-      })
-    }
-    
-    return mockLogs
   }
 
   const toggleLogExpansion = (logId: string) => {
@@ -451,6 +374,25 @@ export const ApiLogsModal: React.FC<ApiLogsModalProps> = ({
                                 </pre>
                               </div>
                             </div>
+                            
+                            {/* Additional Info */}
+                            {(log.ip_address || log.user_agent) && (
+                              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-lg p-3">
+                                <h4 className="text-sm font-medium text-zinc-300 mb-2">Additional Info</h4>
+                                {log.ip_address && (
+                                  <div className="flex items-start gap-2 text-xs mb-1">
+                                    <span className="text-zinc-500 font-medium w-20">IP Address:</span>
+                                    <span className="text-zinc-300">{log.ip_address}</span>
+                                  </div>
+                                )}
+                                {log.user_agent && (
+                                  <div className="flex items-start gap-2 text-xs">
+                                    <span className="text-zinc-500 font-medium w-20">User Agent:</span>
+                                    <span className="text-zinc-300 break-words">{log.user_agent}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       )}
