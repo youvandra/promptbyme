@@ -366,12 +366,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({
       onClick: () => onEdit?.(id)
     },
     {
-      id: 'copy',
-      label: 'Copy Content',
-      icon: <Copy size={16} />,
-      onClick: handleCopyContent
-    },
-    {
       id: 'share',
       label: 'Share Link',
       icon: <Share2 size={16} />,
