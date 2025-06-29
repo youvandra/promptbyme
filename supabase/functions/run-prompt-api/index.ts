@@ -40,21 +40,46 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Verify the user's JWT token
+    // Extract token from Authorization header
     const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
-    
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Invalid authentication token'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
-        }
-      )
+    let userId: string | null = null
+
+    // First, try to authenticate with Supabase JWT
+    try {
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+      
+      if (!authError && user) {
+        userId = user.id
+      }
+    } catch (authError) {
+      // JWT authentication failed, try API key authentication
+      console.log('JWT authentication failed, trying API key authentication')
+    }
+
+    // If JWT authentication failed, try API key authentication
+    if (!userId) {
+      // Check if the token is a valid API key
+      const { data: apiKeyData, error: apiKeyError } = await supabaseClient
+        .from('api_keys')
+        .select('user_id')
+        .eq('key', token)
+        .eq('key_type', 'pbm_api_key')
+        .single()
+
+      if (apiKeyError || !apiKeyData) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Invalid authentication token or API key'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 401,
+          }
+        )
+      }
+
+      userId = apiKeyData.user_id
     }
 
     // Parse request body
@@ -115,7 +140,7 @@ Deno.serve(async (req) => {
     }
 
     // Check if user has access to the prompt
-    if (prompt.access !== 'public' && prompt.user_id !== user.id) {
+    if (prompt.access !== 'public' && prompt.user_id !== userId) {
       return new Response(
         JSON.stringify({
           success: false,

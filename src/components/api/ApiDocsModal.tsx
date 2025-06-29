@@ -104,18 +104,18 @@ export const ApiDocsModal: React.FC<ApiDocsModalProps> = ({
                   >
                     <div className="p-4 border-t border-zinc-800/50">
                       <p className="text-zinc-300 mb-4">
-                        All API requests require authentication using a Supabase JWT token. You need to include this token in the <code className="bg-zinc-800 px-1 py-0.5 rounded text-indigo-300">Authorization</code> header of your requests.
+                        All API requests require authentication. You can use either a Supabase JWT token or a promptby.me API key in the <code className="bg-zinc-800 px-1 py-0.5 rounded text-indigo-300">Authorization</code> header of your requests.
                       </p>
                       
                       <div className="bg-zinc-800/50 p-4 rounded-lg mb-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-zinc-400">Header</span>
+                          <span className="text-sm text-zinc-400">Option 1: Supabase JWT Token</span>
                           <button
-                            onClick={() => copyToClipboard('Authorization: Bearer YOUR_SUPABASE_JWT_TOKEN', 'auth-header')}
+                            onClick={() => copyToClipboard('Authorization: Bearer YOUR_SUPABASE_JWT_TOKEN', 'auth-header-jwt')}
                             className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded transition-colors"
                             title="Copy to clipboard"
                           >
-                            {copied === 'auth-header' ? (
+                            {copied === 'auth-header-jwt' ? (
                               <CheckCircle size={16} className="text-emerald-400" />
                             ) : (
                               <Copy size={16} />
@@ -127,13 +127,33 @@ export const ApiDocsModal: React.FC<ApiDocsModalProps> = ({
                         </pre>
                       </div>
                       
+                      <div className="bg-zinc-800/50 p-4 rounded-lg mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-zinc-400">Option 2: promptby.me API Key</span>
+                          <button
+                            onClick={() => copyToClipboard('Authorization: Bearer YOUR_PROMPTBY_ME_API_KEY', 'auth-header-api')}
+                            className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded transition-colors"
+                            title="Copy to clipboard"
+                          >
+                            {copied === 'auth-header-api' ? (
+                              <CheckCircle size={16} className="text-emerald-400" />
+                            ) : (
+                              <Copy size={16} />
+                            )}
+                          </button>
+                        </div>
+                        <pre className="text-sm text-indigo-300 font-mono">
+                          <code>Authorization: Bearer YOUR_PROMPTBY_ME_API_KEY</code>
+                        </pre>
+                      </div>
+                      
                       <p className="text-zinc-300 mb-2">
-                        To obtain a JWT token, you need to authenticate with Supabase using your application's authentication flow.
+                        To obtain a JWT token, you need to authenticate with Supabase using your application's authentication flow. Alternatively, you can generate a promptby.me API key in your account settings.
                       </p>
                       
                       <div className="bg-zinc-800/50 p-4 rounded-lg">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-zinc-400">JavaScript Example</span>
+                          <span className="text-sm text-zinc-400">JavaScript Example (JWT Token)</span>
                           <button
                             onClick={() => copyToClipboard(`import { createClient } from '@supabase/supabase-js'
 
@@ -216,7 +236,7 @@ const jwtToken = data.session.access_token`}</code>
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm text-zinc-400">Endpoint</span>
                           <button
-                            onClick={() => copyToClipboard('POST https://your-project.supabase.co/functions/v1/run-prompt-api', 'endpoint')}
+                            onClick={() => copyToClipboard(`POST ${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-prompt-api`, 'endpoint')}
                             className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded transition-colors"
                             title="Copy to clipboard"
                           >
@@ -228,7 +248,7 @@ const jwtToken = data.session.access_token`}</code>
                           </button>
                         </div>
                         <pre className="text-sm text-indigo-300 font-mono">
-                          <code>POST https://your-project.supabase.co/functions/v1/run-prompt-api</code>
+                          <code>POST {import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-prompt-api</code>
                         </pre>
                       </div>
                       
@@ -426,14 +446,14 @@ const jwtToken = data.session.access_token`}</code>
                     className="overflow-hidden"
                   >
                     <div className="p-4 border-t border-zinc-800/50">
-                      <h4 className="text-md font-semibold text-white mb-2">JavaScript/TypeScript</h4>
+                      <h4 className="text-md font-semibold text-white mb-2">JavaScript/TypeScript with JWT</h4>
                       
                       <div className="bg-zinc-800/50 p-4 rounded-lg mb-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm text-zinc-400">Example</span>
                           <button
                             onClick={() => copyToClipboard(`async function runPrompt() {
-  const response = await fetch('https://your-project.supabase.co/functions/v1/run-prompt-api', {
+  const response = await fetch('${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-prompt-api', {
     method: 'POST',
     headers: {
       'Authorization': \`Bearer \${supabaseAccessToken}\`,
@@ -459,11 +479,11 @@ const jwtToken = data.session.access_token`}</code>
   } else {
     console.error('Error:', data.error);
   }
-}`, 'js-example')}
+}`, 'js-example-jwt')}
                             className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded transition-colors"
                             title="Copy to clipboard"
                           >
-                            {copied === 'js-example' ? (
+                            {copied === 'js-example-jwt' ? (
                               <CheckCircle size={16} className="text-emerald-400" />
                             ) : (
                               <Copy size={16} />
@@ -472,10 +492,86 @@ const jwtToken = data.session.access_token`}</code>
                         </div>
                         <pre className="text-sm text-indigo-300 font-mono overflow-x-auto">
                           <code>{`async function runPrompt() {
-  const response = await fetch('https://your-project.supabase.co/functions/v1/run-prompt-api', {
+  const response = await fetch('${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-prompt-api', {
     method: 'POST',
     headers: {
       'Authorization': \`Bearer \${supabaseAccessToken}\`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      prompt_id: 'your-prompt-uuid',
+      variables: {
+        name: 'John',
+        company: 'Acme Inc.'
+      },
+      api_key: 'your-ai-provider-api-key',
+      provider: 'openai',
+      model: 'gpt-4o',
+      temperature: 0.7
+    })
+  });
+  
+  const data = await response.json();
+  
+  if (data.success) {
+    console.log('AI Response:', data.output);
+  } else {
+    console.error('Error:', data.error);
+  }
+}`}</code>
+                        </pre>
+                      </div>
+                      
+                      <h4 className="text-md font-semibold text-white mb-2">JavaScript/TypeScript with API Key</h4>
+                      
+                      <div className="bg-zinc-800/50 p-4 rounded-lg mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm text-zinc-400">Example</span>
+                          <button
+                            onClick={() => copyToClipboard(`async function runPrompt() {
+  const response = await fetch('${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-prompt-api', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer your-promptby-me-api-key',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      prompt_id: 'your-prompt-uuid',
+      variables: {
+        name: 'John',
+        company: 'Acme Inc.'
+      },
+      api_key: 'your-ai-provider-api-key',
+      provider: 'openai',
+      model: 'gpt-4o',
+      temperature: 0.7
+    })
+  });
+  
+  const data = await response.json();
+  
+  if (data.success) {
+    console.log('AI Response:', data.output);
+  } else {
+    console.error('Error:', data.error);
+  }
+}`, 'js-example-api')}
+                            className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded transition-colors"
+                            title="Copy to clipboard"
+                          >
+                            {copied === 'js-example-api' ? (
+                              <CheckCircle size={16} className="text-emerald-400" />
+                            ) : (
+                              <Copy size={16} />
+                            )}
+                          </button>
+                        </div>
+                        <pre className="text-sm text-indigo-300 font-mono overflow-x-auto">
+                          <code>{`async function runPrompt() {
+  const response = await fetch('${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-prompt-api', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer your-promptby-me-api-key',
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -512,10 +608,10 @@ const jwtToken = data.session.access_token`}</code>
 import json
 
 def run_prompt():
-    url = 'https://your-project.supabase.co/functions/v1/run-prompt-api'
+    url = '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-prompt-api'
     
     headers = {
-        'Authorization': f'Bearer {supabase_access_token}',
+        'Authorization': 'Bearer your-promptby-me-api-key',  # Or use JWT token
         'Content-Type': 'application/json'
     }
     
@@ -553,10 +649,10 @@ def run_prompt():
 import json
 
 def run_prompt():
-    url = 'https://your-project.supabase.co/functions/v1/run-prompt-api'
+    url = '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-prompt-api'
     
     headers = {
-        'Authorization': f'Bearer {supabase_access_token}',
+        'Authorization': 'Bearer your-promptby-me-api-key',  # Or use JWT token
         'Content-Type': 'application/json'
     }
     
@@ -614,7 +710,7 @@ def run_prompt():
                     <div className="p-4 border-t border-zinc-800/50">
                       <ul className="list-disc list-inside space-y-2 text-zinc-300">
                         <li>
-                          <strong className="text-white">API Keys:</strong> Never expose your AI provider API keys in client-side code. Always use the API from a secure backend environment.
+                          <strong className="text-white">API Keys:</strong> Never expose your AI provider API keys or promptby.me API keys in client-side code. Always use the API from a secure backend environment.
                         </li>
                         <li>
                           <strong className="text-white">JWT Tokens:</strong> Protect your Supabase JWT tokens and ensure they have appropriate expiration times.
