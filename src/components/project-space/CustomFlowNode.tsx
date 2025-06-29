@@ -114,13 +114,14 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             </div>
           )}
           
-          {/* Display node content */}
+          
+        </div>
+        {/* Display node content */}
           {data.content && (
             <div className="mt-3 text-xs text-zinc-300 overflow-hidden whitespace-pre-wrap max-h-16 bg-zinc-800/30 p-2 rounded border border-zinc-700/30">
               {data.content}
             </div>
           )}
-        </div>
       </motion.div>
       
       {/* Output Handle (bottom) */}
