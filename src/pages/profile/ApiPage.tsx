@@ -1,16 +1,18 @@
 import React, { useState } from 'react'
-import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink } from 'lucide-react'
+import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink, Wand2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { ApiKeyModal } from '../../components/api/ApiKeyModal'
 import { ApiDocsModal } from '../../components/api/ApiDocsModal'
+import { CodeGeneratorModal } from '../../components/api/CodeGeneratorModal'
 import { useAuthStore } from '../../store/authStore'
 
 export const ApiPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showApiKeyModal, setShowApiKeyModal] = useState(false)
   const [showApiDocsModal, setShowApiDocsModal] = useState(false)
+  const [showCodeGeneratorModal, setShowCodeGeneratorModal] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   
   const { user, loading: authLoading } = useAuthStore()
@@ -112,7 +114,7 @@ export const ApiPage: React.FC = () => {
               </div>
 
               {/* API Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
@@ -148,6 +150,25 @@ export const ApiPage: React.FC = () => {
                   >
                     <FileText size={16} />
                     <span>View Documentation</span>
+                  </button>
+                </div>
+                
+                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
+                      <Wand2 size={20} className="text-indigo-400" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-white">Generate Code</h2>
+                  </div>
+                  <p className="text-zinc-300 mb-4">
+                    Select a prompt and generate ready-to-use code snippets for API integration in your applications.
+                  </p>
+                  <button
+                    onClick={() => setShowCodeGeneratorModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200"
+                  >
+                    <Code size={16} />
+                    <span>Generate API Code</span>
                   </button>
                 </div>
               </div>
@@ -371,6 +392,12 @@ const jwtToken = data.session.access_token`}</code>
       <ApiDocsModal
         isOpen={showApiDocsModal}
         onClose={() => setShowApiDocsModal(false)}
+      />
+      
+      {/* Code Generator Modal */}
+      <CodeGeneratorModal
+        isOpen={showCodeGeneratorModal}
+        onClose={() => setShowCodeGeneratorModal(false)}
       />
 
       <BoltBadge />
