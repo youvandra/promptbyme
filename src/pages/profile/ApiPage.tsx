@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink, Cpu, Thermometer, Zap, Wand2, Eye, EyeOff } from 'lucide-react'
+import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink, Cpu, Thermometer, Zap, Wand2, Eye, EyeOff, Info } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { ApiKeyModal } from '../../components/api/ApiKeyModal'
 import { ApiDocsModal } from '../../components/api/ApiDocsModal'
+import { ApiLogsModal } from '../../components/api/ApiLogsModal'
 import { PromptSelectorModal } from '../../components/api/PromptSelectorModal'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
@@ -31,6 +32,7 @@ export const ApiPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showApiKeyModal, setShowApiKeyModal] = useState(false)
   const [showApiDocsModal, setShowApiDocsModal] = useState(false)
+  const [showApiLogsModal, setShowApiLogsModal] = useState(false)
   const [showPromptSelectorModal, setShowPromptSelectorModal] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [apiKey, setApiKey] = useState<string | null>(null)
@@ -445,13 +447,23 @@ def run_prompt():
                   </p>
                 </div>
                 
-                <button
-                  onClick={() => setShowApiDocsModal(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200 self-start lg:self-auto"
-                >
-                  <FileText size={16} />
-                  <span>View Documentation</span>
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowApiLogsModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-lg transition-all duration-200"
+                  >
+                    <Info size={16} />
+                    <span>View Logs</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowApiDocsModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200"
+                  >
+                    <FileText size={16} />
+                    <span>View Documentation</span>
+                  </button>
+                </div>
               </div>
 
               {/* API Key Section */}
@@ -793,6 +805,12 @@ def run_prompt():
       <ApiDocsModal
         isOpen={showApiDocsModal}
         onClose={() => setShowApiDocsModal(false)}
+      />
+      
+      {/* API Logs Modal */}
+      <ApiLogsModal
+        isOpen={showApiLogsModal}
+        onClose={() => setShowApiLogsModal(false)}
       />
       
       {/* Prompt Selector Modal */}
