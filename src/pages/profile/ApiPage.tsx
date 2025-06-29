@@ -326,7 +326,12 @@ def run_prompt():
                   API
                 </h1>
                 
-                <div className="w-6" />
+                <button
+                  onClick={() => setShowApiDocsModal(true)}
+                  className="p-1 text-zinc-400 hover:text-white transition-colors"
+                >
+                  <FileText size={20} />
+                </button>
               </div>
             </div>
           </header>
@@ -344,6 +349,14 @@ def run_prompt():
                     Integrate promptby.me into your applications
                   </p>
                 </div>
+                
+                <button
+                  onClick={() => setShowApiDocsModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200 self-start lg:self-auto"
+                >
+                  <FileText size={16} />
+                  <span>View Documentation</span>
+                </button>
               </div>
 
               {/* API Key Section */}
@@ -578,27 +591,7 @@ def run_prompt():
                 </div>
               </div>
 
-              {/* Documentation Link */}
-              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
-                      <FileText size={20} className="text-indigo-400" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold text-white">API Documentation</h2>
-                      <p className="text-zinc-400 text-sm">Detailed reference for the promptby.me API</p>
-                    </div>
-                  </div>
-                  
-                  <button
-                    onClick={() => setShowApiDocsModal(true)}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200"
-                  >
-                    View Documentation
-                  </button>
-                </div>
-              </div>
+              {/* Documentation Link - Removed from here and moved to header */}
             </div>
           </div>
         </div>
