@@ -312,7 +312,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                 <span className="font-medium text-sm">Playground</span>
               </Link>
             </div>
-            <div className="mt-auto border-t border-zinc-800/50 flex-shrink-0">
               
             {/* Pricing */}
             <div className="p-2 border-b border-zinc-800/30">
