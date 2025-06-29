@@ -90,7 +90,7 @@ export const GalleryPage: React.FC = () => {
       
       return matchesSearch && matchesFilter && matchesFolder && matchesTag
     })
-  }, [prompts, searchQuery, filterAccess, selectedFolderId])
+  }, [prompts, searchQuery, filterAccess, selectedFolderId, selectedAppTagFilter])
 
   // Memoize stats calculation
   const stats = React.useMemo(() => ({
