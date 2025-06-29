@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe } from 'lucide-react'
+import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe, Download, FileUp, FileDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
+import { usePromptStore } from '../../store/promptStore'
 import { usePromptStore } from '../../store/promptStore'
 import { useClipboard } from '../../hooks/useClipboard'
 import { supabase } from '../../lib/supabase'
@@ -30,6 +31,7 @@ export const ProfilePage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const importFileInputRef = useRef<HTMLInputElement>(null)
   
   const { copied, copyToClipboard } = useClipboard()
   
@@ -41,7 +43,7 @@ export const ProfilePage: React.FC = () => {
   })
   
   const { user, loading: authLoading, initialize } = useAuthStore()
-  const { prompts, fetchUserPrompts } = usePromptStore()
+  const { prompts, fetchUserPrompts, createPrompt } = usePromptStore()
 
   useEffect(() => {
     initialize()
@@ -255,6 +257,123 @@ export const ProfilePage: React.FC = () => {
       setToast({ message: error.message || 'Failed to update profile', type: 'error' })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleExportPrompts = async () => {
+    if (!user) return
+    
+    try {
+      // Ensure prompts are loaded
+      await fetchUserPrompts(user.id)
+      
+      // Format the data for export
+      const exportData = prompts.map(prompt => ({
+        title: prompt.title,
+        content: prompt.content,
+        access: prompt.access,
+        tags: prompt.tags,
+        notes: prompt.notes,
+        output_sample: prompt.output_sample,
+        media_urls: prompt.media_urls,
+        created_at: prompt.created_at
+      }))
+      
+      // Create a JSON blob
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      
+      // Create download link
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `prompts_backup_${new Date().toISOString().split('T')[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      
+      // Clean up
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      setToast({ message: 'Prompts exported successfully', type: 'success' })
+    } catch (error) {
+      console.error('Error exporting prompts:', error)
+      setToast({ message: 'Failed to export prompts', type: 'error' })
+    }
+  }
+
+  const handleImportPrompts = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user || !event.target.files || event.target.files.length === 0) return
+    
+    const file = event.target.files[0]
+    if (file.type !== 'application/json') {
+      setToast({ message: 'Please select a valid JSON file', type: 'error' })
+      return
+    }
+    
+    try {
+      const reader = new FileReader()
+      
+      reader.onload = async (e) => {
+        try {
+          const content = e.target?.result as string
+          const importedPrompts = JSON.parse(content)
+          
+          if (!Array.isArray(importedPrompts)) {
+            throw new Error('Invalid format: Expected an array of prompts')
+          }
+          
+          let successCount = 0
+          let errorCount = 0
+          
+          for (const promptData of importedPrompts) {
+            try {
+              await createPrompt({
+                user_id: user.id,
+                title: promptData.title || null,
+                content: promptData.content,
+                access: promptData.access || 'private',
+                tags: promptData.tags || [],
+                notes: promptData.notes || null,
+                output_sample: promptData.output_sample || null,
+                media_urls: promptData.media_urls || null
+              })
+              successCount++
+            } catch (error) {
+              console.error('Error importing prompt:', error)
+              errorCount++
+            }
+          }
+          
+          if (errorCount === 0) {
+            setToast({ message: `Successfully imported ${successCount} prompts`, type: 'success' })
+          } else {
+            setToast({ 
+              message: `Imported ${successCount} prompts with ${errorCount} errors`, 
+              type: errorCount < importedPrompts.length ? 'success' : 'error' 
+            })
+          }
+          
+          // Refresh prompts list
+          fetchUserPrompts(user.id)
+        } catch (error) {
+          console.error('Error parsing imported prompts:', error)
+          setToast({ message: 'Failed to parse imported prompts file', type: 'error' })
+        }
+      }
+      
+      reader.onerror = () => {
+        setToast({ message: 'Error reading file', type: 'error' })
+      }
+      
+      reader.readAsText(file)
+      
+      // Reset file input
+      if (importFileInputRef.current) {
+        importFileInputRef.current.value = ''
+      }
+    } catch (error) {
+      console.error('Error importing prompts:', error)
+      setToast({ message: 'Failed to import prompts', type: 'error' })
     }
   }
 
@@ -618,14 +737,42 @@ export const ProfilePage: React.FC = () => {
                           userProfile?.is_public_profile !== false ? 'bg-emerald-400' : 'bg-red-400'
                         }`} />
                         <span className={`text-sm font-medium ${
-                          userProfile?.is_public_profile !== false ? 'text-emerald-400' : 'text-red-400'
-                        }`}>
+                    disabled={saving || isEditing}
+                    className={`inline-flex items-center gap-2 px-4 py-2 flex-shrink-0 ${
                           {userProfile?.is_public_profile !== false ? 'Enabled' : 'Disabled'}
                         </span>
                       </div>
                     </div>
                   </div>
                   </div>
+                  
+                  {/* Export Prompts Button */}
+                  <button
+                    onClick={handleExportPrompts}
+                    disabled={saving || isEditing}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto btn-hover disabled:transform-none flex-shrink-0"
+                  >
+                    <FileDown size={16} />
+                    <span>Export Prompts</span>
+                  </button>
+                  
+                  {/* Import Prompts Button */}
+                  <button
+                    onClick={() => importFileInputRef.current?.click()}
+                    disabled={saving || isEditing}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto btn-hover disabled:transform-none flex-shrink-0"
+                  >
+                    <FileUp size={16} />
+                    <span>Import Prompts</span>
+                  </button>
+                  
+                  <input
+                    ref={importFileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportPrompts}
+                    className="hidden"
+                  />
                 </div>
               </div>
             </div>
