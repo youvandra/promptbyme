@@ -5,22 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FlowNode, ProjectMember } from '../../store/projectSpaceStore'
 
 const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
-  
-  // Get the appropriate icon based on node type
-  const getNodeIcon = () => {
-    switch (data.type) {
-      case 'input':
-        return <Zap size={16} className="text-purple-400" />
-      case 'prompt':
-        return <Edit3 size={16} className="text-blue-400" />
-      case 'condition':
-        return <GitBranch size={16} className="text-yellow-400" />
-      case 'output':
-        return <Target size={16} className="text-green-400" />
-      default:
-        return <Edit3 size={16} className="text-blue-400" />
-    }
-  }
 
   // Get the appropriate background color based on node type
   const getNodeColor = () => {
