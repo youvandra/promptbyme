@@ -14,7 +14,8 @@ import {
   Bell,
   Check,
   Users,
-  Clock
+  Clock,
+  Code
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../store/authStore'
@@ -154,6 +155,12 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       label: 'Prompt Flow',
       description: 'Sequential prompt chains'
     },
+    {
+      path: '/api',
+      icon: Code,
+      label: 'API',
+      description: 'Developer API access'
+    }
   ]
 
   const isActive = (path: string) => location.pathname === path
