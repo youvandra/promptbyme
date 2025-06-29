@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink, Cpu, Thermometer, Zap, Wand2 } from 'lucide-react'
+import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink, Cpu, Thermometer, Zap, Wand2, Eye, EyeOff } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -8,6 +8,7 @@ import { ApiDocsModal } from '../../components/api/ApiDocsModal'
 import { PromptSelectorModal } from '../../components/api/PromptSelectorModal'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
+import { useSecureStorage } from '../../hooks/useSecureStorage'
 
 interface Prompt {
   id: string
@@ -43,12 +44,17 @@ export const ApiPage: React.FC = () => {
   const [generatedCode, setGeneratedCode] = useState<string>('')
   const [extractedVariables, setExtractedVariables] = useState<string[]>([])
   const [variableValues, setVariableValues] = useState<Record<string, string>>({})
+  const [aiProviderApiKey, setAiProviderApiKey] = useState<string>('')
+  const [showApiProviderKey, setShowApiProviderKey] = useState(false)
+  const [savingApiKey, setSavingApiKey] = useState(false)
   
   const { user, loading: authLoading } = useAuthStore()
+  const { getSecureItem, setSecureItem } = useSecureStorage()
 
   useEffect(() => {
     if (user) {
       fetchApiKey()
+      loadAiProviderApiKey()
     }
   }, [user])
 
@@ -78,7 +84,7 @@ export const ApiPage: React.FC = () => {
     if (selectedPrompt) {
       generateCode()
     }
-  }, [selectedPrompt, selectedLanguage, selectedProvider, selectedModel, temperature, maxTokens, apiKey, variableValues])
+  }, [selectedPrompt, selectedLanguage, selectedProvider, selectedModel, temperature, maxTokens, apiKey, variableValues, aiProviderApiKey])
 
   const fetchApiKey = async () => {
     if (!user) return
@@ -101,6 +107,32 @@ export const ApiPage: React.FC = () => {
       console.error('Error fetching API key:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadAiProviderApiKey = async () => {
+    try {
+      const storedKey = await getSecureItem('ai_provider_api_key')
+      if (storedKey) {
+        setAiProviderApiKey(storedKey)
+      }
+    } catch (error) {
+      console.error('Failed to load AI provider API key:', error)
+    }
+  }
+
+  const saveAiProviderApiKey = async () => {
+    if (!aiProviderApiKey) return
+    
+    setSavingApiKey(true)
+    try {
+      await setSecureItem('ai_provider_api_key', aiProviderApiKey)
+      setCopied('ai-provider-key')
+      setTimeout(() => setCopied(null), 2000)
+    } catch (error) {
+      console.error('Failed to save AI provider API key:', error)
+    } finally {
+      setSavingApiKey(false)
     }
   }
 
@@ -185,7 +217,7 @@ export const ApiPage: React.FC = () => {
     body: JSON.stringify({
       prompt_id: "${prompt.id}",
       variables: ${variablesObj},
-      api_key: "YOUR_AI_PROVIDER_API_KEY",
+      api_key: "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
       provider: "${selectedProvider}",
       model: "${selectedModel}",
       temperature: ${temperature},
@@ -236,7 +268,7 @@ def run_prompt():
     payload = {
         "prompt_id": "${prompt.id}",
         "variables": ${variablesDict},
-        "api_key": "YOUR_AI_PROVIDER_API_KEY",
+        "api_key": "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
         "provider": "${selectedProvider}",
         "model": "${selectedModel}",
         "temperature": ${temperature},
@@ -274,7 +306,7 @@ def run_prompt():
   -d '{
     "prompt_id": "${prompt.id}",
     "variables": ${variablesJson},
-    "api_key": "YOUR_AI_PROVIDER_API_KEY",
+    "api_key": "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
     "provider": "${selectedProvider}",
     "model": "${selectedModel}",
     "temperature": ${temperature},
@@ -461,6 +493,55 @@ def run_prompt():
                     </button>
                   )}
                 </div>
+              </div>
+
+              {/* AI Provider API Key Section */}
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
+                      <Key size={20} className="text-indigo-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold text-white">AI Provider API Key</h2>
+                      <p className="text-zinc-400 text-sm">Required for AI model access</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <input
+                        type={showApiProviderKey ? "text" : "password"}
+                        value={aiProviderApiKey}
+                        onChange={(e) => setAiProviderApiKey(e.target.value)}
+                        placeholder={`Enter your ${selectedProvider} API key`}
+                        className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-4 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 pr-10"
+                      />
+                      <button
+                        onClick={() => setShowApiProviderKey(!showApiProviderKey)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-white"
+                      >
+                        {showApiProviderKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    <button
+                      onClick={saveAiProviderApiKey}
+                      disabled={!aiProviderApiKey || savingApiKey}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-lg transition-all duration-200 whitespace-nowrap"
+                    >
+                      {savingApiKey ? (
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : copied === 'ai-provider-key' ? (
+                        <CheckCircle size={16} />
+                      ) : (
+                        'Save Key'
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-zinc-500 mt-3">
+                  Your API key is stored securely in your browser and never sent to our servers.
+                </p>
               </div>
 
               {/* Prompt Selection & Code Generation */}
