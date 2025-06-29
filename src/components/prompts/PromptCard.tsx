@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Copy, Trash2, Eye, Lock, ExternalLink, GitFork, Maximize2, History, Edit3, Share2, FolderOpen, Move, Play, FileText, Image, Unlock } from 'lucide-react'
+import { Copy, Trash2, Eye, Lock, Key, ExternalLink, GitFork, Maximize2, History, Edit3, Share2, FolderOpen, Move, Play, FileText, Image, Unlock } from 'lucide-react'
 import { marked } from 'marked'
 import { motion } from 'framer-motion'
 import { getAppTagById } from '../../lib/appTags'
