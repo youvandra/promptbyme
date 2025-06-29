@@ -38,6 +38,7 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
   const [temperature, setTemperature] = useState(0.7)
   const [maxTokens, setMaxTokens] = useState(1000)
+  const [promptbyApiKey, setPromptbyApiKey] = useState<string | null>(null)
   
   const { user } = useAuthStore()
   const { prompts, loading, fetchUserPrompts } = usePromptStore()
@@ -49,8 +50,32 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
       // Get Supabase URL from environment
       const url = import.meta.env.VITE_SUPABASE_URL || ''
       setSupabaseUrl(url)
+      
+      // Fetch the user's promptby.me API key
+      fetchApiKey()
     }
   }, [isOpen, user, fetchUserPrompts])
+
+  const fetchApiKey = async () => {
+    if (!user) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('api_keys')
+        .select('key')
+        .eq('user_id', user.id)
+        .eq('key_type', 'pbm_api_key')
+        .maybeSingle()
+
+      if (!error && data) {
+        setPromptbyApiKey(data.key)
+      } else {
+        setPromptbyApiKey(null)
+      }
+    } catch (error) {
+      console.error('Error fetching API key:', error)
+    }
+  }
 
   // When a prompt is selected, extract variables
   useEffect(() => {
@@ -135,13 +160,13 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
     }
     
     return `async function runPrompt() {
-  // Replace with your Supabase JWT token
-  const supabaseAccessToken = "YOUR_SUPABASE_JWT_TOKEN";
+  // Your promptby.me API key
+  const promptbyApiKey = "${promptbyApiKey || 'YOUR_PROMPTBY_ME_API_KEY'}";
   
   const response = await fetch("${supabaseUrl}/functions/v1/run-prompt-api", {
     method: "POST",
     headers: {
-      "Authorization": \`Bearer \${supabaseAccessToken}\`,
+      "Authorization": \`Bearer \${promptbyApiKey}\`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
@@ -180,13 +205,13 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
 import json
 
 def run_prompt():
-    # Replace with your Supabase JWT token
-    supabase_access_token = "YOUR_SUPABASE_JWT_TOKEN"
+    # Your promptby.me API key
+    promptby_api_key = "${promptbyApiKey || 'YOUR_PROMPTBY_ME_API_KEY'}"
     
     url = "${supabaseUrl}/functions/v1/run-prompt-api"
     
     headers = {
-        "Authorization": f"Bearer {supabase_access_token}",
+        "Authorization": f"Bearer {promptby_api_key}",
         "Content-Type": "application/json"
     }
     
