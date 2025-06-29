@@ -185,8 +185,7 @@ export const ProjectSpacePage: React.FC = () => {
          content: node.content,
          nodeData: node,
          type: node.type,
-         activeNodeId: activeNodeId,
-         currentUserId: user?.id,
+          activeNodeId: activeNodeId,
         projectMembers: projectMembers,
          onEdit: (nodeId: string) => {
            const node = selectedProject?.nodes?.find(n => n.id === nodeId)
@@ -798,7 +797,6 @@ useEffect(() => {
           setSelectedNode(null)
         }}
         node={selectedNode}
-        projectMembers={projectMembers}
         projectMembers={projectMembers}
         onEdit={(nodeId) => {
           const node = selectedProject?.nodes?.find(n => n.id === nodeId)

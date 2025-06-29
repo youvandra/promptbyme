@@ -3,21 +3,6 @@ import { X, Upload, Edit3, GitBranch, Target, Calendar, User, FileText } from 'l
 import { motion, AnimatePresence } from 'framer-motion'
 import { FlowNode } from '../../store/projectSpaceStore'
 
-interface ProjectMember {
-  id: string
-  user_id: string
-  email: string
-  display_name: string
-  avatar_url?: string
-  role: 'admin' | 'editor' | 'viewer'
-  status: 'pending' | 'accepted' | 'declined'
-  invited_by: string
-  joined_at: string
-  updated_at: string
-  last_active?: string
-  is_current_user: boolean
-}
-
 interface NodeDetailsModalProps {
   isOpen: boolean
   onClose: () => void
