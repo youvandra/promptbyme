@@ -27,6 +27,8 @@ interface PromptState {
   fetchVersionHistory: (promptId: string) => Promise<PromptVersion[]>
   createPrompt: (prompt: Omit<Prompt, 'id' | 'created_at' | 'views' | 'like_count' | 'fork_count'>) => Promise<void>
   updatePrompt: (id: string, updates: Partial<Omit<Prompt, 'id' | 'created_at'>>) => Promise<void>
+  exportUserPrompts: (userId: string) => Promise<Prompt[]>
+  importPrompts: (prompts: any[], userId: string) => Promise<{ imported: number }>
   createVersion: (promptId: string, title: string, content: string, commitMessage?: string, notes?: string | null, outputSample?: string | null, mediaUrls?: string[] | null) => Promise<void>
   revertToVersion: (promptId: string, versionNumber: number) => Promise<void>
   forkPrompt: (originalPromptId: string, userId: string, title?: string) => Promise<void>
@@ -281,6 +283,72 @@ export const usePromptStore = create<PromptState>()(
       })
     } catch (error) {
       console.error('Error updating prompt:', error)
+      throw error
+    }
+  },
+
+  exportUserPrompts: async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('prompts')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      
+      return data || []
+    } catch (error) {
+      console.error('Error exporting user prompts:', error)
+      throw error
+    }
+  },
+
+  importPrompts: async (prompts: any[], userId: string) => {
+    try {
+      // Filter valid prompts (must have content)
+      const validPrompts = prompts.filter(p => 
+        typeof p === 'object' && 
+        p !== null && 
+        typeof p.content === 'string' && 
+        p.content.trim() !== ''
+      )
+      
+      if (validPrompts.length === 0) {
+        throw new Error('No valid prompts found in the import data')
+      }
+      
+      // Prepare prompts for insertion
+      const promptsToInsert = validPrompts.map(p => ({
+        user_id: userId,
+        title: typeof p.title === 'string' ? p.title : null,
+        content: p.content,
+        access: 'private', // Default to private for safety
+        tags: Array.isArray(p.tags) ? p.tags : [],
+        folder_id: null, // Don't try to map folder IDs as they won't match
+        notes: typeof p.notes === 'string' ? p.notes : null,
+        output_sample: typeof p.output_sample === 'string' ? p.output_sample : null,
+        media_urls: Array.isArray(p.media_urls) ? p.media_urls : null,
+        // Don't copy views, fork_count, etc.
+      }))
+      
+      // Insert prompts in batches to avoid hitting request size limits
+      const BATCH_SIZE = 20
+      let imported = 0
+      
+      for (let i = 0; i < promptsToInsert.length; i += BATCH_SIZE) {
+        const batch = promptsToInsert.slice(i, i + BATCH_SIZE)
+        const { error } = await supabase
+          .from('prompts')
+          .insert(batch)
+        
+        if (error) throw error
+        imported += batch.length
+      }
+      
+      return { imported }
+    } catch (error) {
+      console.error('Error importing prompts:', error)
       throw error
     }
   },
