@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Key, Copy, Eye, EyeOff, CheckCircle, AlertCircle } from 'lucide-react'
+import { X, Key, Copy, Eye, EyeOff, CheckCircle, AlertCircle, Server } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
@@ -14,20 +14,23 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
   onClose
 }) => {
   const [pbmApiKey, setPbmApiKey] = useState<string | null>(null)
+  const [aiProviderKey, setAiProviderKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPbmKey, setShowPbmKey] = useState(false)
+  const [showAiProviderKey, setShowAiProviderKey] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [regeneratingPbmKey, setRegeneratingPbmKey] = useState(false)
+  const [savingAiProviderKey, setSavingAiProviderKey] = useState(false)
   
   const { user } = useAuthStore()
 
   useEffect(() => {
     if (isOpen && user) {
-      fetchApiKey()
+      fetchApiKeys()
     }
   }, [isOpen, user])
 
-  const fetchApiKey = async () => {
+  const fetchApiKeys = async () => {
     if (!user) return
     
     setLoading(true)
@@ -45,6 +48,20 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
       } else {
         setPbmApiKey(null)
       }
+
+      // Fetch AI provider API key
+      const { data: aiKeyData, error: aiKeyError } = await supabase
+        .from('api_keys')
+        .select('key')
+        .eq('user_id', user.id)
+        .eq('key_type', 'ai_provider_key')
+        .maybeSingle()
+
+      if (!aiKeyError && aiKeyData) {
+        setAiProviderKey(aiKeyData.key)
+      } else {
+        setAiProviderKey(null)
+      }
     } catch (error) {
       console.error('Error fetching API keys:', error)
     } finally {
@@ -52,7 +69,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
     }
   }
 
-  const generateApiKey = async () => {
+  const generatePbmApiKey = async () => {
     if (!user) return
     
     setRegeneratingPbmKey(true)
@@ -102,6 +119,43 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
     }
   }
 
+  const handleSaveAiProviderKey = async () => {
+    if (!user || !aiProviderKey) return
+    
+    setSavingAiProviderKey(true)
+    
+    try {
+      // Check if user already has this type of API key
+      const { data: existingKey } = await supabase
+        .from('api_keys')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('key_type', 'ai_provider_key')
+        .maybeSingle()
+      
+      if (existingKey) {
+        // Update existing key
+        await supabase
+          .from('api_keys')
+          .update({ key: aiProviderKey })
+          .eq('id', existingKey.id)
+      } else {
+        // Create new key
+        await supabase
+          .from('api_keys')
+          .insert([{ 
+            user_id: user.id, 
+            key: aiProviderKey,
+            key_type: 'ai_provider_key'
+          }])
+      }
+    } catch (error) {
+      console.error('Error saving AI provider API key:', error)
+    } finally {
+      setSavingAiProviderKey(false)
+    }
+  }
+
   const copyToClipboard = async (text: string, keyType: string) => {
     if (!text) return
     
@@ -132,7 +186,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
           <div className="flex items-center gap-3">
             <Key className="text-indigo-400" size={20} />
             <h2 className="text-xl font-semibold text-white">
-              API Key
+              API Keys
             </h2>
           </div>
           
@@ -145,115 +199,164 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
           <p className="text-zinc-300">
-            Your promptby.me API key allows you to authenticate with the promptby.me API directly. Use this key instead of a Supabase JWT token for simpler API integration.
+            Manage your API keys for promptby.me and AI providers.
           </p>
           
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-                <span className="text-zinc-400">Loading API key...</span>
+                <span className="text-zinc-400">Loading API keys...</span>
               </div>
             </div>
           ) : (
             <>
-              {pbmApiKey ? (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <div className="flex items-center">
-                      <input
-                        type={showPbmKey ? "text" : "password"}
-                        value={pbmApiKey}
-                        readOnly
-                        className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                      />
-                      <div className="absolute right-2 flex items-center gap-2">
+              {/* promptby.me API Key Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-white flex items-center gap-2">
+                  <Key size={18} className="text-indigo-400" />
+                  promptby.me API Key
+                </h3>
+                <p className="text-sm text-zinc-400">
+                  Use this key to authenticate with the promptby.me API directly.
+                </p>
+                
+                {pbmApiKey ? (
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <div className="flex items-center">
+                        <input
+                          type={showPbmKey ? "text" : "password"}
+                          value={pbmApiKey}
+                          readOnly
+                          className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                        />
+                        <div className="absolute right-2 flex items-center gap-2">
+                          <button
+                            onClick={() => setShowPbmKey(!showPbmKey)}
+                            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                            title={showPbmKey ? "Hide API key" : "Show API key"}
+                          >
+                            {showPbmKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                          <button
+                            onClick={() => copyToClipboard(pbmApiKey, 'pbm')}
+                            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                            title="Copy to clipboard"
+                          >
+                            {copied === 'pbm' ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-zinc-500">
+                        Last generated: {new Date().toLocaleDateString()}
+                      </p>
+                      <button
+                        onClick={() => generatePbmApiKey()}
+                        disabled={regeneratingPbmKey}
+                        className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                      >
+                        {regeneratingPbmKey ? 'Regenerating...' : 'Regenerate key'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <p className="text-zinc-400 mb-4">You don't have a promptby.me API key yet.</p>
+                    <button
+                      onClick={() => generatePbmApiKey()}
+                      disabled={regeneratingPbmKey}
+                      className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 mx-auto"
+                    >
+                      {regeneratingPbmKey ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Generating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Key size={16} />
+                          <span>Generate API Key</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* AI Provider API Key Section */}
+              <div className="space-y-4 pt-6 border-t border-zinc-800/50">
+                <h3 className="text-lg font-medium text-white flex items-center gap-2">
+                  <Server size={18} className="text-emerald-400" />
+                  AI Provider API Key
+                </h3>
+                <p className="text-sm text-zinc-400">
+                  Store your AI provider API key (OpenAI, Anthropic, etc.) for use with prompt flows.
+                </p>
+                
+                <div className="relative">
+                  <div className="flex items-center">
+                    <input
+                      type={showAiProviderKey ? "text" : "password"}
+                      value={aiProviderKey || ''}
+                      onChange={(e) => setAiProviderKey(e.target.value)}
+                      placeholder="Enter your AI provider API key"
+                      className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white font-mono text-sm focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+                    />
+                    <div className="absolute right-2 flex items-center gap-2">
+                      <button
+                        onClick={() => setShowAiProviderKey(!showAiProviderKey)}
+                        className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                        title={showAiProviderKey ? "Hide API key" : "Show API key"}
+                      >
+                        {showAiProviderKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                      {aiProviderKey && (
                         <button
-                          onClick={() => setShowPbmKey(!showPbmKey)}
-                          className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                          title={showPbmKey ? "Hide API key" : "Show API key"}
-                        >
-                          {showPbmKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                        <button
-                          onClick={() => copyToClipboard(pbmApiKey, 'pbm')}
+                          onClick={() => copyToClipboard(aiProviderKey, 'ai')}
                           className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
                           title="Copy to clipboard"
                         >
-                          {copied === 'pbm' ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
+                          {copied === 'ai' ? <CheckCircle size={16} className="text-emerald-400" /> : <Copy size={16} />}
                         </button>
-                      </div>
+                      )}
                     </div>
                   </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <p className="text-xs text-zinc-500">
-                      Last generated: {new Date().toLocaleDateString()}
-                    </p>
-                    <button
-                      onClick={() => generateApiKey()}
-                      disabled={regeneratingPbmKey}
-                      className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
-                    >
-                      {regeneratingPbmKey ? 'Regenerating...' : 'Regenerate key'}
-                    </button>
-                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-6">
-                  <p className="text-zinc-400 mb-4">You don't have an API key yet.</p>
-                  <button
-                    onClick={() => generateApiKey()}
-                    disabled={regeneratingPbmKey}
-                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 mx-auto"
-                  >
-                    {regeneratingPbmKey ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Generating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Key size={16} />
-                        <span>Generate API Key</span>
-                      </>
-                    )}
-                  </button>
+                
+                <button
+                  onClick={handleSaveAiProviderKey}
+                  disabled={savingAiProviderKey || !aiProviderKey}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200"
+                >
+                  {savingAiProviderKey ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Key size={16} />
+                      <span>Save API Key</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
+                <AlertCircle size={18} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-amber-300">
+                  <p className="font-medium mb-1">Security Note</p>
+                  <p>Your API keys are stored securely. Never share your API keys or expose them in client-side code. Use them only in secure server environments.</p>
                 </div>
-              )}
+              </div>
             </>
           )}
-          
-          <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-4">
-            <h3 className="text-sm font-medium text-indigo-300 mb-2">Usage</h3>
-            <p className="text-xs text-zinc-300 mb-2">
-              Use this key in the Authorization header when making API calls.
-            </p>
-            <div className="bg-zinc-800/50 p-3 rounded-lg overflow-x-auto">
-              <pre className="text-xs text-zinc-300 font-mono">
-                <code>
-{`// Include this key in your Authorization header
-fetch('${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-prompt-api', {
-  headers: {
-    'Authorization': 'Bearer ${pbmApiKey || 'your-promptby-me-api-key'}',
-    'Content-Type': 'application/json'
-  },
-  // ...
-})`}
-                </code>
-              </pre>
-            </div>
-          </div>
-          
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
-            <AlertCircle size={18} className="text-amber-400 flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-amber-300">
-              <p className="font-medium mb-1">Security Note</p>
-              <p>This API key grants access to your prompts. Keep it secure and never expose it in client-side code. Use it only in secure server environments.</p>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
