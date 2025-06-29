@@ -58,7 +58,6 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         transition={{ duration: 0.2 }}
       >
         <div className="flex items-center gap-2 mb-2">
-          {getNodeIcon()}
           <div className="text-white font-medium text-sm truncate flex-1">
             <span>{data.label || data.title}</span>
             
