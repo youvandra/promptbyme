@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import * as Purchases from '@revenuecat/purchases-js';
-import { Check, X, HelpCircle, ArrowRight, Zap } from 'lucide-react';
+import { Check, X, HelpCircle, ArrowRight, Zap, XCircle } from 'lucide-react';
 import { Section } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardContent, CardFooter } from '../components/ui/Card';
@@ -11,6 +12,7 @@ import { useEffect } from 'react';
 
 export const PricingPage: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   
   // Initialize RevenueCat SDK
@@ -119,6 +121,21 @@ export const PricingPage: React.FC = () => {
   return (
     <>
       {/* Hero Section */}
+      {/* Back button */}
+      <div className="fixed top-6 right-6 z-50">
+        <motion.button
+          onClick={() => navigate('/')}
+          className="p-2 bg-zinc-800/80 backdrop-blur-sm hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-full transition-all duration-200 shadow-lg"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <XCircle size={24} />
+        </motion.button>
+      </div>
+      
       <Section className="pt-32 md:pt-40">
         <div className="text-center max-w-3xl mx-auto">
           <motion.div
