@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink, Cpu, Thermometer, Zap } from 'lucide-react'
+import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink, Cpu, Thermometer, Zap, Wand2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -21,6 +21,11 @@ interface Prompt {
   original_prompt_id?: string | null
 }
 
+interface VariableValue {
+  name: string
+  value: string
+}
+
 export const ApiPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showApiKeyModal, setShowApiKeyModal] = useState(false)
@@ -36,6 +41,8 @@ export const ApiPage: React.FC = () => {
   const [maxTokens, setMaxTokens] = useState(1000)
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null)
   const [generatedCode, setGeneratedCode] = useState<string>('')
+  const [extractedVariables, setExtractedVariables] = useState<string[]>([])
+  const [variableValues, setVariableValues] = useState<Record<string, string>>({})
   
   const { user, loading: authLoading } = useAuthStore()
 
@@ -71,7 +78,7 @@ export const ApiPage: React.FC = () => {
     if (selectedPrompt) {
       generateCode()
     }
-  }, [selectedPrompt, selectedLanguage, selectedProvider, selectedModel, temperature, maxTokens, apiKey])
+  }, [selectedPrompt, selectedLanguage, selectedProvider, selectedModel, temperature, maxTokens, apiKey, variableValues])
 
   const fetchApiKey = async () => {
     if (!user) return
@@ -109,7 +116,31 @@ export const ApiPage: React.FC = () => {
 
   const handlePromptSelected = (prompt: Prompt) => {
     setSelectedPrompt(prompt)
+    
+    // Extract variables from the prompt content
+    const variables = extractVariablesFromContent(prompt.content)
+    setExtractedVariables(variables)
+    
+    // Initialize variable values
+    const initialValues: Record<string, string> = {}
+    variables.forEach(variable => {
+      initialValues[variable] = ''
+    })
+    setVariableValues(initialValues)
+    
     generateCode(prompt)
+  }
+
+  const extractVariablesFromContent = (content: string): string[] => {
+    const matches = content.match(/\{\{([^}]+)\}\}/g) || []
+    return [...new Set(matches.map(match => match.replace(/[{}]/g, '')))]
+  }
+
+  const handleVariableChange = (name: string, value: string) => {
+    setVariableValues(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
   const generateCode = (promptObj = selectedPrompt) => {
@@ -127,13 +158,14 @@ export const ApiPage: React.FC = () => {
 
   // Generate JavaScript code
   const generateJsCode = (prompt: Prompt): string => {
-    // Extract variables from prompt content
-    const variableMatches = prompt.content.match(/\{\{([^}]+)\}\}/g) || []
-    const uniqueVariables = Array.from(new Set(variableMatches.map(match => match.replace(/[{}]/g, ''))))
-    
+    // Create variables object with user-provided values or placeholders
     let variablesObj = '{}'
-    if (uniqueVariables.length > 0) {
-      variablesObj = `{\n    ${uniqueVariables.map(v => `${v}: "${v}Value"`).join(',\n    ')}\n  }`
+    if (extractedVariables.length > 0) {
+      const variableEntries = extractedVariables.map(variable => {
+        const value = variableValues[variable] || `${variable}Value`
+        return `    ${variable}: "${value}"`
+      })
+      variablesObj = `{\n${variableEntries.join(',\n')}\n  }`
     }
     
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
@@ -173,13 +205,14 @@ export const ApiPage: React.FC = () => {
 
   // Generate Python code
   const generatePythonCode = (prompt: Prompt): string => {
-    // Extract variables from prompt content
-    const variableMatches = prompt.content.match(/\{\{([^}]+)\}\}/g) || []
-    const uniqueVariables = Array.from(new Set(variableMatches.map(match => match.replace(/[{}]/g, ''))))
-    
+    // Create variables dictionary with user-provided values or placeholders
     let variablesDict = '{}'
-    if (uniqueVariables.length > 0) {
-      variablesDict = `{\n        ${uniqueVariables.map(v => `"${v}": "${v}_value"`).join(',\n        ')}\n    }`
+    if (extractedVariables.length > 0) {
+      const variableEntries = extractedVariables.map(variable => {
+        const value = variableValues[variable] || `${variable}_value`
+        return `        "${variable}": "${value}"`
+      })
+      variablesDict = `{\n${variableEntries.join(',\n')}\n    }`
     }
     
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
@@ -450,6 +483,34 @@ def run_prompt():
                     >
                       {selectedPrompt ? 'Change Prompt' : 'Select Prompt'}
                     </button>
+
+                    {/* Variables Section - Only show if there are variables */}
+                    {extractedVariables.length > 0 && (
+                      <div className="mt-4">
+                        <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-4">
+                          <h4 className="text-sm font-medium text-indigo-300 mb-3 flex items-center gap-2">
+                            <Wand2 size={16} />
+                            <span>Variables</span>
+                          </h4>
+                          <div className="space-y-3">
+                            {extractedVariables.map((variable) => (
+                              <div key={variable}>
+                                <label className="block text-xs font-medium text-zinc-300 mb-1">
+                                  {`{{${variable}}}`}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={variableValues[variable] || ''}
+                                  onChange={(e) => handleVariableChange(variable, e.target.value)}
+                                  placeholder={`Enter value for ${variable}`}
+                                  className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 text-sm"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Middle Column - Settings */}
