@@ -1,5 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import * as bcrypt from 'npm:bcryptjs@2.4.3'
+import { hash } from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -136,9 +136,8 @@ Deno.serve(async (req) => {
 
     // Process the action
     if (action === 'set') {
-      // Hash the password
-      const saltRounds = 10
-      const passwordHash = await bcrypt.hash(password, saltRounds)
+      // Hash the password using Deno's bcrypt
+      const passwordHash = await hash(password)
 
       // Update the prompt with the password hash
       const { error: updateError } = await supabaseClient
