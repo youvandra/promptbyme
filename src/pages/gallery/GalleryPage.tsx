@@ -90,7 +90,7 @@ export const GalleryPage: React.FC = () => {
       
       return matchesSearch && matchesFilter && matchesFolder && matchesTag
     })
-  }, [prompts, searchQuery, filterAccess, selectedFolderId])
+  }, [prompts, searchQuery, filterAccess, selectedFolderId, selectedAppTagFilter])
 
   // Memoize stats calculation
   const stats = React.useMemo(() => ({
@@ -228,11 +228,9 @@ export const GalleryPage: React.FC = () => {
     }
   }
 
-
   // Get current folder name
   const currentFolder = selectedFolderId ? folders.find(f => f.id === selectedFolderId) : null
   const currentFolderName = currentFolder ? currentFolder.name : 'All Prompts'
-
 
   const formatNumber = (num: number) => {
     if (num < 1000) return num.toString()
@@ -315,17 +313,13 @@ export const GalleryPage: React.FC = () => {
             <div className="w-full max-w-6xl px-6 mx-auto py-8">
               {/* Page Header */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-                <div className="flex items-center gap-4">
-                  <div>
-                      {searchQuery || filterAccess !== 'all' || selectedFolderId || selectedAppTagFilter ? 'No matching prompts' : 'No prompts yet'}
-                      <h1 className="text-3xl font-bold text-white">
-                        {currentFolderName}
-                      {searchQuery || filterAccess !== 'all' || selectedFolderId || selectedAppTagFilter
-                    </div>
-                    <p className="text-zinc-400">
-                      Manage your AI prompt collection with version control
-                    </p>
-                  </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-white">
+                    {currentFolderName}
+                  </h1>
+                  <p className="text-zinc-400">
+                    Manage your AI prompt collection with version control
+                  </p>
                 </div>
                 
                 <div className="flex items-center gap-3">
