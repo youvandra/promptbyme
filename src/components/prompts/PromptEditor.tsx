@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Save, GitBranch, Eye, EyeOff, History, Image, X, FileText, Upload, Trash2 } from 'lucide-react'
+import { Save, GitBranch, Eye, EyeOff, History, Image, X, FileText, Upload, Trash2, Download } from 'lucide-react'
 import { PromptVersionHistory } from './PromptVersionHistory'
 import { PromptFolderSelector } from '../folders/PromptFolderSelector'
 import { TagSelector } from '../tags/TagSelector'
 import { useFolderStore } from '../../store/folderStore'
 import { usePromptStore } from '../../store/promptStore'
 import { motion, AnimatePresence } from 'framer-motion'
+import { supabase } from '../../lib/supabase'
 
 interface PromptEditorProps {
   promptId?: string
@@ -62,6 +63,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
   const [uploadProgress, setUploadProgress] = useState(0)
   const [showMediaPreview, setShowMediaPreview] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'content' | 'notes' | 'output' | 'media'>('content')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -217,6 +219,15 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
     setShowMediaPreview(true)
   }
 
+  const downloadMedia = (url: string) => {
+    const link = document.createElement('a')
+    link.href = url
+    link.download = getFileNameFromUrl(url)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   // Function to highlight variables in content
   const highlightVariables = (text: string) => {
     return text.replace(/\{\{([^}]+)\}\}/g, '<span class="text-indigo-400 font-medium bg-indigo-500/10 px-1 rounded">{{$1}}</span>')
@@ -264,161 +275,241 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
           </div>
         </div>
 
-        {/* Content Textarea */}
+        {/* Tabs */}
+        <div className="border-b border-zinc-800/50 -mx-8 px-8 pb-2">
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setActiveTab('content')}
+              className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === 'content'
+                  ? 'bg-indigo-600/20 text-indigo-400'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+              }`}
+            >
+              Content
+            </button>
+            <button
+              onClick={() => setActiveTab('notes')}
+              className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
+                activeTab === 'notes'
+                  ? 'bg-indigo-600/20 text-indigo-400'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+              }`}
+            >
+              Notes
+              {notes && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>}
+            </button>
+            <button
+              onClick={() => setActiveTab('output')}
+              className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
+                activeTab === 'output'
+                  ? 'bg-indigo-600/20 text-indigo-400'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+              }`}
+            >
+              Output Sample
+              {outputSample && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>}
+            </button>
+            <button
+              onClick={() => setActiveTab('media')}
+              className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
+                activeTab === 'media'
+                  ? 'bg-indigo-600/20 text-indigo-400'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+              }`}
+            >
+              Media
+              {mediaUrls.length > 0 && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>}
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
         <div>
-          <label className="block text-sm font-medium text-zinc-100 mb-3">
-            Prompt Content
-          </label>
-          <div className="relative">
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Start writing your prompt here...
+          {activeTab === 'content' && (
+            <div>
+              <label className="block text-sm font-medium text-zinc-100 mb-3">
+                Prompt Content
+              </label>
+              <div className="relative">
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Start writing your prompt here...
 Examples:
 • Use **bold** and *italic* for emphasis
 • Add ```code blocks``` for technical content
 • Include {{variables}} for dynamic content
 
 Write clear, specific instructions for the best AI results."
-              className="w-full min-h-[250px] max-h-[400px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-4 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y font-mono text-sm leading-relaxed"
-            />
-            
-            {/* Character count */}
-            <div className="absolute bottom-3 right-3 text-xs text-zinc-500 bg-zinc-800/80 backdrop-blur-sm px-2 py-1 rounded">
-              {content.length} characters
+                  className="w-full min-h-[250px] max-h-[400px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-4 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y font-mono text-sm leading-relaxed"
+                />
+                
+                {/* Character count */}
+                <div className="absolute bottom-3 right-3 text-xs text-zinc-500 bg-zinc-800/80 backdrop-blur-sm px-2 py-1 rounded">
+                  {content.length} characters
+                </div>
+              </div>
+
+              {/* Live preview of variables */}
+              {content && content.includes('{{') && (
+                <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 mt-4">
+                  <h4 className="text-sm font-medium text-indigo-300 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
+                    Variables detected
+                  </h4>
+                  <div 
+                    className="text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: highlightVariables(content.substring(0, 200) + (content.length > 200 ? '...' : '')) }}
+                  />
+                </div>
+              )}
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* Notes Section */}
-        <div>
-          <label className="block text-sm font-medium text-zinc-100 mb-3 flex items-center gap-2">
-            <FileText size={16} className="text-indigo-400" />
-            Notes <span className="text-zinc-500">(optional)</span>
-          </label>
-          <textarea
-            value={notes || ''}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Add any additional notes, context, or instructions about this prompt..."
-            className="w-full min-h-[100px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y"
-          />
-        </div>
-
-        {/* Media Upload Section */}
-        <div>
-          <label className="block text-sm font-medium text-zinc-100 mb-3 flex items-center gap-2">
-            <Image size={16} className="text-indigo-400" />
-            Media Files <span className="text-zinc-500">(optional)</span>
-          </label>
-          
-          <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
-            {/* Upload Button */}
-            <div className="mb-4">
-              <input
-                ref={fileInputRef}
-                type="file"
-                onChange={handleFileUpload}
-                className="hidden"
-                multiple
-                accept="image/jpeg,image/png,image/gif,application/pdf"
+          {activeTab === 'notes' && (
+            <div>
+              <label className="block text-sm font-medium text-zinc-100 mb-3 flex items-center gap-2">
+                <FileText size={16} className="text-indigo-400" />
+                Notes <span className="text-zinc-500">(optional)</span>
+              </label>
+              <textarea
+                value={notes || ''}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Add any additional notes, context, or instructions about this prompt..."
+                className="w-full min-h-[250px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y"
               />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingMedia}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg transition-all duration-200"
-              >
-                {uploadingMedia ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
-                    <span>Uploading... {uploadProgress}%</span>
-                  </>
-                ) : (
-                  <>
-                    <Upload size={16} />
-                    <span>Upload Files</span>
-                  </>
-                )}
-              </button>
-              <p className="text-xs text-zinc-500 mt-1">
-                Supported formats: JPG, PNG, GIF, PDF. Max size: 5MB per file.
+              <p className="text-xs text-zinc-500 mt-2">
+                Notes are helpful for documenting your thought process, use cases, or any other context that might be useful later.
               </p>
             </div>
-            
-            {/* Media Preview */}
-            {mediaUrls.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {mediaUrls.map((url, index) => (
-                  <div key={index} className="relative group">
-                    {isImageUrl(url) ? (
-                      <div 
-                        className="aspect-square bg-zinc-800 rounded-lg overflow-hidden cursor-pointer"
-                        onClick={() => handlePreviewMedia(url)}
-                      >
-                        <img 
-                          src={url} 
-                          alt={`Uploaded media ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+          )}
+
+          {activeTab === 'output' && (
+            <div>
+              <label className="block text-sm font-medium text-zinc-100 mb-3 flex items-center gap-2">
+                <Eye size={16} className="text-indigo-400" />
+                Output Sample <span className="text-zinc-500">(optional)</span>
+              </label>
+              <textarea
+                value={outputSample || ''}
+                onChange={(e) => setOutputSample(e.target.value)}
+                placeholder="Provide an example of the expected output from this prompt..."
+                className="w-full min-h-[250px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y"
+              />
+              <p className="text-xs text-zinc-500 mt-2">
+                Adding an output sample helps others understand what to expect when using this prompt.
+              </p>
+            </div>
+          )}
+
+          {activeTab === 'media' && (
+            <div>
+              <label className="block text-sm font-medium text-zinc-100 mb-3 flex items-center gap-2">
+                <Image size={16} className="text-indigo-400" />
+                Media Files <span className="text-zinc-500">(optional)</span>
+              </label>
+              
+              <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
+                {/* Upload Button */}
+                <div className="mb-4">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    multiple
+                    accept="image/jpeg,image/png,image/gif,application/pdf"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingMedia}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg transition-all duration-200"
+                  >
+                    {uploadingMedia ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                        <span>Uploading... {uploadProgress}%</span>
+                      </>
                     ) : (
-                      <div 
-                        className="aspect-square bg-zinc-800 rounded-lg flex items-center justify-center cursor-pointer"
-                        onClick={() => window.open(url, '_blank')}
-                      >
-                        <FileText size={24} className="text-zinc-400" />
-                        <span className="text-xs text-zinc-400 mt-2 px-2 truncate">
-                          {getFileNameFromUrl(url)}
-                        </span>
-                      </div>
+                      <>
+                        <Upload size={16} />
+                        <span>Upload Files</span>
+                      </>
                     )}
-                    
-                    {/* Remove button */}
-                    <button
-                      onClick={() => handleRemoveMedia(url)}
-                      className="absolute top-1 right-1 p-1 bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      title="Remove"
-                    >
-                      <X size={12} />
-                    </button>
+                  </button>
+                  <p className="text-xs text-zinc-500 mt-1">
+                    Supported formats: JPG, PNG, GIF, PDF. Max size: 5MB per file.
+                  </p>
+                </div>
+                
+                {/* Media Preview */}
+                {mediaUrls.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {mediaUrls.map((url, index) => (
+                      <div key={index} className="relative group">
+                        {isImageUrl(url) ? (
+                          <div 
+                            className="aspect-square bg-zinc-800 rounded-lg overflow-hidden cursor-pointer"
+                            onClick={() => handlePreviewMedia(url)}
+                          >
+                            <img 
+                              src={url} 
+                              alt={`Uploaded media ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div 
+                            className="aspect-square bg-zinc-800 rounded-lg flex flex-col items-center justify-center cursor-pointer p-2"
+                            onClick={() => window.open(url, '_blank')}
+                          >
+                            <FileText size={24} className="text-zinc-400 mb-2" />
+                            <span className="text-xs text-zinc-400 text-center truncate w-full">
+                              {getFileNameFromUrl(url)}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Action buttons */}
+                        <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          {/* Download button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              downloadMedia(url);
+                            }}
+                            className="p-1.5 bg-zinc-800/80 text-zinc-300 rounded-lg hover:bg-zinc-700/80"
+                            title="Download"
+                          >
+                            <Download size={12} />
+                          </button>
+                          
+                          {/* Remove button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveMedia(url);
+                            }}
+                            className="p-1.5 bg-red-500/80 text-white rounded-lg hover:bg-red-600/80"
+                            title="Remove"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="text-center py-6 text-zinc-500">
+                    <Image className="mx-auto mb-2 opacity-30" size={32} />
+                    <p>No media files attached</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="text-center py-6 text-zinc-500">
-                <Image className="mx-auto mb-2 opacity-30" size={32} />
-                <p>No media files attached</p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-
-        {/* Output Sample Section */}
-        <div>
-          <label className="block text-sm font-medium text-zinc-100 mb-3 flex items-center gap-2">
-            <Eye size={16} className="text-indigo-400" />
-            Output Sample <span className="text-zinc-500">(optional)</span>
-          </label>
-          <textarea
-            value={outputSample || ''}
-            onChange={(e) => setOutputSample(e.target.value)}
-            placeholder="Provide an example of the expected output from this prompt..."
-            className="w-full min-h-[100px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y"
-          />
-        </div>
-
-        {/* Live preview of variables */}
-        {content && content.includes('{{') && (
-          <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4">
-            <h4 className="text-sm font-medium text-indigo-300 mb-2 flex items-center gap-2">
-              <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
-              Variables detected
-            </h4>
-            <div 
-              className="text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: highlightVariables(content.substring(0, 200) + (content.length > 200 ? '...' : '')) }}
-            />
-          </div>
-        )}
 
         {/* Change indicator for existing prompts */}
         {hasChanges && promptId && (
