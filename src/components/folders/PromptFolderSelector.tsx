@@ -7,7 +7,7 @@ interface Folder {
   id: string
   name: string
   color: string
-  parent_id?: string
+  parent_id?: string | null
   children?: Folder[]
 }
 

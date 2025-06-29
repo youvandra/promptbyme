@@ -9,7 +9,7 @@ interface Folder {
   color: string
   icon: string
   user_id: string
-  parent_id?: string
+  parent_id?: string | null
   position: number
   is_shared: boolean
   created_at: string
