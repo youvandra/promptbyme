@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink, Wand2 } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink, Wand2, Play, Server, Cpu } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -7,6 +7,7 @@ import { ApiKeyModal } from '../../components/api/ApiKeyModal'
 import { ApiDocsModal } from '../../components/api/ApiDocsModal'
 import { CodeGeneratorModal } from '../../components/api/CodeGeneratorModal'
 import { useAuthStore } from '../../store/authStore'
+import { supabase } from '../../lib/supabase'
 
 export const ApiPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -14,8 +15,43 @@ export const ApiPage: React.FC = () => {
   const [showApiDocsModal, setShowApiDocsModal] = useState(false)
   const [showCodeGeneratorModal, setShowCodeGeneratorModal] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
+  const [apiKey, setApiKey] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python'>('javascript')
+  const [selectedProvider, setSelectedProvider] = useState<'openai' | 'anthropic' | 'google' | 'llama' | 'groq'>('openai')
+  const [isRunning, setIsRunning] = useState(false)
+  const [output, setOutput] = useState<string | null>(null)
   
   const { user, loading: authLoading } = useAuthStore()
+
+  useEffect(() => {
+    if (user) {
+      fetchApiKey()
+    }
+  }, [user])
+
+  const fetchApiKey = async () => {
+    if (!user) return
+    
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('api_keys')
+        .select('key')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (!error && data) {
+        setApiKey(data.key)
+      } else {
+        setApiKey(null)
+      }
+    } catch (error) {
+      console.error('Error fetching API key:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const copyToClipboard = async (text: string, id: string) => {
     try {
@@ -25,6 +61,16 @@ export const ApiPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to copy:', err)
     }
+  }
+
+  const handleTryIt = () => {
+    setIsRunning(true)
+    
+    // Simulate API call
+    setTimeout(() => {
+      setOutput("This is a simulated response from the API. In a real implementation, this would be the actual response from the AI provider based on your prompt and variables.")
+      setIsRunning(false)
+    }, 2000)
   }
 
   if (authLoading) {
@@ -113,268 +159,233 @@ export const ApiPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* API Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20">
-                  <div className="flex items-center gap-3 mb-4">
+              {/* API Key Section */}
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
                       <Key size={20} className="text-indigo-400" />
                     </div>
-                    <h2 className="text-xl font-semibold text-white">API Key</h2>
+                    <div>
+                      <h2 className="text-xl font-semibold text-white">API Key</h2>
+                      <p className="text-zinc-400 text-sm">Required for AI provider authentication</p>
+                    </div>
                   </div>
-                  <p className="text-zinc-300 mb-4">
-                    Generate and manage your API key to authenticate with AI providers when using the promptby.me API.
-                  </p>
-                  <button
-                    onClick={() => setShowApiKeyModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200"
-                  >
-                    <Key size={16} />
-                    <span>Manage API Key</span>
-                  </button>
+                  
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+                      <span className="text-zinc-400">Loading...</span>
+                    </div>
+                  ) : apiKey ? (
+                    <div className="flex items-center gap-3">
+                      <div className="bg-zinc-800/50 px-4 py-2 rounded-lg border border-zinc-700/50">
+                        <code className="text-indigo-300 font-mono text-sm">{apiKey.substring(0, 8)}...{apiKey.substring(apiKey.length - 8)}</code>
+                      </div>
+                      <button
+                        onClick={() => setShowApiKeyModal(true)}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200"
+                      >
+                        Manage Key
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowApiKeyModal(true)}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200"
+                    >
+                      Generate API Key
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Prompt Selection & Code Generation */}
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
+                    <Wand2 size={20} className="text-indigo-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-white">Generate API Code</h2>
+                    <p className="text-zinc-400 text-sm">Select a prompt and generate code for API integration</p>
+                  </div>
                 </div>
                 
-                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20">
-                  <div className="flex items-center gap-3 mb-4">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1">
+                    <button
+                      onClick={() => setShowCodeGeneratorModal(true)}
+                      className="w-full flex items-center justify-center gap-2 p-6 bg-zinc-800/30 border border-zinc-700/30 hover:border-indigo-500/50 hover:bg-zinc-800/50 rounded-xl transition-all duration-200"
+                    >
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                          <Code size={24} className="text-indigo-400" />
+                        </div>
+                        <h3 className="text-white font-medium mb-2">Choose Your Prompt</h3>
+                        <p className="text-zinc-400 text-sm">Select from your saved prompts to generate API code</p>
+                      </div>
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <div className="h-full flex flex-col">
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-zinc-300 mb-2">
+                          Programming Language
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            onClick={() => setSelectedLanguage('javascript')}
+                            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-all duration-200 ${
+                              selectedLanguage === 'javascript' 
+                                ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' 
+                                : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
+                            }`}
+                          >
+                            <span>JavaScript</span>
+                          </button>
+                          
+                          <button
+                            onClick={() => setSelectedLanguage('python')}
+                            className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-all duration-200 ${
+                              selectedLanguage === 'python' 
+                                ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' 
+                                : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
+                            }`}
+                          >
+                            <span>Python</span>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-zinc-300 mb-2">
+                          AI Provider
+                        </label>
+                        <select
+                          value={selectedProvider}
+                          onChange={(e) => setSelectedProvider(e.target.value as any)}
+                          className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                        >
+                          <option value="openai">OpenAI</option>
+                          <option value="anthropic">Anthropic (Claude)</option>
+                          <option value="google">Google (Gemini)</option>
+                          <option value="llama">Llama</option>
+                          <option value="groq">Groq</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Try It Section */}
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
+                    <Play size={20} className="text-indigo-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-white">Try It</h2>
+                    <p className="text-zinc-400 text-sm">Test your API integration</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-300 mb-2">
+                        Provider
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex items-center gap-2 p-3 bg-zinc-800/30 border border-zinc-700/30 rounded-lg">
+                          <Server size={16} className="text-indigo-400" />
+                          <span className="text-zinc-300 text-sm">{selectedProvider}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 p-3 bg-zinc-800/30 border border-zinc-700/30 rounded-lg">
+                          <Cpu size={16} className="text-indigo-400" />
+                          <span className="text-zinc-300 text-sm">
+                            {selectedProvider === 'openai' ? 'gpt-4o' : 
+                             selectedProvider === 'anthropic' ? 'claude-3-opus' :
+                             selectedProvider === 'google' ? 'gemini-pro' :
+                             selectedProvider === 'llama' ? 'llama-3-70b' : 'llama3-8b-8192'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-end">
+                      <button
+                        onClick={handleTryIt}
+                        disabled={isRunning || !apiKey}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
+                      >
+                        {isRunning ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <span>Running...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play size={16} />
+                            <span>Run Test</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {output && (
+                    <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-white">Response</h4>
+                        <button
+                          onClick={() => copyToClipboard(output, 'output')}
+                          className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded transition-colors"
+                          title="Copy to clipboard"
+                        >
+                          {copied === 'output' ? (
+                            <CheckCircle size={16} className="text-emerald-400" />
+                          ) : (
+                            <Copy size={16} />
+                          )}
+                        </button>
+                      </div>
+                      <div className="bg-zinc-900/50 p-3 rounded-lg text-zinc-300 text-sm">
+                        {output}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {!apiKey && (
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-amber-300 text-sm">
+                      You need to generate an API key first to run tests.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Documentation Link */}
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
                       <FileText size={20} className="text-indigo-400" />
                     </div>
-                    <h2 className="text-xl font-semibold text-white">Documentation</h2>
+                    <div>
+                      <h2 className="text-xl font-semibold text-white">API Documentation</h2>
+                      <p className="text-zinc-400 text-sm">Detailed reference for the promptby.me API</p>
+                    </div>
                   </div>
-                  <p className="text-zinc-300 mb-4">
-                    Learn how to use the promptby.me API to run prompts programmatically from your applications.
-                  </p>
+                  
                   <button
                     onClick={() => setShowApiDocsModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200"
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200"
                   >
-                    <FileText size={16} />
-                    <span>View Documentation</span>
+                    View Documentation
                   </button>
-                </div>
-                
-                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
-                      <Wand2 size={20} className="text-indigo-400" />
-                    </div>
-                    <h2 className="text-xl font-semibold text-white">Generate Code</h2>
-                  </div>
-                  <p className="text-zinc-300 mb-4">
-                    Select a prompt and generate ready-to-use code snippets for API integration in your applications.
-                  </p>
-                  <button
-                    onClick={() => setShowCodeGeneratorModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200"
-                  >
-                    <Code size={16} />
-                    <span>Generate API Code</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Quick Start Guide */}
-              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
-                <h2 className="text-xl font-semibold text-white mb-4">Quick Start Guide</h2>
-                
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-medium text-white">1. Generate an API Key</h3>
-                    <p className="text-zinc-300">
-                      First, generate an API key by clicking the "Manage API Key" button above. This key will be used to authenticate with AI providers.
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-medium text-white">2. Authenticate with Supabase</h3>
-                    <p className="text-zinc-300 mb-2">
-                      To access your prompts, you need to authenticate with Supabase and get a JWT token.
-                    </p>
-                    <div className="bg-zinc-800/50 p-4 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-zinc-400">JavaScript</span>
-                        <button
-                          onClick={() => copyToClipboard(`import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  'YOUR_SUPABASE_URL',
-  'YOUR_SUPABASE_ANON_KEY'
-)
-
-// Sign in and get the JWT token
-const { data, error } = await supabase.auth.signInWithPassword({
-  email: 'user@example.com',
-  password: 'password'
-})
-
-// The JWT token is in data.session.access_token
-const jwtToken = data.session.access_token`, 'auth-code')}
-                          className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded transition-colors"
-                          title="Copy to clipboard"
-                        >
-                          {copied === 'auth-code' ? (
-                            <CheckCircle size={16} className="text-emerald-400" />
-                          ) : (
-                            <Copy size={16} />
-                          )}
-                        </button>
-                      </div>
-                      <pre className="text-sm text-indigo-300 font-mono overflow-x-auto">
-                        <code>{`import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  'YOUR_SUPABASE_URL',
-  'YOUR_SUPABASE_ANON_KEY'
-)
-
-// Sign in and get the JWT token
-const { data, error } = await supabase.auth.signInWithPassword({
-  email: 'user@example.com',
-  password: 'password'
-})
-
-// The JWT token is in data.session.access_token
-const jwtToken = data.session.access_token`}</code>
-                      </pre>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-medium text-white">3. Call the API</h3>
-                    <p className="text-zinc-300 mb-2">
-                      Use the JWT token to authenticate with the promptby.me API and run a prompt.
-                    </p>
-                    <div className="bg-zinc-800/50 p-4 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-zinc-400">JavaScript</span>
-                        <button
-                          onClick={() => copyToClipboard(`async function runPrompt() {
-  const response = await fetch('https://your-project.supabase.co/functions/v1/run-prompt-api', {
-    method: 'POST',
-    headers: {
-      'Authorization': \`Bearer \${jwtToken}\`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      prompt_id: 'your-prompt-uuid',
-      variables: {
-        name: 'John',
-        company: 'Acme Inc.'
-      },
-      api_key: 'your-ai-provider-api-key',
-      provider: 'openai',
-      model: 'gpt-4o'
-    })
-  });
-  
-  const data = await response.json();
-  
-  if (data.success) {
-    console.log('AI Response:', data.output);
-  } else {
-    console.error('Error:', data.error);
-  }
-}`, 'api-call')}
-                          className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded transition-colors"
-                          title="Copy to clipboard"
-                        >
-                          {copied === 'api-call' ? (
-                            <CheckCircle size={16} className="text-emerald-400" />
-                          ) : (
-                            <Copy size={16} />
-                          )}
-                        </button>
-                      </div>
-                      <pre className="text-sm text-indigo-300 font-mono overflow-x-auto">
-                        <code>{`async function runPrompt() {
-  const response = await fetch('https://your-project.supabase.co/functions/v1/run-prompt-api', {
-    method: 'POST',
-    headers: {
-      'Authorization': \`Bearer \${jwtToken}\`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      prompt_id: 'your-prompt-uuid',
-      variables: {
-        name: 'John',
-        company: 'Acme Inc.'
-      },
-      api_key: 'your-ai-provider-api-key',
-      provider: 'openai',
-      model: 'gpt-4o'
-    })
-  });
-  
-  const data = await response.json();
-  
-  if (data.success) {
-    console.log('AI Response:', data.output);
-  } else {
-    console.error('Error:', data.error);
-  }
-}`}</code>
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Resources */}
-              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
-                <h2 className="text-xl font-semibold text-white mb-4">Additional Resources</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <a
-                    href="https://supabase.com/docs/guides/functions"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-4 bg-zinc-800/30 hover:bg-zinc-800/50 border border-zinc-700/30 rounded-xl transition-all duration-200"
-                  >
-                    <ExternalLink size={18} className="text-indigo-400" />
-                    <div>
-                      <h3 className="text-white font-medium text-sm">Supabase Edge Functions</h3>
-                      <p className="text-zinc-400 text-xs">Learn more about Supabase Edge Functions</p>
-                    </div>
-                  </a>
-                  
-                  <a
-                    href="https://platform.openai.com/docs/api-reference"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-4 bg-zinc-800/30 hover:bg-zinc-800/50 border border-zinc-700/30 rounded-xl transition-all duration-200"
-                  >
-                    <ExternalLink size={18} className="text-indigo-400" />
-                    <div>
-                      <h3 className="text-white font-medium text-sm">OpenAI API Reference</h3>
-                      <p className="text-zinc-400 text-xs">Documentation for the OpenAI API</p>
-                    </div>
-                  </a>
-                  
-                  <a
-                    href="https://docs.anthropic.com/claude/reference/getting-started-with-the-api"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-4 bg-zinc-800/30 hover:bg-zinc-800/50 border border-zinc-700/30 rounded-xl transition-all duration-200"
-                  >
-                    <ExternalLink size={18} className="text-indigo-400" />
-                    <div>
-                      <h3 className="text-white font-medium text-sm">Anthropic API Reference</h3>
-                      <p className="text-zinc-400 text-xs">Documentation for the Claude API</p>
-                    </div>
-                  </a>
-                  
-                  <a
-                    href="https://console.groq.com/docs/quickstart"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-4 bg-zinc-800/30 hover:bg-zinc-800/50 border border-zinc-700/30 rounded-xl transition-all duration-200"
-                  >
-                    <ExternalLink size={18} className="text-indigo-400" />
-                    <div>
-                      <h3 className="text-white font-medium text-sm">Groq API Reference</h3>
-                      <p className="text-zinc-400 text-xs">Documentation for the Groq API</p>
-                    </div>
-                  </a>
                 </div>
               </div>
             </div>
@@ -385,7 +396,10 @@ const jwtToken = data.session.access_token`}</code>
       {/* API Key Modal */}
       <ApiKeyModal
         isOpen={showApiKeyModal}
-        onClose={() => setShowApiKeyModal(false)}
+        onClose={() => {
+          setShowApiKeyModal(false)
+          fetchApiKey() // Refresh API key after modal closes
+        }}
       />
 
       {/* API Docs Modal */}
