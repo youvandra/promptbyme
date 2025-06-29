@@ -198,9 +198,6 @@ export const PromptImportModal: React.FC<PromptImportModalProps> = ({
                       <span>• {formatDate(prompt.created_at)}</span>
                     </div>
                   </div>
-                </div>
-
-                    
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
                         <Plus size={12} className="text-white" />
