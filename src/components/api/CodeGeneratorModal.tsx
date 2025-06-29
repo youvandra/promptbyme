@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Search, Code, Filter, Eye, EyeOff, GitFork, Heart, Plus, Thermometer, ChevronDown, ChevronUp, Zap, Copy, CheckCircle, AlertCircle, Server } from 'lucide-react'
+import { Search, Code, Filter, Eye, EyeOff, GitFork, Heart, Plus, Thermometer, ChevronDown, ChevronUp, Zap, Copy, CheckCircle, AlertCircle, Server, ArrowLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePromptStore } from '../../store/promptStore'
 import { useAuthStore } from '../../store/authStore'
@@ -1017,7 +1017,7 @@ def run_flow():
                 
                 {/* Right Column - Code Output */}
                 <div className="w-full md:w-1/2 flex flex-col overflow-y-auto">
-                  <div className="p-6 flex-1 overflow-y-auto">
+                  <div className="p-6 flex flex-col flex-1 overflow-y-auto">
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-white">
                         Generated Code
@@ -1035,7 +1035,7 @@ def run_flow():
                       </button>
                     </div>
                     
-                    <div className="bg-zinc-800/50 p-4 rounded-lg overflow-auto">
+                    <div className="bg-zinc-800/50 p-4 rounded-lg flex-1 overflow-auto">
                       <pre className="text-sm text-indigo-300 font-mono">
                         <code>{generateCode()}</code>
                       </pre>
