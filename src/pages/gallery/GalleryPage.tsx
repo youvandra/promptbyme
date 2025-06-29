@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft, Menu, Eye, Lock, GitFork, Users, ChevronDown, FolderPlus } from 'lucide-react'
+import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft, Menu, Eye, Lock, GitFork, Users, ChevronDown, FolderPlus, Tag } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PromptCard } from '../../components/prompts/PromptCard'
 import { PromptModal } from '../../components/prompts/PromptModal'
@@ -10,8 +10,11 @@ import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
+import { CustomSelect, SelectOption } from '../../components/ui/CustomSelect'
+import { TagFilterDropdown } from '../../components/ui/TagFilterDropdown'
 import { usePromptStore } from '../../store/promptStore'
 import { useFolderStore } from '../../store/folderStore'
+import { getAppTagById } from '../../lib/appTags'
 
 // Memoized prompt card component to prevent unnecessary re-renders
 const MemoizedPromptCard = React.memo(PromptCard)
@@ -24,6 +27,7 @@ export const GalleryPage: React.FC = () => {
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [showFolderModal, setShowFolderModal] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedAppTagFilter, setSelectedAppTagFilter] = useState<string | null>(null)
   const [filterAccess, setFilterAccess] = useState<'all' | 'public' | 'private'>('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
@@ -80,8 +84,11 @@ export const GalleryPage: React.FC = () => {
       const matchesFilter = filterAccess === 'all' || prompt.access === filterAccess
       
       const matchesFolder = selectedFolderId === null || prompt.folder_id === selectedFolderId
+
+      const matchesTag = selectedAppTagFilter === null || 
+        (prompt.tags && prompt.tags.includes(selectedAppTagFilter))
       
-      return matchesSearch && matchesFilter && matchesFolder
+      return matchesSearch && matchesFilter && matchesFolder && matchesTag
     })
   }, [prompts, searchQuery, filterAccess, selectedFolderId])
 
@@ -95,6 +102,13 @@ export const GalleryPage: React.FC = () => {
     forkedPrompts: filteredPrompts.filter(p => p.original_prompt_id !== null).length,
     totalVersions: filteredPrompts.reduce((sum, p) => sum + (p.total_versions || 1), 0)
   }), [filteredPrompts])
+
+  // Access filter options
+  const accessFilterOptions: SelectOption[] = [
+    { value: 'all', label: 'All Prompts', icon: <Filter size={16} className="text-indigo-400" /> },
+    { value: 'public', label: 'Public Only', icon: <Eye size={16} className="text-emerald-400" /> },
+    { value: 'private', label: 'Private Only', icon: <Lock size={16} className="text-amber-400" /> }
+  ]
 
   const handleDeletePrompt = async (id: string) => {
     try {
@@ -303,10 +317,10 @@ export const GalleryPage: React.FC = () => {
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
                 <div className="flex items-center gap-4">
                   <div>
-                    <div className="flex items-center gap-3 mb-2">
+                      {searchQuery || filterAccess !== 'all' || selectedFolderId || selectedAppTagFilter ? 'No matching prompts' : 'No prompts yet'}
                       <h1 className="text-3xl font-bold text-white">
                         {currentFolderName}
-                      </h1>
+                      {searchQuery || filterAccess !== 'all' || selectedFolderId || selectedAppTagFilter
                     </div>
                     <p className="text-zinc-400">
                       Manage your AI prompt collection with version control
@@ -379,17 +393,21 @@ export const GalleryPage: React.FC = () => {
                   />
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <Filter className="text-zinc-500" size={18} />
-                  <select
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Access Filter */}
+                  <CustomSelect
+                    options={accessFilterOptions}
                     value={filterAccess}
-                    onChange={(e) => setFilterAccess(e.target.value as 'all' | 'public' | 'private')}
-                    className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                  >
-                    <option value="all">All Prompts</option>
-                    <option value="public">Public Only</option>
-                    <option value="private">Private Only</option>
-                  </select>
+                    onChange={(value) => setFilterAccess(value as 'all' | 'public' | 'private')}
+                    placeholder="Filter by access"
+                    className="w-full sm:w-48"
+                  />
+                  
+                  <TagFilterDropdown
+                    selectedTag={selectedAppTagFilter}
+                    onTagChange={setSelectedAppTagFilter}
+                    className="w-full sm:w-48"
+                  />
                 </div>
 
                 <div className="flex items-center gap-2 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-1">

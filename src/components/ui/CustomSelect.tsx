@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Check, User } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 
 export interface SelectOption {
   value: string;
   label: string;
-  avatarUrl?: string | null;
+  icon?: React.ReactNode;
 }
 
 interface CustomSelectProps {
@@ -55,17 +55,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {selectedOption ? (
             <>
-              {selectedOption.avatarUrl ? (
-                <img 
-                  src={selectedOption.avatarUrl} 
-                  alt={selectedOption.label}
-                  className="w-6 h-6 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-6 h-6 bg-indigo-600/20 rounded-full flex items-center justify-center">
-                  <User size={14} className="text-indigo-400" />
-                </div>
-              )}
+              {selectedOption.icon && <span className="flex-shrink-0">{selectedOption.icon}</span>}
               <span className="text-sm truncate">{selectedOption.label}</span>
             </>
           ) : (
@@ -89,26 +79,6 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-full max-h-64 overflow-y-auto"
           >
             <div className="p-2">
-              {/* Unassigned option */}
-              <button
-                type="button"
-                onClick={() => handleSelect('')}
-                className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left transition-colors ${
-                  value === '' 
-                    ? 'bg-indigo-600/20 text-indigo-300' 
-                    : 'text-zinc-300 hover:bg-zinc-800/50 hover:text-white'
-                }`}
-              >
-                <div className="w-6 h-6 bg-zinc-800/50 rounded-full flex items-center justify-center">
-                  <User size={14} className="text-zinc-400" />
-                </div>
-                <span className="text-sm">Unassigned</span>
-                {value === '' && (
-                  <Check size={14} className="ml-auto text-indigo-400" />
-                )}
-              </button>
-              
-              {/* Member options */}
               {options.map((option) => (
                 <button
                   key={option.value}
@@ -120,18 +90,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                       : 'text-zinc-300 hover:bg-zinc-800/50 hover:text-white'
                   }`}
                 >
-                  {option.avatarUrl ? (
-                    <img 
-                      src={option.avatarUrl} 
-                      alt={option.label}
-                      className="w-6 h-6 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-6 h-6 bg-indigo-600/20 rounded-full flex items-center justify-center">
-                      <User size={14} className="text-indigo-400" />
-                    </div>
-                  )}
-                  <span className="text-sm truncate">{option.label}</span>
+                  {option.icon && <span className="flex-shrink-0">{option.icon}</span>}
+                  <span className="text-sm">{option.label}</span>
                   {value === option.value && (
                     <Check size={14} className="ml-auto text-indigo-400" />
                   )}
