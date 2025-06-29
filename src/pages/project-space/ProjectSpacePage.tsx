@@ -799,6 +799,7 @@ useEffect(() => {
         }}
         node={selectedNode}
         projectMembers={projectMembers}
+        projectMembers={projectMembers}
         onEdit={(nodeId) => {
           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
           if (node) {
