@@ -602,56 +602,6 @@ def run_flow():
             {/* API Sidebar */}
             <div className="hidden md:block w-64 border-r border-zinc-800/50 overflow-y-auto">
               <div className="p-4">
-                <div className="relative mb-4">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={16} />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search endpoints..."
-                    className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all duration-200"
-                  />
-                </div>
-                
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Filter size={14} className="text-zinc-500" />
-                    <span className="text-xs font-medium text-zinc-400">FILTER BY</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => setCategoryFilter('all')}
-                      className={`px-2 py-1 text-xs rounded-md transition-colors ${
-                        categoryFilter === 'all' 
-                          ? 'bg-zinc-700 text-white' 
-                          : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50'
-                      }`}
-                    >
-                      All
-                    </button>
-                    <button
-                      onClick={() => setCategoryFilter('prompt')}
-                      className={`px-2 py-1 text-xs rounded-md transition-colors ${
-                        categoryFilter === 'prompt' 
-                          ? 'bg-indigo-600/50 text-indigo-300' 
-                          : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50'
-                      }`}
-                    >
-                      Prompts
-                    </button>
-                    <button
-                      onClick={() => setCategoryFilter('flow')}
-                      className={`px-2 py-1 text-xs rounded-md transition-colors ${
-                        categoryFilter === 'flow' 
-                          ? 'bg-purple-600/50 text-purple-300' 
-                          : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700/50'
-                      }`}
-                    >
-                      Flows
-                    </button>
-                  </div>
-                </div>
-                
                 <div className="space-y-1">
                   {filteredEndpoints.map(endpoint => (
                     <button
