@@ -79,6 +79,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
               </div>
             )}
           </div>
+        </div>
       </motion.div>
       
       {/* Output Handle (bottom) */}
