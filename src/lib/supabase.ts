@@ -105,14 +105,6 @@ export type Database = {
           output_sample?: string | null
           media_urls?: string[] | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "prompts_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
       }
       prompt_versions: {
         Row: {
