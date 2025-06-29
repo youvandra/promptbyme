@@ -328,7 +328,6 @@ export const GalleryPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-              </div>
                 <div className="flex items-center gap-3">
                   <PromptFolderSelector
                     selectedFolderId={selectedFolderId}
