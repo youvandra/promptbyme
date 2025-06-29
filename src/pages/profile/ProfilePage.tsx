@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe, Download, FileUp, FileDown } from 'lucide-react'
+import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
@@ -30,7 +30,6 @@ export const ProfilePage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const importFileInputRef = useRef<HTMLInputElement>(null)
   
   const { copied, copyToClipboard } = useClipboard()
   
@@ -42,7 +41,7 @@ export const ProfilePage: React.FC = () => {
   })
   
   const { user, loading: authLoading, initialize } = useAuthStore()
-  const { prompts, fetchUserPrompts, createPrompt } = usePromptStore()
+  const { prompts, fetchUserPrompts } = usePromptStore()
 
   useEffect(() => {
     initialize()
@@ -51,11 +50,6 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     if (user) {
       fetchUserPrompts(user.id)
-    }
-  }, [user, fetchUserPrompts])
-
-  useEffect(() => {
-    if (user) {
       loadUserProfile()
     }
   }, [user, fetchUserPrompts])
@@ -264,126 +258,6 @@ export const ProfilePage: React.FC = () => {
     }
   }
 
-  const handleExportPrompts = async () => {
-    if (!user || prompts.length === 0) {
-      setToast({ message: 'No prompts to export', type: 'error' })
-      return
-    }
-
-    try {
-      // Prepare prompts data for export
-      const exportData = prompts.map(prompt => ({
-        title: prompt.title,
-        content: prompt.content,
-        access: prompt.access,
-        tags: prompt.tags,
-        notes: prompt.notes,
-        output_sample: prompt.output_sample,
-        // Don't include media_urls as they're specific to the user's storage
-      }))
-
-      // Create a JSON blob
-      const jsonString = JSON.stringify(exportData, null, 2)
-      const blob = new Blob([jsonString], { type: 'application/json' })
-      
-      // Create a download link
-      const url = URL.createObjectURL(blob)
-      const date = new Date().toISOString().split('T')[0]
-      const filename = `promptby_me_export_${date}.json`
-      
-      const a = document.createElement('a')
-      a.href = url
-      a.download = filename
-      document.body.appendChild(a)
-      a.click()
-      
-      // Clean up
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      
-      setToast({ message: `${exportData.length} prompts exported successfully`, type: 'success' })
-    } catch (error) {
-      console.error('Error exporting prompts:', error)
-      setToast({ message: 'Failed to export prompts', type: 'error' })
-    }
-  }
-
-  const handleImportPrompts = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user || !event.target.files || event.target.files.length === 0) return
-    
-    const file = event.target.files[0]
-    if (file.type !== 'application/json') {
-      setToast({ message: 'Please select a JSON file', type: 'error' })
-      return
-    }
-    
-    try {
-      const reader = new FileReader()
-      
-      reader.onload = async (e) => {
-        try {
-          const content = e.target?.result as string
-          const importedPrompts = JSON.parse(content)
-          
-          if (!Array.isArray(importedPrompts)) {
-            throw new Error('Invalid import format. Expected an array of prompts.')
-          }
-          
-          let successCount = 0
-          let errorCount = 0
-          
-          for (const prompt of importedPrompts) {
-            try {
-              // Validate required fields
-              if (!prompt.content) {
-                errorCount++
-                continue
-              }
-              
-              // Create the prompt
-              await createPrompt({
-                user_id: user.id,
-                title: prompt.title || null,
-                content: prompt.content,
-                access: prompt.access || 'private',
-                tags: prompt.tags || [],
-                notes: prompt.notes || null,
-                output_sample: prompt.output_sample || null,
-              })
-              
-              successCount++
-            } catch (promptError) {
-              console.error('Error importing prompt:', promptError)
-              errorCount++
-            }
-          }
-          
-          if (successCount > 0) {
-            setToast({ 
-              message: `Imported ${successCount} prompts successfully${errorCount > 0 ? ` (${errorCount} failed)` : ''}`, 
-              type: 'success' 
-            })
-          } else {
-            setToast({ message: 'Failed to import any prompts', type: 'error' })
-          }
-        } catch (parseError) {
-          console.error('Error parsing import file:', parseError)
-          setToast({ message: 'Invalid JSON format', type: 'error' })
-        }
-      }
-      
-      reader.readAsText(file)
-      
-      // Reset the file input
-      if (importFileInputRef.current) {
-        importFileInputRef.current.value = ''
-      }
-    } catch (error) {
-      console.error('Error importing prompts:', error)
-      setToast({ message: 'Failed to import prompts', type: 'error' })
-    }
-  }
-
   const handleCopyProfileLink = () => {
     if (!userProfile?.display_name) return
     const profileUrl = `${window.location.origin}/${userProfile.display_name}/`
@@ -485,256 +359,6 @@ export const ProfilePage: React.FC = () => {
                   <h1 className="text-3xl font-bold text-white">
                     Profile Settings
                   </h1>
-                  <div className="flex flex-wrap items-center gap-3 mt-3">
-                    <button
-                      onClick={() => importFileInputRef.current?.click()}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
-                    >
-                      <FileUp size={14} className="text-indigo-400" />
-                      <span>Import Prompts</span>
-                    </button>
-                    <input
-                      ref={importFileInputRef}
-                      type="file"
-                      accept=".json"
-                      onChange={handleImportPrompts}
-                      className="hidden"
-                    />
-                    
-                    <button
-                      onClick={handleExportPrompts}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
-                    >
-                      <FileDown size={14} className="text-indigo-400" />
-                      <span>Export Prompts</span>
-                    </button>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  disabled={saving}
-                  className={`inline-flex items-center gap-2 px-4 py-2 ${
-                    isEditing ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'
-                  } disabled:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto btn-hover disabled:transform-none`}
-                >
-                  {isEditing ? <X size={16} /> : <Settings size={16} />}
-                  <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
-                </button>
-              </div>
-
-              <div className="space-y-8">
-                {/* Profile Card */}
-                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
-                  <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Avatar Section */}
-                    <div className="flex flex-col items-center lg:items-start">
-                      <div className="relative group">
-                        {profileImage ? (
-                          <img
-                            src={profileImage}
-                            alt="Profile"
-                            className="w-20 h-20 rounded-full object-cover border-2 border-zinc-700"
-                          />
-                        ) : (
-                          <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                            {formData.displayName ? getInitials(formData.displayName) : <User size={32} />}
-                          </div>
-                        )}
-                        
-                        {isEditing && (
-                          <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <button
-                              onClick={() => fileInputRef.current?.click()}
-                              className="p-2 bg-indigo-600 rounded-full hover:bg-indigo-700 transition-colors"
-                              title="Change photo"
-                            >
-                              <Camera size={16} />
-                            </button>
-                          </div>
-                        )}
-                        
-                        {isEditing && profileImage && (
-                          <button
-                            onClick={removeImage}
-                            className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
-                            title="Remove photo"
-                          >
-                            <X size={12} />
-                          </button>
-                        )}
-                      </div>
-                      
-                      {isEditing && (
-                        <div className="mt-3 text-center">
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="flex items-center gap-2 px-3 py-1.5 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-                          >
-                            <Upload size={14} />
-                            <span>Upload Photo</span>
-                          </button>
-                          <p className="text-xs text-zinc-500 mt-1">
-                            Max 5MB, JPG/PNG
-                          </p>
-                        </div>
-                      )}
-                      
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                      
-                      {!isEditing && (
-                        <div className="text-center lg:text-left mt-3">
-                          <h2 className="text-lg font-semibold text-white mb-1">
-                            {userProfile?.display_name || 'Anonymous User'}
-                          </h2>
-                          <p className="text-zinc-400 text-sm">
-                            {userProfile?.role || 'User'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Profile Info */}
-                    <div className="flex-1 space-y-4">
-                      {isEditing ? (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm text-zinc-300 mb-2">
-                                Display Name *
-                              </label>
-                              <input
-                                type="text"
-                                value={formData.displayName}
-                                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                                placeholder="Enter your name"
-                                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm text-zinc-300 mb-2">
-                                Role
-                              </label>
-                              <select
-                                value={formData.role}
-                                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                              >
-                                <option value="">Select your role</option>
-                                {ROLE_OPTIONS.map(role => (
-                                  <option key={role} value={role}>{role}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-                          
-                          {/* Public Profile Toggle */}
-                          <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <h4 className="font-medium text-white text-sm mb-1 flex items-center gap-2">
-                                  Public Profile
-                                </h4>
-                                <p className="text-xs text-zinc-400">Allow others to see your public prompts and profile</p>
-                              </div>
-                              <label className="relative inline-flex items-center cursor-pointer">
-                                <input 
-                                  type="checkbox" 
-                                  className="sr-only peer" 
-                                  checked={formData.isPublicProfile}
-                                  onChange={(e) => setFormData({ ...formData, isPublicProfile: e.target.checked })}
-                                />
-                                <div className="w-11 h-6 bg-zinc-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                              </label>
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-3 pt-2">
-                            <button
-                              onClick={handleSaveProfile}
-                              disabled={saving || !formData.displayName.trim()}
-                              className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white rounded-xl transition-all duration-200 btn-hover disabled:transform-none"
-                            >
-                              {saving ? (
-                                <>
-                                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                  <span>Saving...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Save size={16} />
-                                  <span>Save Changes</span>
-                                </>
-                              )}
-                            </button>
-                            
-                            <button
-                              onClick={() => setIsEditing(false)}
-                              disabled={saving}
-                              className="px-4 py-2.5 text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-3">
-                                <Mail className="text-indigo-400" size={16} />
-                                <div>
-                                  <p className="text-xs text-zinc-500">Email</p>
-                                  <p className="text-white text-sm">{user.email}</p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-center gap-3">
-                                <Calendar className="text-indigo-400" size={16} />
-                                <div>
-                                  <p className="text-xs text-zinc-500">Joined</p>
-                                  <p className="text-white text-sm">{formatDate(user.created_at)}</p>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-center gap-3">
-                                <Shield className="text-indigo-400" size={16} />
-                                <div>
-                                    <p className="text-xs text-zinc-500">Status</p>
-                                    <p className="text-white text-sm">
-                                      {user.email_confirmed_at ? 'Verified' : 'Pending Verification'}
-                                    </p>
-                                </div>
-                              </div>
-                              
-                            </div>
-                            {userProfile?.is_public_profile !== false && userProfile?.display_name && (
-                              <div className="flex items-center gap-2 mt-1">
-                                <div className="flex items-center gap-1 px-2 py-1 bg-zinc-800/50 rounded-lg">
-                                  <Globe size={12} className="text-indigo-400" />
-                                  <span className="text-xs text-zinc-300">promptby.me/{userProfile.display_name}/</span>
-                                </div>
-                                <button
-                                  onClick={handleCopyProfileLink}
-                                  className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors flex items-center gap-1"
-                                  title="Copy profile link"
-                                >
-                                  {copied ? <CheckCircle size={12} /> : <Copy size={12} />}
-                                  <span className="text-xs">{copied ? 'Copied!' : 'Copy'}</span>
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   <p className="text-zinc-400">
                     Manage your account and preferences
                   </p>
@@ -969,7 +593,7 @@ export const ProfilePage: React.FC = () => {
                 {/* Account Settings */}
                 <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">
-                    Privacy & Data
+                    Privacy & Notifications
                   </h3>
                   
                   <div className="space-y-4">
@@ -998,35 +622,6 @@ export const ProfilePage: React.FC = () => {
                         }`}>
                           {userProfile?.is_public_profile !== false ? 'Enabled' : 'Disabled'}
                         </span>
-                      </div>
-                    </div>
-                    
-                    {/* Import/Export Section */}
-                    <div className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl border border-zinc-700/30">
-                      <div>
-                        <h4 className="font-medium text-white text-sm">Data Management</h4>
-                        <p className="text-xs text-zinc-400 mt-1">
-                          Import or export your prompts for backup and transfer
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => importFileInputRef.current?.click()}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-zinc-800/70 hover:bg-zinc-700 rounded-lg text-xs text-zinc-300 transition-colors"
-                        >
-                          <FileUp size={12} />
-                          <span>Import</span>
-                        </button>
-                        
-                        <button
-                          onClick={handleExportPrompts}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-zinc-800/70 hover:bg-zinc-700 rounded-lg text-xs text-zinc-300 transition-colors"
-                          disabled={prompts.length === 0}
-                        >
-                          <FileDown size={12} />
-                          <span>Export</span>
-                        </button>
                       </div>
                     </div>
                   </div>
