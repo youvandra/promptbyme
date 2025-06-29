@@ -1,10 +1,18 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { hash } from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
+// Simple hash function using Web Crypto API (available in Deno)
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(password)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 Deno.serve(async (req) => {
@@ -136,8 +144,8 @@ Deno.serve(async (req) => {
 
     // Process the action
     if (action === 'set') {
-      // Hash the password using Deno's bcrypt
-      const passwordHash = await hash(password)
+      // Hash the password using Web Crypto API
+      const passwordHash = await hashPassword(password)
 
       // Update the prompt with the password hash
       const { error: updateError } = await supabaseClient
@@ -189,7 +197,7 @@ Deno.serve(async (req) => {
           }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 500,
+          status: 500,
           }
         )
       }

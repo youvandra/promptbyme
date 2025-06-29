@@ -1,10 +1,18 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import * as bcrypt from 'npm:bcryptjs@2.4.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
+// Simple hash function using Web Crypto API (available in Deno)
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(password)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 Deno.serve(async (req) => {
@@ -17,7 +25,7 @@ Deno.serve(async (req) => {
     // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         auth: {
           autoRefreshToken: false,
@@ -42,10 +50,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get the prompt
+    // Get the prompt with password hash
     const { data: prompt, error: promptError } = await supabaseClient
       .from('prompts')
-      .select('password_hash, is_password_protected')
+      .select('password_hash, is_password_protected, access')
       .eq('id', promptId)
       .single()
 
@@ -76,27 +84,14 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, prompt.password_hash)
+    // Hash the provided password and compare
+    const hashedPassword = await hashPassword(password)
+    const isValid = hashedPassword === prompt.password_hash
 
-    if (!isPasswordValid) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Invalid password'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
-        }
-      )
-    }
-
-    // Password is valid
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Password verified successfully'
+        valid: isValid
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
