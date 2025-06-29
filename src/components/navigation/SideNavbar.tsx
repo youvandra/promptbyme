@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   Home,
+  DollarSign,
   User, 
   LogOut, 
   X,
@@ -159,6 +160,12 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       icon: Code,
       label: 'API',
       description: 'Developer API access'
+    },
+    {
+      path: '/pricing',
+      icon: DollarSign,
+      label: 'Pricing',
+      description: 'View our plans'
     }
   ]
 
