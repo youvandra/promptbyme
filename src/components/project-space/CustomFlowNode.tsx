@@ -110,6 +110,27 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                 return (
                   <div className="flex items-center gap-1.5">
                     {assignedMember.avatar_url ? (
+                      <img 
+                        src={assignedMember.avatar_url}
+                        alt={assignedMember.display_name || assignedMember.email}
+                        className="w-4 h-4 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-4 h-4 bg-indigo-600/30 rounded-full flex items-center justify-center">
+                        <span className="text-[8px] text-indigo-300">
+                          {(assignedMember.display_name || assignedMember.email).charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-indigo-300">
+                      {assignedMember.display_name || assignedMember.email}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </div>
       </motion.div>
       
       {/* Output Handle (bottom) */}
