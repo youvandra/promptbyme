@@ -735,8 +735,6 @@ export const ProfilePage: React.FC = () => {
                         </div>
                       )}
                     </div>
-                  </h1>
-                  </div>
                   <p className="text-zinc-400">
                     Manage your account and preferences
                   </p>
