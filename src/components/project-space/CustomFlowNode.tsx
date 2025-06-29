@@ -91,7 +91,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       {/* Output Handle (bottom) */}
       <Handle
         type="source"
-        position={Position.Bottom} 
+      <div className="text-xs text-zinc-300 mt-2 whitespace-pre-wrap w-full max-h-[80px] overflow-hidden text-left">
         className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-pointer !opacity-100"
       />
     </div>
