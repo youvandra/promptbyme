@@ -6,17 +6,7 @@ This document provides information on how to use the promptby.me API to programm
 
 ## Authentication
 
-All API requests require authentication. You can use either a Supabase JWT token or a promptby.me API key in the `Authorization` header of your requests.
-
-### Option 1: Supabase JWT Token
-
-```
-Authorization: Bearer YOUR_SUPABASE_JWT_TOKEN
-```
-
-To obtain a JWT token, you need to authenticate with Supabase using your application's authentication flow.
-
-### Option 2: promptby.me API Key
+All API requests require authentication using a promptby.me API key in the `Authorization` header of your requests.
 
 ```
 Authorization: Bearer YOUR_PROMPTBY_ME_API_KEY
@@ -33,7 +23,7 @@ Execute a prompt with optional variable substitution.
 **Endpoint:** `POST /functions/v1/run-prompt-api`
 
 **Headers:**
-- `Authorization: Bearer YOUR_SUPABASE_JWT_TOKEN` or `Authorization: Bearer YOUR_PROMPTBY_ME_API_KEY`
+- `Authorization: Bearer YOUR_PROMPTBY_ME_API_KEY`
 - `Content-Type: application/json`
 
 **Request Body:**
@@ -100,39 +90,6 @@ Error (4xx/5xx):
 
 ## Usage Examples
 
-### JavaScript/TypeScript with JWT
-
-```javascript
-async function runPrompt() {
-  const response = await fetch('https://your-project.supabase.co/functions/v1/run-prompt-api', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${supabaseAccessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      prompt_id: 'your-prompt-uuid',
-      variables: {
-        name: 'John',
-        company: 'Acme Inc.'
-      },
-      api_key: 'your-ai-provider-api-key',
-      provider: 'openai',
-      model: 'gpt-4o',
-      temperature: 0.7
-    })
-  });
-  
-  const data = await response.json();
-  
-  if (data.success) {
-    console.log('AI Response:', data.output);
-  } else {
-    console.error('Error:', data.error);
-  }
-}
-```
-
 ### JavaScript/TypeScript with API Key
 
 ```javascript
@@ -176,7 +133,7 @@ def run_prompt():
     url = 'https://your-project.supabase.co/functions/v1/run-prompt-api'
     
     headers = {
-        'Authorization': 'Bearer your-promptby-me-api-key',  # Or use JWT token
+        'Authorization': 'Bearer your-promptby-me-api-key',
         'Content-Type': 'application/json'
     }
     
@@ -205,11 +162,9 @@ def run_prompt():
 
 1. **API Keys**: Never expose your AI provider API keys or promptby.me API keys in client-side code. Always use the API from a secure backend environment.
 
-2. **JWT Tokens**: Protect your Supabase JWT tokens and ensure they have appropriate expiration times.
+2. **Rate Limiting**: Be aware that this API may be subject to rate limiting both from promptby.me and from the underlying AI providers.
 
-3. **Rate Limiting**: Be aware that this API may be subject to rate limiting both from promptby.me and from the underlying AI providers.
-
-4. **Prompt Access**: Users can only access prompts they own or prompts that are marked as public.
+3. **Prompt Access**: Users can only access prompts they own or prompts that are marked as public.
 
 ## Support
 

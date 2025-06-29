@@ -44,43 +44,28 @@ Deno.serve(async (req) => {
     const token = authHeader.replace('Bearer ', '')
     let userId: string | null = null
 
-    // First, try to authenticate with Supabase JWT
-    try {
-      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
-      
-      if (!authError && user) {
-        userId = user.id
-      }
-    } catch (authError) {
-      // JWT authentication failed, try API key authentication
-      console.log('JWT authentication failed, trying API key authentication')
+    // Check if the token is a valid API key
+    const { data: apiKeyData, error: apiKeyError } = await supabaseClient
+      .from('api_keys')
+      .select('user_id')
+      .eq('key', token)
+      .eq('key_type', 'pbm_api_key')
+      .single()
+
+    if (apiKeyError || !apiKeyData) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Invalid API key'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
     }
 
-    // If JWT authentication failed, try API key authentication
-    if (!userId) {
-      // Check if the token is a valid API key
-      const { data: apiKeyData, error: apiKeyError } = await supabaseClient
-        .from('api_keys')
-        .select('user_id')
-        .eq('key', token)
-        .eq('key_type', 'pbm_api_key')
-        .single()
-
-      if (apiKeyError || !apiKeyData) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: 'Invalid authentication token or API key'
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 401,
-          }
-        )
-      }
-
-      userId = apiKeyData.user_id
-    }
+    userId = apiKeyData.user_id
 
     // Parse request body
     const { 
@@ -110,7 +95,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'API key is required'
+          error: 'AI provider API key is required'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink, Wand2, Play, Server, Cpu } from 'lucide-react'
+import { Menu, Code, Key, FileText, Copy, CheckCircle, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -19,8 +19,6 @@ export const ApiPage: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python'>('javascript')
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'anthropic' | 'google' | 'llama' | 'groq'>('openai')
-  const [isRunning, setIsRunning] = useState(false)
-  const [output, setOutput] = useState<string | null>(null)
   
   const { user, loading: authLoading } = useAuthStore()
 
@@ -39,6 +37,7 @@ export const ApiPage: React.FC = () => {
         .from('api_keys')
         .select('key')
         .eq('user_id', user.id)
+        .eq('key_type', 'pbm_api_key')
         .maybeSingle()
 
       if (!error && data) {
@@ -61,16 +60,6 @@ export const ApiPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to copy:', err)
     }
-  }
-
-  const handleTryIt = () => {
-    setIsRunning(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      setOutput("This is a simulated response from the API. In a real implementation, this would be the actual response from the AI provider based on your prompt and variables.")
-      setIsRunning(false)
-    }, 2000)
   }
 
   if (authLoading) {
@@ -168,7 +157,7 @@ export const ApiPage: React.FC = () => {
                     </div>
                     <div>
                       <h2 className="text-xl font-semibold text-white">API Key</h2>
-                      <p className="text-zinc-400 text-sm">Required for AI provider authentication</p>
+                      <p className="text-zinc-400 text-sm">Required for API authentication</p>
                     </div>
                   </div>
                   
@@ -204,7 +193,7 @@ export const ApiPage: React.FC = () => {
               <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
-                    <Wand2 size={20} className="text-indigo-400" />
+                    <Code size={20} className="text-indigo-400" />
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-white">Generate API Code</h2>
@@ -277,93 +266,6 @@ export const ApiPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Try It Section */}
-              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
-                    <Play size={20} className="text-indigo-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-white">Try It</h2>
-                    <p className="text-zinc-400 text-sm">Test your API integration</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-zinc-300 mb-2">
-                        Provider
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="flex items-center gap-2 p-3 bg-zinc-800/30 border border-zinc-700/30 rounded-lg">
-                          <Server size={16} className="text-indigo-400" />
-                          <span className="text-zinc-300 text-sm">{selectedProvider}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 p-3 bg-zinc-800/30 border border-zinc-700/30 rounded-lg">
-                          <Cpu size={16} className="text-indigo-400" />
-                          <span className="text-zinc-300 text-sm">
-                            {selectedProvider === 'openai' ? 'gpt-4o' : 
-                             selectedProvider === 'anthropic' ? 'claude-3-opus' :
-                             selectedProvider === 'google' ? 'gemini-pro' :
-                             selectedProvider === 'llama' ? 'llama-3-70b' : 'llama3-8b-8192'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-end">
-                      <button
-                        onClick={handleTryIt}
-                        disabled={isRunning || !apiKey}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
-                      >
-                        {isRunning ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            <span>Running...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Play size={16} />
-                            <span>Run Test</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {output && (
-                    <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-white">Response</h4>
-                        <button
-                          onClick={() => copyToClipboard(output, 'output')}
-                          className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded transition-colors"
-                          title="Copy to clipboard"
-                        >
-                          {copied === 'output' ? (
-                            <CheckCircle size={16} className="text-emerald-400" />
-                          ) : (
-                            <Copy size={16} />
-                          )}
-                        </button>
-                      </div>
-                      <div className="bg-zinc-900/50 p-3 rounded-lg text-zinc-300 text-sm">
-                        {output}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {!apiKey && (
-                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-amber-300 text-sm">
-                      You need to generate an API key first to run tests.
-                    </div>
-                  )}
                 </div>
               </div>
 
