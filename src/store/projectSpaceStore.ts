@@ -131,24 +131,35 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
 
         if (ownedError) throw ownedError
 
-        // Get projects where user is a member
-        const { data: memberProjects, error: memberError } = await supabase
+        // First, get project IDs where user is a member
+        const { data: memberProjectIds, error: memberError } = await supabase
           .from('project_members')
-          .select(`
-            flow_projects (*)
-          `)
+          .select('project_id')
           .eq('user_id', user.id)
           .eq('status', 'accepted')
 
         if (memberError) throw memberError
 
+        // Then fetch the actual project data for those IDs
+        let memberProjects = []
+        if (memberProjectIds && memberProjectIds.length > 0) {
+          const projectIds = memberProjectIds.map(mp => mp.project_id)
+          const { data: projects, error: projectsError } = await supabase
+            .from('flow_projects')
+            .select('*')
+            .in('id', projectIds)
+
+          if (projectsError) throw projectsError
+          memberProjects = projects || []
+        }
+
         // Combine and deduplicate projects
         const allProjects = [...(ownedProjects || [])]
         
-        if (memberProjects) {
-          memberProjects.forEach(mp => {
-            if (mp.flow_projects && !allProjects.find(p => p.id === mp.flow_projects.id)) {
-              allProjects.push(mp.flow_projects)
+        if (memberProjects.length > 0) {
+          memberProjects.forEach(project => {
+            if (!allProjects.find(p => p.id === project.id)) {
+              allProjects.push(project)
             }
           })
         }
@@ -205,7 +216,7 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
         if (error) throw error
 
         const { projects, selectedProject } = get()
-        const updatedProjects = projects.map(p => p.id === id ? project : p)
+        const updatedProjects = projects.map(p => p.id === id ? { ...p, ...project } : p)
         
         set({ 
           projects: updatedProjects,
@@ -400,19 +411,48 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           .update(dbUpdates)
           .eq('id', nodeId)
           .select()
-          .single()
+          .maybeSingle()
 
-        if (error) throw error
+        if (error) {
+          throw error
+        }
 
-        // Transform node to include position object
-        const transformedNode: FlowNode = {
-          ...node,
-          position: { x: node.position_x, y: node.position_y }
+        // If no node was found (node is null), handle gracefully
+        if (!node) {
+          // Node doesn't exist, but we can still update local state with the changes
+          const { selectedProject } = get()
+          if (selectedProject?.nodes) {
+            const existingNode = selectedProject.nodes.find(n => n.id === nodeId)
+            if (existingNode) {
+              const transformedNode = {
+                ...existingNode,
+                ...updates
+              }
+              
+              const updatedNodes = selectedProject.nodes.map(n => 
+                n.id === nodeId ? transformedNode : n
+              )
+              
+              set({
+                selectedProject: {
+                  ...selectedProject,
+                  nodes: updatedNodes
+                }
+              })
+            }
+          }
+          return
         }
 
         // Update selected project if it contains this node
         const { selectedProject } = get()
         if (selectedProject?.nodes) {
+          // Transform node to include position object
+          const transformedNode: FlowNode = {
+            ...node,
+            position: { x: node.position_x, y: node.position_y }
+          }
+          
           const updatedNodes = selectedProject.nodes.map(n => 
             n.id === nodeId ? transformedNode : n
           )
@@ -500,12 +540,16 @@ export const useProjectSpaceStore = create<ProjectSpaceState>()(
           .from('flow_nodes')
           .select('*')
           .eq('id', nodeId)
-          .single()
+          .maybeSingle()
 
-        if (fetchError || !originalNode) {
-          throw new Error('Failed to fetch original node')
+        if (fetchError) {
+          throw fetchError
         }
-
+        
+        if (!originalNode) {
+          throw new Error('Node not found')
+        }
+        
         // Create a new node with the same properties but at an offset position
         const { data: newNode, error: createError } = await supabase
           .from('flow_nodes')

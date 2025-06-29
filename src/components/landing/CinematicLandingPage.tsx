@@ -112,8 +112,8 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
       content: "flow"
     },
     {
-      title: "Track your progress",
-      subtitle: "Move prompts through your workflow",
+      title: "Run your flow",
+      subtitle: "Trigger the entire prompt pipeline",
       content: "kanban"
     },
     {
@@ -617,10 +617,29 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                   >
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                       {[
-                        { title: "Backlog", items: ["API Design", "Error Handling"], color: "zinc" },
-                        { title: "In Progress", items: ["User Dashboard"], color: "indigo" },
-                        { title: "Done", items: ["Landing Page", "Auth Flow"], color: "emerald" }
-                      ].map((column, columnIndex) => (
+                        {
+                          title: "Content Production",
+                          items: [
+                            { name: "Content ideas", color: "emerald" },
+                            { name: "Content script", color: "emerald" },
+                            { name: "Generate Caption", color: "indigo" },
+                          ],
+                        },
+                        {
+                          title: "Audience Engagement",
+                          items: [
+                            { name: "CTA for audience reply", color: "zinc" },
+                          ],
+                        },
+                        {
+                          title: "Sponsored Endorsement Draft",
+                          items: [
+                            { name: "Brand brief", color: "indigo" },
+                            { name: "Soft-selling story", color: "zinc" },
+                          ],
+                        },
+                      ]
+                      .map((column, columnIndex) => (
                         <motion.div 
                           key={columnIndex} 
                           className="space-y-3 md:space-y-4"
@@ -655,15 +674,17 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                                 whileHover={{ scale: 1.02, y: -2 }}
                               >
                                 <div className="flex items-center justify-between">
-                                  <span className="text-white text-xs md:text-sm font-medium">{item}</span>
-                                  <motion.div 
-                                    className={`w-2 h-2 rounded-full ${
-                                      column.color === 'emerald' ? 'bg-emerald-400' :
-                                      column.color === 'indigo' ? 'bg-indigo-400' : 'bg-zinc-400'
-                                    }`}
-                                    animate={{ scale: [1, 1.2, 1] }}
-                                    transition={{ duration: 2, repeat: Infinity, delay: itemIndex * 0.5 }}
-                                  />
+                                <span className="text-white text-xs md:text-sm font-medium">{item.name}</span>
+                                <motion.div 
+                                  className={`w-2 h-2 rounded-full ${
+                                    item.color === 'emerald' ? 'bg-emerald-400' :
+                                    item.color === 'indigo' ? 'bg-indigo-400' :
+                                    'bg-zinc-400'
+                                  }`}
+                                  animate={{ scale: [1, 1.2, 1] }}
+                                  transition={{ duration: 2, repeat: Infinity, delay: itemIndex * 0.5 }}
+                                />
+
                                 </div>
                               </motion.div>
                             ))}

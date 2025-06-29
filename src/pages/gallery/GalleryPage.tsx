@@ -5,6 +5,7 @@ import { PromptCard } from '../../components/prompts/PromptCard'
 import { PromptModal } from '../../components/prompts/PromptModal'
 import { PromptVersionHistory } from '../../components/prompts/PromptVersionHistory'
 import { FolderModal } from '../../components/folders/FolderModal'
+import { PromptFolderSelector } from '../../components/folders/PromptFolderSelector'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -120,18 +121,24 @@ export const GalleryPage: React.FC = () => {
     }
   }
 
-  const handleSavePrompt = async (id: string, title: string, content: string, access: 'public' | 'private') => {
+  const handleSavePrompt = async (id: string, title: string, content: string, access: 'public' | 'private', notes?: string | null, outputSample?: string | null, mediaUrls?: string[] | null) => {
     try {
       const currentPrompt = prompts.find(p => p.id === id)
       if (currentPrompt && (currentPrompt.content !== content || currentPrompt.title !== title)) {
-        await createVersion(id, title, content, 'Updated via modal')
+        await createVersion(id, title, content, 'Updated via modal', notes, outputSample, mediaUrls)
         setToast({ message: 'New version created successfully', type: 'success' })
       } else {
-        await updatePrompt(id, { title: title || null, access })
+        await updatePrompt(id, { 
+          title: title || null, 
+          access,
+          notes: notes || null,
+          output_sample: outputSample || null,
+          media_urls: mediaUrls || null
+        })
         setToast({ message: 'Prompt updated successfully', type: 'success' })
       }
       
-      const updatedPrompt = { ...selectedPrompt, title, content, access }
+      const updatedPrompt = { ...selectedPrompt, title, content, access, notes, output_sample: outputSample, media_urls: mediaUrls }
       setSelectedPrompt(updatedPrompt)
     } catch (error) {
       setToast({ message: 'Failed to update prompt', type: 'error' })
@@ -300,66 +307,6 @@ export const GalleryPage: React.FC = () => {
                       <h1 className="text-3xl font-bold text-white">
                         {currentFolderName}
                       </h1>
-                      
-                      {/* Folder Dropdown */}
-                      {folders.length > 0 && (
-                        <div className="relative">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setShowFolderDropdown(!showFolderDropdown)
-                            }}
-                            className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200"
-                          >
-                            <FolderOpen size={16} className="text-indigo-400" />
-                            <ChevronDown size={14} className={`transition-transform duration-200 ${showFolderDropdown ? 'rotate-180' : ''}`} />
-                          </button>
-                          
-                          {showFolderDropdown && (
-                            <div className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 min-w-[200px] max-h-64 overflow-y-auto">
-                              <div className="p-2">
-                                <button
-                                  onClick={() => {
-                                    setSelectedFolderId(null)
-                                    setShowFolderDropdown(false)
-                                  }}
-                                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
-                                    selectedFolderId === null 
-                                      ? 'bg-indigo-600/20 text-indigo-300' 
-                                      : 'text-zinc-300 hover:bg-zinc-800/50'
-                                  }`}
-                                >
-                                  <FolderOpen size={16} />
-                                  <span>All Prompts</span>
-                                </button>
-                                
-                                {folders.map((folder) => (
-                                  <button
-                                    key={folder.id}
-                                    onClick={() => {
-                                      setSelectedFolderId(folder.id)
-                                      setShowFolderDropdown(false)
-                                    }}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
-                                      selectedFolderId === folder.id 
-                                        ? 'bg-indigo-600/20 text-indigo-300' 
-                                        : 'text-zinc-300 hover:bg-zinc-800/50'
-                                    }`}
-                                  >
-                                    <div 
-                                      className="w-4 h-4 flex-shrink-0"
-                                      style={{ color: folder.color }}
-                                    >
-                                      <FolderOpen size={16} />
-                                    </div>
-                                    <span className="truncate">{folder.name}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                     <p className="text-zinc-400">
                       Manage your AI prompt collection with version control
@@ -368,13 +315,11 @@ export const GalleryPage: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setShowFolderModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
-                  >
-                    <FolderPlus size={16} />
-                    <span>New Folder</span>
-                  </button>
+                  <PromptFolderSelector
+                    selectedFolderId={selectedFolderId}
+                    onFolderSelect={setSelectedFolderId}
+                    onNewFolderClick={() => setShowFolderModal(true)}
+                  />
                   
                   <Link
                     to="/"
@@ -492,6 +437,9 @@ export const GalleryPage: React.FC = () => {
                       currentVersion={prompt.current_version}
                       totalVersions={prompt.total_versions}
                       tags={prompt.tags}
+                      notes={prompt.notes}
+                      outputSample={prompt.output_sample}
+                      mediaUrls={prompt.media_urls}
                       folders={folders}
                       enableContextMenu={true}
                       onEdit={handleEditPrompt}

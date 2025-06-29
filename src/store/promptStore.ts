@@ -27,11 +27,13 @@ interface PromptState {
   fetchVersionHistory: (promptId: string) => Promise<PromptVersion[]>
   createPrompt: (prompt: Omit<Prompt, 'id' | 'created_at' | 'views' | 'like_count' | 'fork_count'>) => Promise<void>
   updatePrompt: (id: string, updates: Partial<Omit<Prompt, 'id' | 'created_at'>>) => Promise<void>
-  createVersion: (promptId: string, title: string, content: string, commitMessage?: string) => Promise<void>
+  createVersion: (promptId: string, title: string, content: string, commitMessage?: string, notes?: string | null, outputSample?: string | null, mediaUrls?: string[] | null) => Promise<void>
   revertToVersion: (promptId: string, versionNumber: number) => Promise<void>
   forkPrompt: (originalPromptId: string, userId: string, title?: string) => Promise<void>
   deletePrompt: (id: string) => Promise<void>
   incrementViews: (id: string) => Promise<void>
+  uploadMedia: (file: File, userId: string) => Promise<string>
+  deleteMedia: (url: string) => Promise<void>
   subscribeToUserPrompts: (userId: string) => () => void
   clearCache: () => void
 }
@@ -283,7 +285,7 @@ export const usePromptStore = create<PromptState>()(
     }
   },
 
-  createVersion: async (promptId: string, title: string, content: string, commitMessage?: string) => {
+  createVersion: async (promptId: string, title: string, content: string, commitMessage?: string, notes?: string | null, outputSample?: string | null, mediaUrls?: string[] | null) => {
     try {
       // Get the current prompt to increment version numbers
       const { prompts, cache } = get()
@@ -327,7 +329,10 @@ export const usePromptStore = create<PromptState>()(
           title: title || null,
           content,
           current_version: newVersionNumber,
-          total_versions: newTotalVersions
+          total_versions: newTotalVersions,
+          notes: notes || null,
+          output_sample: outputSample || null,
+          media_urls: mediaUrls || null
         })
         .eq('id', promptId)
         .select()
@@ -457,7 +462,10 @@ export const usePromptStore = create<PromptState>()(
         views: 0,
         fork_count: 0,
         current_version: 1,
-        total_versions: 1
+        total_versions: 1,
+        notes: originalPrompt.notes,
+        output_sample: originalPrompt.output_sample,
+        media_urls: originalPrompt.media_urls || []
       }
 
       const { data, error } = await supabase
@@ -546,6 +554,54 @@ export const usePromptStore = create<PromptState>()(
     } catch (error) {
       console.error('Error incrementing views:', error)
       // Don't throw error to prevent breaking the UI if view tracking fails
+    }
+  },
+
+  uploadMedia: async (file: File, userId: string) => {
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${userId}/${Date.now()}.${fileExt}`
+      const filePath = `${fileName}`
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('prompt-media')
+        .upload(filePath, file, {
+          upsert: true
+        })
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('prompt-media')
+        .getPublicUrl(filePath)
+
+      return urlData.publicUrl
+    } catch (error) {
+      console.error('Error uploading media:', error)
+      throw error
+    }
+  },
+
+  deleteMedia: async (url: string) => {
+    try {
+      // Extract the file path from the URL
+      const urlObj = new URL(url)
+      const pathParts = urlObj.pathname.split('/')
+      const bucketName = pathParts[1] // After the first slash should be the bucket name
+      const filePath = pathParts.slice(2).join('/') // Everything after the bucket name
+      
+      const { error } = await supabase.storage
+        .from(bucketName)
+        .remove([filePath])
+
+      if (error) {
+        throw error
+      }
+    } catch (error) {
+      console.error('Error deleting media:', error)
+      throw error
     }
   },
 

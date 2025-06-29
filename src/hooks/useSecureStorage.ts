@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 export const useSecureStorage = () => {
   // Encryption utilities
@@ -75,6 +75,7 @@ export const useSecureStorage = () => {
   const setSecureItem = async (key: string, value: string) => {
     const encrypted = await encryptData(value)
     localStorage.setItem(key, encrypted)
+    return true
   }
 
   const getSecureItem = async (key: string): Promise<string | null> => {

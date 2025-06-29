@@ -22,7 +22,9 @@ export const HomePage: React.FC = () => {
     loading: promptLoading, 
     createPrompt,
     createVersion,
-    subscribeToUserPrompts 
+    subscribeToUserPrompts,
+    uploadMedia,
+    deleteMedia
   } = usePromptStore()
   const { fetchFolders } = useFolderStore()
 
@@ -38,7 +40,16 @@ export const HomePage: React.FC = () => {
     }
   }, [user, fetchFolders, subscribeToUserPrompts])
 
-  const handleCreatePrompt = async (title: string, content: string, access: 'public' | 'private', folderId?: string | null, tags?: string[]) => {
+  const handleCreatePrompt = async (
+    title: string, 
+    content: string, 
+    access: 'public' | 'private', 
+    folderId?: string | null, 
+    tags?: string[],
+    notes?: string | null,
+    outputSample?: string | null,
+    mediaUrls?: string[] | null
+  ) => {
     if (!user) {
       setShowAuthModal(true)
       return
@@ -55,6 +66,9 @@ export const HomePage: React.FC = () => {
         current_version: 1,
         total_versions: 1,
         folder_id: folderId || null,
+        notes: notes || null,
+        output_sample: outputSample || null,
+        media_urls: mediaUrls || null
       }
 
       await createPrompt(promptData)

@@ -65,6 +65,9 @@ export type Database = {
           folder_id: string | null
           current_version: number | null
           total_versions: number | null
+          notes: string | null
+          output_sample: string | null
+          media_urls: string[] | null
         }
         Insert: {
           id?: string
@@ -80,6 +83,9 @@ export type Database = {
           folder_id?: string | null
           current_version?: number | null
           total_versions?: number | null
+          notes?: string | null
+          output_sample?: string | null
+          media_urls?: string[] | null
         }
         Update: {
           id?: string
@@ -95,6 +101,9 @@ export type Database = {
           folder_id?: string | null
           current_version?: number | null
           total_versions?: number | null
+          notes?: string | null
+          output_sample?: string | null
+          media_urls?: string[] | null
         }
       }
       prompt_versions: {
@@ -130,87 +139,6 @@ export type Database = {
           created_by?: string | null
           is_current?: boolean | null
           created_at?: string | null
-        }
-      }
-      likes: {
-        Row: {
-          id: string
-          user_id: string
-          prompt_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          prompt_id: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          prompt_id?: string
-          created_at?: string
-        }
-      }
-      flow_projects: {
-        Row: {
-          id: string
-          user_id: string
-          name: string
-          description: string | null
-          created_at: string | null
-          updated_at: string | null
-          visibility: 'private' | 'team' | 'public'
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          name: string
-          description?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-          visibility?: 'private' | 'team' | 'public'
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          name?: string
-          description?: string | null
-          created_at?: string | null
-          updated_at?: string | null
-          visibility?: 'private' | 'team' | 'public'
-        }
-      }
-      project_members: {
-        Row: {
-          id: string
-          project_id: string
-          user_id: string
-          role: 'viewer' | 'editor' | 'admin'
-          status: 'pending' | 'accepted' | 'declined'
-          invited_by_user_id: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          user_id: string
-          role: 'viewer' | 'editor' | 'admin'
-          status?: 'pending' | 'accepted' | 'declined'
-          invited_by_user_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          user_id?: string
-          role?: 'viewer' | 'editor' | 'admin'
-          status?: 'pending' | 'accepted' | 'declined'
-          invited_by_user_id?: string | null
-          created_at?: string
-          updated_at?: string
         }
       }
       flow_nodes: {
@@ -344,6 +272,58 @@ export type Database = {
           created_at?: string
         }
       }
+    }
+  }
+  prompt_flows: {
+    Row: {
+      id: string
+      user_id: string
+      name: string
+      description: string | null
+      created_at: string | null
+      updated_at: string | null
+    }
+    Insert: {
+      id?: string
+      user_id: string
+      name: string
+      description?: string | null
+      created_at?: string | null
+      updated_at?: string | null
+    }
+    Update: {
+      id?: string
+      user_id?: string
+      name?: string
+      description?: string | null
+      created_at?: string | null
+      updated_at?: string | null
+    }
+  }
+  flow_steps: {
+    Row: {
+      id: string
+      flow_id: string
+      prompt_id: string
+      order_index: number
+      step_title: string
+      created_at: string | null
+    }
+    Insert: {
+      id?: string
+      flow_id: string
+      prompt_id: string
+      order_index: number
+      step_title: string
+      created_at?: string | null
+    }
+    Update: {
+      id?: string
+      flow_id?: string
+      prompt_id?: string
+      order_index?: number
+      step_title?: string
+      created_at?: string | null
     }
   }
 }

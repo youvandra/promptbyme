@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Menu, Play, Settings, Copy, Download, Trash2, Save, Plus, Wand2 } from 'lucide-react'
+import { Menu, Play, Cpu, Copy, Download, Trash2, Save, Plus, Wand2 } from 'lucide-react'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { PromptSelectionModal } from '../../components/prompts/PromptSelectionModal'
-import { VariableFillModal } from '../../components/prompts/VariableFillModal'
+import { VariableFillOnlyModal } from '../../components/prompts/VariableFillOnlyModal'
 import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
 
@@ -19,8 +19,7 @@ export const PlaygroundPage: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [apiKey, setApiKey] = useState('')
-  const [model, setModel] = useState('gpt-3.5-turbo')
+  const [model, setModel] = useState('llama3-8b-8192')
   const [temperature, setTemperature] = useState(0.7)
   const [maxTokens, setMaxTokens] = useState(1000)
   const [promptInput, setPromptInput] = useState('')
@@ -28,8 +27,7 @@ export const PlaygroundPage: React.FC = () => {
   const [output, setOutput] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [showPromptModal, setShowPromptModal] = useState(false)
-  const [showVariableModal, setShowVariableModal] = useState(false)
-  const [pendingPromptContent, setPendingPromptContent] = useState('')
+  const [showVariableOnlyModal, setShowVariableOnlyModal] = useState(false)
   
   const { user, loading: authLoading, initialize } = useAuthStore()
   const { fetchUserPrompts } = usePromptStore()
@@ -52,89 +50,13 @@ export const PlaygroundPage: React.FC = () => {
     }
   }, [user, fetchUserPrompts, location.state])
 
-  // Encryption utilities
-  const generateKey = async (password: string): Promise<CryptoKey> => {
-    const encoder = new TextEncoder()
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(password),
-      { name: 'PBKDF2' },
-      false,
-      ['deriveKey']
-    )
-    
-    return crypto.subtle.deriveKey(
-      {
-        name: 'PBKDF2',
-        salt: encoder.encode('promptby.me-salt'),
-        iterations: 100000,
-        hash: 'SHA-256'
-      },
-      keyMaterial,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt', 'decrypt']
-    )
-  }
-
-  const encryptApiKey = async (apiKey: string): Promise<string> => {
-    try {
-      const key = await generateKey('promptby.me-encryption-key')
-      const encoder = new TextEncoder()
-      const data = encoder.encode(apiKey)
-      const iv = crypto.getRandomValues(new Uint8Array(12))
-      
-      const encrypted = await crypto.subtle.encrypt(
-        { name: 'AES-GCM', iv },
-        key,
-        data
-      )
-      
-      const encryptedArray = new Uint8Array(encrypted)
-      const combined = new Uint8Array(iv.length + encryptedArray.length)
-      combined.set(iv)
-      combined.set(encryptedArray, iv.length)
-      
-      return btoa(String.fromCharCode(...combined))
-    } catch (error) {
-      console.error('Encryption failed:', error)
-      return apiKey // Fallback to plain text if encryption fails
-    }
-  }
-
-  const decryptApiKey = async (encryptedData: string): Promise<string> => {
-    try {
-      const key = await generateKey('promptby.me-encryption-key')
-      const combined = new Uint8Array(atob(encryptedData).split('').map(char => char.charCodeAt(0)))
-      const iv = combined.slice(0, 12)
-      const encrypted = combined.slice(12)
-      
-      const decrypted = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv },
-        key,
-        encrypted
-      )
-      
-      const decoder = new TextDecoder()
-      return decoder.decode(decrypted)
-    } catch (error) {
-      console.error('Decryption failed:', error)
-      return encryptedData // Fallback to treating as plain text
-    }
-  }
-
   // Load saved settings from localStorage with decryption
   useEffect(() => {
     const loadSettings = async () => {
-      const savedApiKey = localStorage.getItem('openai_api_key_encrypted')
-      const savedModel = localStorage.getItem('openai_model')
-      const savedTemperature = localStorage.getItem('openai_temperature')
-      const savedMaxTokens = localStorage.getItem('openai_max_tokens')
+      const savedModel = localStorage.getItem('groq_model')
+      const savedTemperature = localStorage.getItem('groq_temperature')
+      const savedMaxTokens = localStorage.getItem('groq_max_tokens')
       
-      if (savedApiKey) {
-        const decryptedKey = await decryptApiKey(savedApiKey)
-        setApiKey(decryptedKey)
-      }
       if (savedModel) setModel(savedModel)
       if (savedTemperature) setTemperature(parseFloat(savedTemperature))
       if (savedMaxTokens) setMaxTokens(parseInt(savedMaxTokens))
@@ -146,14 +68,10 @@ export const PlaygroundPage: React.FC = () => {
   // Save settings to localStorage with encryption
   const saveSettings = async () => {
     try {
-      if (apiKey.trim()) {
-        const encryptedKey = await encryptApiKey(apiKey)
-        localStorage.setItem('openai_api_key_encrypted', encryptedKey)
-      }
-      localStorage.setItem('openai_model', model)
-      localStorage.setItem('openai_temperature', temperature.toString())
-      localStorage.setItem('openai_max_tokens', maxTokens.toString())
-      setToast({ message: 'Settings saved securely', type: 'success' })
+      localStorage.setItem('groq_model', model)
+      localStorage.setItem('groq_temperature', temperature.toString())
+      localStorage.setItem('groq_max_tokens', maxTokens.toString())
+      setToast({ message: 'Settings saved successfully', type: 'success' })
     } catch (error) {
       console.error('Failed to save settings:', error)
       setToast({ message: 'Failed to save settings', type: 'error' })
@@ -163,28 +81,22 @@ export const PlaygroundPage: React.FC = () => {
   const handlePromptSelected = (prompt: any) => {
     const hasVariables = /\{\{([^}]+)\}\}/.test(prompt.content)
     
+    // Set the selected prompt first, regardless of whether it has variables
+    setSelectedPrompt({ id: prompt.id, title: prompt.title, content: prompt.content })
+    
     if (hasVariables) {
-      setPendingPromptContent(prompt.content)
-      setSelectedPrompt({ id: prompt.id, title: prompt.title, content: prompt.content })
-      setShowVariableModal(true)
+      setShowVariableOnlyModal(true)
     } else {
       setPromptInput(prompt.content)
-      setSelectedPrompt({ id: prompt.id, title: prompt.title, content: prompt.content })
     }
   }
 
   const handleVariablesFilled = (filledContent: string) => {
     setPromptInput(filledContent)
-    setShowVariableModal(false)
-    setPendingPromptContent('')
+    setShowVariableOnlyModal(false)
   }
 
   const generateResponse = async () => {
-    if (!apiKey.trim()) {
-      setToast({ message: 'Please enter your OpenAI API key', type: 'error' })
-      return
-    }
-    
     if (!selectedPrompt || !promptInput.trim()) {
       setToast({ message: 'Please select a prompt first', type: 'error' })
       return
@@ -194,12 +106,12 @@ export const PlaygroundPage: React.FC = () => {
     setOutput('')
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
+          'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`
+        }, 
         body: JSON.stringify({
           model: model,
           messages: [
@@ -209,7 +121,8 @@ export const PlaygroundPage: React.FC = () => {
             }
           ],
           temperature: temperature,
-          max_tokens: maxTokens
+          max_tokens: maxTokens,
+          stream: false
         })
       })
 
@@ -344,28 +257,11 @@ export const PlaygroundPage: React.FC = () => {
                 <div className="xl:col-span-1 space-y-6">
                   <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
                     <div className="flex items-center gap-2 mb-6">
-                      <Settings className="text-indigo-400" size={20} />
-                      <h2 className="text-lg font-semibold text-white">Configuration</h2>
+                      <Cpu className="text-indigo-400" size={20} />
+                      <h2 className="text-lg font-semibold text-white">Groq API Settings</h2>
                     </div>
                     
                     <div className="space-y-4">
-                      {/* API Key */}
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">
-                          OpenAI API Key *
-                        </label>
-                        <input
-                          type="password"
-                          value={apiKey}
-                          onChange={(e) => setApiKey(e.target.value)}
-                          placeholder="sk-..."
-                          className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                        />
-                        <p className="text-xs text-zinc-500 mt-1">
-                          Your API key is encrypted
-                        </p>
-                      </div>
-
                       {/* Model Selection */}
                       <div>
                         <label className="block text-sm font-medium text-zinc-300 mb-2">
@@ -376,10 +272,10 @@ export const PlaygroundPage: React.FC = () => {
                           onChange={(e) => setModel(e.target.value)}
                           className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                         >
-                          <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                          <option value="gpt-4">GPT-4</option>
-                          <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                          <option value="gpt-4o">GPT-4o</option>
+                          <option value="llama3-8b-8192">Llama 3 (8B)</option>
+                          <option value="llama3-70b-8192">Llama 3 (70B)</option>
+                          <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                          <option value="gemma-7b-it">Gemma 7B</option>
                         </select>
                       </div>
 
@@ -521,7 +417,7 @@ export const PlaygroundPage: React.FC = () => {
                       </div>
                       <button
                         onClick={generateResponse}
-                        disabled={isGenerating || !apiKey.trim() || !selectedPrompt}
+                        disabled={isGenerating || !selectedPrompt}
                         className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 disabled:transform-none disabled:cursor-not-allowed"
                       >
                         {isGenerating ? (
@@ -599,10 +495,13 @@ export const PlaygroundPage: React.FC = () => {
       />
 
       {/* Variable Fill Modal */}
-      <VariableFillModal
-        isOpen={showVariableModal}
-        onClose={() => setShowVariableModal(false)}
-        promptContent={pendingPromptContent}
+      <VariableFillOnlyModal
+        isOpen={showVariableOnlyModal}
+        onClose={() => {
+          setShowVariableOnlyModal(false)
+          // Don't clear selectedPrompt when closing without filling
+        }}
+        promptContent={selectedPrompt?.content || ''}
         promptTitle={selectedPrompt?.title}
         onVariablesFilled={handleVariablesFilled}
       />

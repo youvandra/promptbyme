@@ -8,7 +8,7 @@ interface Folder {
   color: string
   icon: string
   user_id: string
-  parent_id?: string
+  parent_id?: string | null
   position: number
   is_shared: boolean
   created_at: string
@@ -73,7 +73,7 @@ export const useFolderStore = create<FolderState>((set, get) => ({
         .from('folders')
         .select('position')
         .eq('user_id', user.id)
-        .eq('parent_id', folderData.parent_id || null)
+        .is('parent_id', folderData.parent_id || null)
         .order('position', { ascending: false })
         .limit(1)
 

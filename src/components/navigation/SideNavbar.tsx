@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   Home,
   User, 
-  FolderOpen, 
   LogOut, 
   X,
   Menu,
@@ -12,7 +11,10 @@ import {
   Bell,
   Check,
   Users,
-  Clock
+  Clock,
+  Code,
+  FolderOpen,
+  Folder
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../store/authStore'
@@ -138,13 +140,25 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       path: '/gallery',
       icon: FolderOpen,
       label: 'Gallery',
-      description: 'Your prompt collection'
+      description: 'Your prompt library'
     },
     {
       path: '/project-space',
       icon: Layers,
       label: 'Project Space',
-      description: 'Visual prompt flows'
+      description: 'Visual prompt projects'
+    },
+    {
+      path: '/prompt-flow',
+      icon: Folder,
+      label: 'Prompt Flow',
+      description: 'Sequential prompt chains'
+    },
+    {
+      path: '/api',
+      icon: Code,
+      label: 'API',
+      description: 'Developer API access'
     }
   ]
 
@@ -197,15 +211,15 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Mobile overlay */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
           onClick={onToggle}
         />
       )}
-
-      {/* Sidebar - FIXED positioning to prevent scrolling */}
+    
+      {/* Sidebar */}
       <div 
         id="sidebar"
         className={`
@@ -215,7 +229,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
           lg:translate-x-0
         `}
       >
-        {/* Header - Fixed at top */}
+        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-zinc-800/50 flex-shrink-0">
           <div className="flex items-center gap-3">
             <img 
@@ -235,7 +249,17 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
           </button>
         </div>
 
-        {/* Navigation - Scrollable content */}
+        {/* Mobile toggle button - fixed to the side when sidebar is closed */}
+        <button
+          onClick={onToggle}
+          className={`md:hidden fixed top-20 left-0 bg-indigo-600 text-white p-2 rounded-r-lg shadow-lg z-40 transition-opacity duration-300 ${
+            isOpen ? 'opacity-0' : 'opacity-100'
+          }`}
+        >
+          <Menu size={20} />
+        </button>
+
+        {/* Navigation */}
         <nav className="flex-1 p-4 overflow-y-auto">
           <div className="space-y-1">
             {navItems.map((item) => {
@@ -377,7 +401,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                           <div className="flex items-center gap-2">
                             <Users className="text-indigo-400" size={16} />
                             <h3 className="text-sm font-semibold text-white">
-                              Project Invitations
+                              Notifications
                             </h3>
                             {userInvitations.length > 0 && (
                               <div className="px-2 py-0.5 bg-indigo-600 text-white text-xs font-bold rounded-full">
@@ -394,8 +418,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                             <X size={14} />
                           </button>
                         </div>
-
-                        {/* Invitations list */}
+                        
                         <div className="max-h-80 overflow-y-auto">
                           {invitationsLoading ? (
                             <div className="p-4 text-center">
@@ -407,7 +430,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                           ) : userInvitations.length === 0 ? (
                             <div className="p-4 text-center text-zinc-500">
                               <Bell className="mx-auto mb-2 opacity-50" size={24} />
-                              <p className="text-sm">No pending invitations</p>
+                              <p className="text-sm">No pending Notifications</p>
                             </div>
                           ) : (
                             userInvitations.map((invitation) => (
