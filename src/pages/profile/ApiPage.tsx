@@ -344,14 +344,6 @@ def run_prompt():
                     Integrate promptby.me into your applications
                   </p>
                 </div>
-                
-                <button
-                  onClick={() => setShowApiDocsModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200"
-                >
-                  <FileText size={16} />
-                  <span>View Documentation</span>
-                </button>
               </div>
 
               {/* API Key Section */}
