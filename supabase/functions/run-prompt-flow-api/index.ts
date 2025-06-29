@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import * as bcrypt from 'npm:bcryptjs@2.4.3'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,7 +95,7 @@ Deno.serve(async (req) => {
 
     // Parse request body and prepare for logging
     let requestBody;
-    let flowId, variables, apiKey, provider, model, temperature, maxTokens;
+    let flowId, variables, apiKey, provider, model, temperature, maxTokens, promptPassword;
     
     try {
       requestBody = await req.json();
@@ -105,11 +106,13 @@ Deno.serve(async (req) => {
       model = requestBody.model || 'llama3-8b-8192';
       temperature = requestBody.temperature || 0.7;
       maxTokens = requestBody.max_tokens || 1000;
+      promptPassword = requestBody.password;
       
       // Create a safe copy of the request body for logging (redact API key)
       const logRequestBody = {
         ...requestBody,
-        api_key: apiKey ? 'sk_...redacted...' : undefined
+        api_key: apiKey ? 'sk_...redacted...' : undefined,
+        password: promptPassword ? '********' : undefined
       };
       
       // Store this for logging later
@@ -309,7 +312,9 @@ Deno.serve(async (req) => {
         prompts (
           id,
           title,
-          content
+          content,
+          is_password_protected,
+          password_hash
         )
       `)
       .eq('flow_id', flowId)
@@ -348,6 +353,91 @@ Deno.serve(async (req) => {
           status: 404,
         }
       );
+    }
+
+    // Check if any step has a password-protected prompt that the user doesn't own
+    for (const step of steps) {
+      if (step.prompts.is_password_protected && step.prompts.user_id !== userId) {
+        // If no password provided
+        if (!promptPassword) {
+          // Log the missing password error
+          try {
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+            
+            await supabaseClient
+              .from('api_call_logs')
+              .insert({
+                user_id: userId,
+                endpoint: req.url,
+                method: req.method,
+                status: 401,
+                request_body: requestBody,
+                response_body: { 
+                  success: false, 
+                  error: `This flow contains a password-protected prompt (${step.step_title}). Please provide a password.` 
+                },
+                duration_ms: duration,
+                ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+                user_agent: req.headers.get('user-agent') || 'unknown'
+              });
+          } catch (logError) {
+            console.error('Failed to log API call:', logError);
+          }
+          
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: `This flow contains a password-protected prompt (${step.step_title}). Please provide a password.`
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 401,
+            }
+          );
+        }
+
+        // Verify password
+        const isPasswordValid = await bcrypt.compare(promptPassword, step.prompts.password_hash);
+        
+        if (!isPasswordValid) {
+          // Log the invalid password error
+          try {
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+            
+            await supabaseClient
+              .from('api_call_logs')
+              .insert({
+                user_id: userId,
+                endpoint: req.url,
+                method: req.method,
+                status: 401,
+                request_body: requestBody,
+                response_body: { 
+                  success: false, 
+                  error: `Invalid password for prompt in step "${step.step_title}"` 
+                },
+                duration_ms: duration,
+                ip_address: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown',
+                user_agent: req.headers.get('user-agent') || 'unknown'
+              });
+          } catch (logError) {
+            console.error('Failed to log API call:', logError);
+          }
+          
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: `Invalid password for prompt in step "${step.step_title}"`
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 401,
+            }
+          );
+        }
+      }
     }
 
     // Fetch custom content and variables for each step

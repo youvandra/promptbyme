@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Copy, Eye, Lock, GitFork, Zap, Play } from 'lucide-react'
+import { ArrowLeft, Copy, Eye, Lock, GitFork, Zap, Play, Key } from 'lucide-react'
 import { marked } from 'marked'
 import { Toast } from '../../components/ui/Toast'
 import { getAppTagById } from '../../lib/appTags'
 import { PromptModal } from '../../components/prompts/PromptModal'
 import { VariableFillModal } from '../../components/prompts/VariableFillModal'
+import { PasswordPromptModal } from '../../components/prompts/PasswordPromptModal'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { AuthModal } from '../../components/auth/AuthModal'
 import { usePromptStore } from '../../store/promptStore'
@@ -13,7 +14,9 @@ import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
 import { Database } from '../../lib/supabase'
 
-type Prompt = Database['public']['Tables']['prompts']['Row']
+type Prompt = Database['public']['Tables']['prompts']['Row'] & {
+  is_password_protected?: boolean
+}
 
 export const SharedPromptPage: React.FC = () => {
   const { username, id } = useParams<{ username: string; id: string }>()
@@ -21,6 +24,8 @@ export const SharedPromptPage: React.FC = () => {
   const [promptOwner, setPromptOwner] = useState<any>(null)
   const [showModal, setShowModal] = useState(false)
   const [showVariableModal, setShowVariableModal] = useState(false)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [isPasswordVerified, setIsPasswordVerified] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
@@ -77,9 +82,24 @@ export const SharedPromptPage: React.FC = () => {
         } else if (promptData.access === 'private') {
           setError('This prompt is private and cannot be accessed')
         } else {
-          setPrompt(promptData)
-          // Increment view count for public prompts
-          await incrementViews(id)
+          // Check if the current user is the owner
+          const { data: { user: currentUser } } = await supabase.auth.getUser()
+          const isOwner = currentUser && currentUser.id === promptData.user_id
+          
+          // Set the prompt with password protection info
+          setPrompt({
+            ...promptData,
+            is_password_protected: !!promptData.is_password_protected
+          })
+          
+          // If the prompt is password protected and the current user is not the owner
+          if (promptData.is_password_protected && !isOwner) {
+            setIsPasswordVerified(false)
+          } else {
+            setIsPasswordVerified(true)
+            // Increment view count for public prompts
+            await incrementViews(id)
+          }
         }
       } catch (err) {
         console.error('Error loading prompt:', err)
@@ -231,6 +251,30 @@ export const SharedPromptPage: React.FC = () => {
     setPendingAction(null)
   }
 
+  const handlePasswordVerified = () => {
+    setIsPasswordVerified(true)
+    setShowPasswordModal(false)
+    
+    // Increment view count after password verification
+    if (prompt) {
+      incrementViews(prompt.id)
+    }
+  }
+
+  const handlePromptUpdated = () => {
+    // Reload the prompt to get the latest data
+    if (id) {
+      fetchPromptById(id).then(updatedPrompt => {
+        if (updatedPrompt) {
+          setPrompt({
+            ...updatedPrompt,
+            is_password_protected: !!updatedPrompt.is_password_protected
+          })
+        }
+      })
+    }
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -262,6 +306,7 @@ export const SharedPromptPage: React.FC = () => {
   const isForkedPrompt = prompt?.original_prompt_id !== null
   const canFork = prompt && !isForkedPrompt
   const canRunInApp = prompt && prompt.tags && prompt.tags.length > 0 && prompt.tags[0] && getAppTagById(prompt.tags[0])?.runUrl
+  const isPasswordProtected = prompt?.is_password_protected || false
 
   if (loading) {
     return (
@@ -391,6 +436,17 @@ export const SharedPromptPage: React.FC = () => {
                     <span>Public</span>
                   </div>
                   
+                  {/* Password Protected Indicator */}
+                  {isPasswordProtected && (
+                    <>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <Lock size={14} className="text-amber-400" />
+                        <span className="text-amber-400">Password Protected</span>
+                      </div>
+                    </>
+                  )}
+                  
                   {/* Fork indicator */}
                   {isForkedPrompt && (
                     <>
@@ -426,8 +482,19 @@ export const SharedPromptPage: React.FC = () => {
               
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-3 lg:flex-shrink-0">
+                {/* Password Button - Only show if prompt is password protected and not verified */}
+                {isPasswordProtected && !isPasswordVerified && (
+                  <button
+                    onClick={() => setShowPasswordModal(true)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-200 text-sm font-medium transform hover:scale-105 bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20 btn-hover`}
+                  >
+                    <Key size={16} />
+                    <span>Enter Password</span>
+                  </button>
+                )}
+
                 {/* Run in App button */}
-                {canRunInApp && (
+                {canRunInApp && isPasswordVerified && (
                   <button
                     onClick={handleRunInApp}
                     disabled={isRunning}
@@ -448,7 +515,7 @@ export const SharedPromptPage: React.FC = () => {
                 )}
 
                 {/* Fork button - only show for original prompts */}
-                {canFork && (
+                {canFork && isPasswordVerified && (
                   <button
                     onClick={handleFork}
                     disabled={isForking}
@@ -470,36 +537,57 @@ export const SharedPromptPage: React.FC = () => {
                 )}
                 
                 {/* Copy button */}
-                <button
-                  onClick={handleCopyClick}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 rounded-xl transition-all duration-200 text-sm font-medium transform hover:scale-105 btn-hover"
-                >
-                  <Copy size={16} />
-                  <span>Copy</span>
-                </button>
+                {isPasswordVerified && (
+                  <button
+                    onClick={handleCopyClick}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 rounded-xl transition-all duration-200 text-sm font-medium transform hover:scale-105 btn-hover"
+                  >
+                    <Copy size={16} />
+                    <span>Copy</span>
+                  </button>
+                )}
               </div>
             </div>
 
             {/* Content */}
-            <div 
-              className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-6 cursor-pointer hover:border-zinc-600/50 transition-all duration-200"
-              onClick={() => setShowModal(true)}
-            >
+            {isPasswordVerified ? (
               <div 
-                className="text-zinc-200 leading-relaxed prose prose-invert max-w-none line-clamp-6"
-                dangerouslySetInnerHTML={renderContent()}
-                style={{
-                  wordBreak: 'break-word',
-                  overflowWrap: 'break-word',
-                  hyphens: 'auto',
-                }}
-              />
-              <div className="mt-4 text-center">
-                <span className="text-indigo-400 text-sm hover:text-indigo-300 transition-colors">
-                  Click to view full content →
-                </span>
+                className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-6 cursor-pointer hover:border-zinc-600/50 transition-all duration-200"
+                onClick={() => setShowModal(true)}
+              >
+                <div 
+                  className="text-zinc-200 leading-relaxed prose prose-invert max-w-none line-clamp-6"
+                  dangerouslySetInnerHTML={renderContent()}
+                  style={{
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                    hyphens: 'auto',
+                  }}
+                />
+                <div className="mt-4 text-center">
+                  <span className="text-indigo-400 text-sm hover:text-indigo-300 transition-colors">
+                    Click to view full content →
+                  </span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-6 text-center">
+                <Lock className="mx-auto text-amber-400 mb-4" size={48} />
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  Password Protected Content
+                </h3>
+                <p className="text-zinc-400 mb-4">
+                  This prompt is password protected. Please enter the password to view the content.
+                </p>
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200"
+                >
+                  <Key size={16} />
+                  <span>Enter Password</span>
+                </button>
+              </div>
+            )}
 
             {/* Footer */}
             <div className="mt-6 pt-6 border-t border-zinc-800/50">
@@ -541,6 +629,7 @@ export const SharedPromptPage: React.FC = () => {
         onClose={() => setShowModal(false)}
         showActions={false}
         isOwner={false}
+        onPromptUpdated={handlePromptUpdated}
       />
 
       {/* Variable Fill Modal */}
@@ -550,6 +639,14 @@ export const SharedPromptPage: React.FC = () => {
         promptContent={prompt?.content || ''}
         promptTitle={prompt?.title || undefined}
         onVariablesFilled={handleVariablesFilled}
+      />
+
+      {/* Password Prompt Modal */}
+      <PasswordPromptModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        promptId={prompt.id}
+        onPasswordVerified={handlePasswordVerified}
       />
 
       {/* Auth Modal */}

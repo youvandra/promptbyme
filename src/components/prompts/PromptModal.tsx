@@ -1,16 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { X, Copy, Edit3, Share2, Save, Eye, Lock, GitFork, ExternalLink, Calendar, User, History, FileText, Image, Download, Upload, Plus, Trash2 } from 'lucide-react'
+import { X, Copy, Edit3, Share2, Save, Eye, Lock, GitFork, ExternalLink, Calendar, User, History, FileText, Image, Download, Upload, Plus, Trash2, Unlock } from 'lucide-react'
 import { marked } from 'marked'
-import { Database } from '../lib/supabase'
+import { Database } from '../../lib/supabase'
 import { getAppTagById } from '../../lib/appTags'
 import { TagSelector } from '../tags/TagSelector'
 import { PromptVersionHistory } from './PromptVersionHistory'
 import { VariableFillModal } from './VariableFillModal'
+import { PasswordPromptModal } from './PasswordPromptModal'
+import { LockPromptModal } from './LockPromptModal'
 import { supabase } from '../../lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePromptStore } from '../../store/promptStore'
 
-type Prompt = Database['public']['Tables']['prompts']['Row']
+type Prompt = Database['public']['Tables']['prompts']['Row'] & {
+  is_password_protected?: boolean
+}
 
 interface PromptModalProps {
   prompt: Prompt | null
@@ -28,6 +32,7 @@ interface PromptModalProps {
   onDelete?: (id: string) => void
   showActions?: boolean
   isOwner?: boolean
+  onPromptUpdated?: () => void
 }
 
 export const PromptModal: React.FC<PromptModalProps> = ({
@@ -37,7 +42,8 @@ export const PromptModal: React.FC<PromptModalProps> = ({
   onSave,
   onDelete,
   showActions = true,
-  isOwner = false
+  isOwner = false,
+  onPromptUpdated
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
@@ -51,6 +57,9 @@ export const PromptModal: React.FC<PromptModalProps> = ({
   const [copied, setCopied] = useState(false)
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [showVariableModal, setShowVariableModal] = useState(false)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [showLockModal, setShowLockModal] = useState(false)
+  const [isPasswordVerified, setIsPasswordVerified] = useState(false)
   const [userDisplayName, setUserDisplayName] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'content' | 'notes' | 'output' | 'media'>('content')
   const [showMediaPreview, setShowMediaPreview] = useState(false)
@@ -74,8 +83,21 @@ export const PromptModal: React.FC<PromptModalProps> = ({
       setEditMediaUrls(prompt.media_urls || [])
       setIsEditing(false)
       setActiveTab('content')
+      
+      // Reset password verification state
+      if (isOwner) {
+        // Owner always has access
+        setIsPasswordVerified(true)
+      } else if (prompt.is_password_protected) {
+        // Non-owner needs to verify password for protected prompts
+        setIsPasswordVerified(false)
+        setShowPasswordModal(true)
+      } else {
+        // Non-password protected prompts are accessible
+        setIsPasswordVerified(true)
+      }
     }
-  }, [prompt, isOpen])
+  }, [prompt, isOpen, isOwner])
 
   useEffect(() => {
     if (isEditing && textareaRef.current) {
@@ -133,6 +155,9 @@ export const PromptModal: React.FC<PromptModalProps> = ({
         editMediaUrls.length > 0 ? editMediaUrls : null
       )
       setIsEditing(false)
+      if (onPromptUpdated) {
+        onPromptUpdated()
+      }
     } catch (error) {
       console.error('Failed to save prompt:', error)
     } finally {
@@ -250,6 +275,21 @@ export const PromptModal: React.FC<PromptModalProps> = ({
     }
   }
 
+  const handlePasswordVerified = () => {
+    setIsPasswordVerified(true)
+    setShowPasswordModal(false)
+  }
+
+  const handleLockPrompt = () => {
+    setShowLockModal(true)
+  }
+
+  const handleLockPromptSuccess = () => {
+    if (onPromptUpdated) {
+      onPromptUpdated()
+    }
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -330,7 +370,8 @@ export const PromptModal: React.FC<PromptModalProps> = ({
 
   const isForkedPrompt = prompt?.original_prompt_id !== null
   const hasMultipleVersions = (prompt?.total_versions || 1) > 1
-  const hasMedia = isEditing ? editMediaUrls.length > 0 : (prompt?.media_urls && prompt.media_urls.length > 0)
+  const hasMedia = isEditing ? editMediaUrls.length > 0 : (prompt?.media_urls && prompt?.media_urls.length > 0)
+  const isPasswordProtected = prompt?.is_password_protected || false
 
   if (!isOpen || !prompt) return null
 
@@ -372,6 +413,17 @@ export const PromptModal: React.FC<PromptModalProps> = ({
                         {prompt.access}
                       </span>
                     </div>
+                    
+                    {/* Password Protected Indicator */}
+                    {isPasswordProtected && (
+                      <>
+                        <span>•</span>
+                        <div className="flex items-center gap-1">
+                          <Lock size={12} className="text-amber-400" />
+                          <span className="text-amber-400">Password Protected</span>
+                        </div>
+                      </>
+                    )}
                     
                     {hasMultipleVersions && (
                       <>
@@ -454,6 +506,17 @@ export const PromptModal: React.FC<PromptModalProps> = ({
                       title="Copy link"
                     >
                       <Share2 size={16} />
+                    </button>
+                  )}
+                  
+                  {/* Lock/Unlock Prompt */}
+                  {isOwner && prompt.access === 'public' && (
+                    <button
+                      onClick={handleLockPrompt}
+                      className="p-2 text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all duration-200"
+                      title={isPasswordProtected ? "Change password" : "Password protect"}
+                    >
+                      {isPasswordProtected ? <Lock size={16} className="text-amber-400" /> : <Lock size={16} />}
                     </button>
                   )}
                   
@@ -594,197 +657,263 @@ export const PromptModal: React.FC<PromptModalProps> = ({
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-            {activeTab === 'content' && (
-              <div className="space-y-6">
-                {/* Tags Display */}
-                {prompt.tags && prompt.tags.length > 0 && prompt.tags[0] && (
-                  <div className="mb-6">
-                    {(() => {
-                      const tag = getAppTagById(prompt.tags[0])
-                      if (!tag) return null
-                      
-                      const Icon = tag.icon
-                      return (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800/30 border border-zinc-700/30 rounded-lg w-fit">
-                          <Icon 
-                            size={14} 
-                            style={{ color: tag.color }}
-                          />
-                          <span className="text-zinc-300 font-medium text-sm">{tag.name}</span>
-                        </div>
-                      )
-                    })()}
-                  </div>
-                )}
-                
-                {/* Content */}
-                {isEditing ? (
-                  <div className="space-y-4">
-                    <textarea
-                      ref={textareaRef}
-                      value={editContent}
-                      onChange={(e) => {
-                        setEditContent(e.target.value)
-                        adjustTextareaHeight()
-                      }}
-                      placeholder="Enter your prompt content..."
-                      className="w-full min-h-[200px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none font-mono text-sm"
-                    />
+            {isPasswordVerified ? (
+              <>
+                {activeTab === 'content' && (
+                  <div className="space-y-6">
+                    {/* Tags Display */}
+                    {prompt.tags && prompt.tags.length > 0 && prompt.tags[0] && (
+                      <div className="mb-6">
+                        {(() => {
+                          const tag = getAppTagById(prompt.tags[0])
+                          if (!tag) return null
+                          
+                          const Icon = tag.icon
+                          return (
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800/30 border border-zinc-700/30 rounded-lg w-fit">
+                              <Icon 
+                                size={14} 
+                                style={{ color: tag.color }}
+                              />
+                              <span className="text-zinc-300 font-medium text-sm">{tag.name}</span>
+                            </div>
+                          )
+                        })()}
+                      </div>
+                    )}
                     
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                      <button
-                        onClick={handleSave}
-                        disabled={saving || !editContent.trim()}
-                        className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
-                      >
-                        {saving ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            <span>Saving...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Save size={16} />
-                            <span>Save Changes</span>
-                          </>
-                        )}
-                      </button>
-                      
-                      <button
-                        onClick={() => setIsEditing(false)}
-                        disabled={saving}
-                        className="px-4 py-2.5 text-zinc-400 hover:text-white transition-colors disabled:opacity-50 w-full sm:w-auto text-center"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div 
-                    className="prose prose-invert prose-lg max-w-none text-zinc-200 leading-relaxed break-words"
-                    dangerouslySetInnerHTML={renderContent()}
-                    style={{
-                      wordBreak: 'break-word',
-                      overflowWrap: 'break-word',
-                      hyphens: 'auto',
-                    }}
-                  />
-                )}
-              </div>
-            )}
-
-            {activeTab === 'notes' && (
-              <div className="space-y-6">
-                {isEditing ? (
-                  <div className="space-y-4">
-                    <textarea
-                      value={editNotes || ''}
-                      onChange={(e) => setEditNotes(e.target.value)}
-                      placeholder="Add notes about this prompt..."
-                      className="w-full min-h-[200px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y"
-                    />
-                  </div>
-                ) : prompt.notes ? (
-                  <div 
-                    className="prose prose-invert prose-lg max-w-none text-zinc-200 leading-relaxed break-words"
-                    dangerouslySetInnerHTML={renderNotes()}
-                  />
-                ) : (
-                  <div className="text-center py-12 text-zinc-500">
-                    <FileText className="mx-auto mb-4 opacity-30" size={48} />
-                    <p>No notes available for this prompt</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'output' && (
-              <div className="space-y-6">
-                {isEditing ? (
-                  <div className="space-y-4">
-                    <textarea
-                      value={editOutputSample || ''}
-                      onChange={(e) => setEditOutputSample(e.target.value)}
-                      placeholder="Add an example of the expected output..."
-                      className="w-full min-h-[200px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y"
-                    />
-                  </div>
-                ) : prompt.output_sample ? (
-                  <div 
-                    className="prose prose-invert prose-lg max-w-none text-zinc-200 leading-relaxed break-words"
-                    dangerouslySetInnerHTML={renderOutputSample()}
-                  />
-                ) : (
-                  <div className="text-center py-12 text-zinc-500">
-                    <Eye className="mx-auto mb-4 opacity-30" size={48} />
-                    <p>No output sample available for this prompt</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'media' && (
-              <div className="space-y-6">
-                {isEditing ? (
-                  <div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                      multiple
-                      accept="image/jpeg,image/png,image/gif,application/pdf"
-                    />
-                    
-                    <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
-                      {/* Upload Button - Centered when no media, small + button when media exists */}
-                      {editMediaUrls.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-8">
+                    {/* Content */}
+                    {isEditing ? (
+                      <div className="space-y-4">
+                        <textarea
+                          ref={textareaRef}
+                          value={editContent}
+                          onChange={(e) => {
+                            setEditContent(e.target.value)
+                            adjustTextareaHeight()
+                          }}
+                          placeholder="Enter your prompt content..."
+                          className="w-full min-h-[200px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none font-mono text-sm"
+                        />
+                        
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                           <button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={uploadingMedia}
-                            className="flex flex-col items-center gap-3 px-6 py-4 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl transition-all duration-200 mb-3"
+                            onClick={handleSave}
+                            disabled={saving || !editContent.trim()}
+                            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed w-full sm:w-auto justify-center"
                           >
-                            {uploadingMedia ? (
+                            {saving ? (
                               <>
-                                <div className="w-6 h-6 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
-                                <span>Uploading... {uploadProgress}%</span>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <span>Saving...</span>
                               </>
                             ) : (
                               <>
-                                <Upload size={24} />
-                                <span>Upload Files</span>
+                                <Save size={16} />
+                                <span>Save Changes</span>
                               </>
                             )}
                           </button>
-                          <p className="text-xs text-zinc-500">
-                            Supported formats: JPG, PNG, GIF, PDF. Max size: 5MB per file.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="mb-4 flex justify-between items-center">
-                          <p className="text-sm text-zinc-400">
-                            {editMediaUrls.length} file{editMediaUrls.length !== 1 ? 's' : ''} attached
-                          </p>
+                          
                           <button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={uploadingMedia}
-                            className="flex items-center gap-2 p-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg transition-all duration-200"
-                            title="Add more files"
+                            onClick={() => setIsEditing(false)}
+                            disabled={saving}
+                            className="px-4 py-2.5 text-zinc-400 hover:text-white transition-colors disabled:opacity-50 w-full sm:w-auto text-center"
                           >
-                            {uploadingMedia ? (
-                              <div className="w-4 h-4 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
-                            ) : (
-                              <Plus size={16} />
-                            )}
+                            Cancel
                           </button>
                         </div>
-                      )}
-                      
-                      {/* Media Preview */}
-                      {editMediaUrls.length > 0 && (
+                      </div>
+                    ) : (
+                      <div 
+                        className="prose prose-invert prose-lg max-w-none text-zinc-200 leading-relaxed break-words"
+                        dangerouslySetInnerHTML={renderContent()}
+                        style={{
+                          wordBreak: 'break-word',
+                          overflowWrap: 'break-word',
+                          hyphens: 'auto',
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'notes' && (
+                  <div className="space-y-6">
+                    {isEditing ? (
+                      <div className="space-y-4">
+                        <textarea
+                          value={editNotes || ''}
+                          onChange={(e) => setEditNotes(e.target.value)}
+                          placeholder="Add notes about this prompt..."
+                          className="w-full min-h-[200px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y"
+                        />
+                      </div>
+                    ) : prompt.notes ? (
+                      <div 
+                        className="prose prose-invert prose-lg max-w-none text-zinc-200 leading-relaxed break-words"
+                        dangerouslySetInnerHTML={renderNotes()}
+                      />
+                    ) : (
+                      <div className="text-center py-12 text-zinc-500">
+                        <FileText className="mx-auto mb-4 opacity-30" size={48} />
+                        <p>No notes available for this prompt</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'output' && (
+                  <div className="space-y-6">
+                    {isEditing ? (
+                      <div className="space-y-4">
+                        <textarea
+                          value={editOutputSample || ''}
+                          onChange={(e) => setEditOutputSample(e.target.value)}
+                          placeholder="Add an example of the expected output..."
+                          className="w-full min-h-[200px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y"
+                        />
+                      </div>
+                    ) : prompt.output_sample ? (
+                      <div 
+                        className="prose prose-invert prose-lg max-w-none text-zinc-200 leading-relaxed break-words"
+                        dangerouslySetInnerHTML={renderOutputSample()}
+                      />
+                    ) : (
+                      <div className="text-center py-12 text-zinc-500">
+                        <Eye className="mx-auto mb-4 opacity-30" size={48} />
+                        <p>No output sample available for this prompt</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'media' && (
+                  <div className="space-y-6">
+                    {isEditing ? (
+                      <div>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                          multiple
+                          accept="image/jpeg,image/png,image/gif,application/pdf"
+                        />
+                        
+                        <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
+                          {/* Upload Button - Centered when no media, small + button when media exists */}
+                          {editMediaUrls.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-8">
+                              <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploadingMedia}
+                                className="flex flex-col items-center gap-3 px-6 py-4 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl transition-all duration-200 mb-3"
+                              >
+                                {uploadingMedia ? (
+                                  <>
+                                    <div className="w-6 h-6 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                                    <span>Uploading... {uploadProgress}%</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Upload size={24} />
+                                    <span>Upload Files</span>
+                                  </>
+                                )}
+                              </button>
+                              <p className="text-xs text-zinc-500">
+                                Supported formats: JPG, PNG, GIF, PDF. Max size: 5MB per file.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="mb-4 flex justify-between items-center">
+                              <p className="text-sm text-zinc-400">
+                                {editMediaUrls.length} file{editMediaUrls.length !== 1 ? 's' : ''} attached
+                              </p>
+                              <button
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploadingMedia}
+                                className="p-1 text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded transition-colors flex items-center gap-1"
+                                title="Add more files"
+                              >
+                                {uploadingMedia ? (
+                                  <div className="w-4 h-4 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                                ) : (
+                                  <Plus size={16} />
+                                )}
+                              </button>
+                            </div>
+                          )}
+                          
+                          {/* Media Preview */}
+                          {editMediaUrls.length > 0 && (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                              {editMediaUrls.map((url, index) => (
+                                <div key={index} className="relative group">
+                                  {isImageUrl(url) ? (
+                                    <div 
+                                      className="aspect-square bg-zinc-800 rounded-lg overflow-hidden cursor-pointer"
+                                      onClick={() => handlePreviewMedia(url)}
+                                    >
+                                      <img 
+                                        src={url} 
+                                        alt={`Uploaded media ${index + 1}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div 
+                                      className="aspect-square bg-zinc-800 rounded-lg flex flex-col items-center justify-center cursor-pointer p-2"
+                                      onClick={() => window.open(url, '_blank')}
+                                    >
+                                      <FileText size={24} className="text-zinc-400 mb-2" />
+                                      <span className="text-xs text-zinc-400 text-center truncate w-full">
+                                        {getFileNameFromUrl(url)}
+                                      </span>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Action buttons */}
+                                  <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    {/* Download button */}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        downloadMedia(url);
+                                      }}
+                                      className="p-1.5 bg-zinc-800/80 text-zinc-300 rounded-lg hover:bg-zinc-700/80"
+                                      title="Download"
+                                    >
+                                      <Download size={12} />
+                                    </button>
+                                    
+                                    {/* Remove button */}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemoveMedia(url);
+                                      }}
+                                      className="p-1.5 bg-red-500/80 text-white rounded-lg hover:bg-red-600/80"
+                                      title="Remove"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : prompt.media_urls && prompt.media_urls.length > 0 ? (
+                      <div>
+                        <h4 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
+                          <Image size={16} className="text-indigo-400" />
+                          Media Files
+                        </h4>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                          {editMediaUrls.map((url, index) => (
+                          {prompt.media_urls.map((url, index) => (
                             <div key={index} className="relative group">
                               {isImageUrl(url) ? (
                                 <div 
@@ -793,7 +922,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
                                 >
                                   <img 
                                     src={url} 
-                                    alt={`Uploaded media ${index + 1}`}
+                                    alt={`Media ${index + 1}`}
                                     className="w-full h-full object-cover"
                                   />
                                 </div>
@@ -809,88 +938,45 @@ export const PromptModal: React.FC<PromptModalProps> = ({
                                 </div>
                               )}
                               
-                              {/* Action buttons */}
-                              <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                {/* Download button */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    downloadMedia(url);
-                                  }}
-                                  className="p-1.5 bg-zinc-800/80 text-zinc-300 rounded-lg hover:bg-zinc-700/80"
-                                  title="Download"
-                                >
-                                  <Download size={12} />
-                                </button>
-                                
-                                {/* Remove button */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleRemoveMedia(url);
-                                  }}
-                                  className="p-1.5 bg-red-500/80 text-white rounded-lg hover:bg-red-600/80"
-                                  title="Remove"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              </div>
+                              {/* Download button */}
+                              <button
+                                onClick={() => downloadMedia(url)}
+                                className="absolute bottom-1 right-1 p-1.5 bg-zinc-800/80 text-zinc-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                title="Download"
+                              >
+                                <Download size={14} />
+                              </button>
                             </div>
                           ))}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                ) : prompt.media_urls && prompt.media_urls.length > 0 ? (
-                  <div>
-                    <h4 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
-                      <Image size={16} className="text-indigo-400" />
-                      Media Files
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {prompt.media_urls.map((url, index) => (
-                        <div key={index} className="relative group">
-                          {isImageUrl(url) ? (
-                            <div 
-                              className="aspect-square bg-zinc-800 rounded-lg overflow-hidden cursor-pointer"
-                              onClick={() => handlePreviewMedia(url)}
-                            >
-                              <img 
-                                src={url} 
-                                alt={`Media ${index + 1}`}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div 
-                              className="aspect-square bg-zinc-800 rounded-lg flex flex-col items-center justify-center cursor-pointer p-2"
-                              onClick={() => window.open(url, '_blank')}
-                            >
-                              <FileText size={24} className="text-zinc-400 mb-2" />
-                              <span className="text-xs text-zinc-400 text-center truncate w-full">
-                                {getFileNameFromUrl(url)}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {/* Download button */}
-                          <button
-                            onClick={() => downloadMedia(url)}
-                            className="absolute bottom-1 right-1 p-1.5 bg-zinc-800/80 text-zinc-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                            title="Download"
-                          >
-                            <Download size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-zinc-500">
-                    <Image className="mx-auto mb-4 opacity-30" size={48} />
-                    <p>No media files attached to this prompt</p>
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-zinc-500">
+                        <Image className="mx-auto mb-4 opacity-30" size={48} />
+                        <p>No media files attached to this prompt</p>
+                      </div>
+                    )}
                   </div>
                 )}
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center p-8">
+                  <Lock className="mx-auto text-amber-400 mb-4" size={48} />
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    Password Protected Content
+                  </h3>
+                  <p className="text-zinc-400 mb-4">
+                    This prompt is password protected. Please enter the password to view the content.
+                  </p>
+                  <button
+                    onClick={() => setShowPasswordModal(true)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200"
+                  >
+                    <Key size={16} />
+                    <span>Enter Password</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -920,6 +1006,23 @@ export const PromptModal: React.FC<PromptModalProps> = ({
         onClose={() => setShowVariableModal(false)}
         promptContent={prompt?.content || ''}
         promptTitle={prompt?.title || undefined}
+      />
+
+      {/* Password Prompt Modal */}
+      <PasswordPromptModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        promptId={prompt.id}
+        onPasswordVerified={handlePasswordVerified}
+      />
+
+      {/* Lock Prompt Modal */}
+      <LockPromptModal
+        isOpen={showLockModal}
+        onClose={() => setShowLockModal(false)}
+        promptId={prompt.id}
+        isPasswordProtected={isPasswordProtected}
+        onSuccess={handleLockPromptSuccess}
       />
 
       {/* Media Preview Modal */}
