@@ -281,6 +281,17 @@ export const PromptCard: React.FC<PromptCardProps> = ({
     }
   }
 
+  const handleRunClick = () => {
+    // Check if content has variables
+    const hasVariables = /\{\{([^}]+)\}\}/.test(content)
+    
+    if (hasVariables) {
+      setShowVariableModal(true)
+    } else {
+      handleRunInApp(content)
+    }
+  }
+
   const handleVariablesFilled = (filledContent: string) => {
     handleRunInApp(filledContent)
     setShowVariableModal(false)
