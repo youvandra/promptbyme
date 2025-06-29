@@ -30,11 +30,13 @@ interface Flow {
 interface CodeGeneratorModalProps {
   isOpen: boolean
   onClose: () => void
+  initialCodeType?: 'prompt' | 'flow'
 }
 
 export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
   isOpen,
-  onClose
+  onClose,
+  initialCodeType = 'prompt'
 }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterAccess, setFilterAccess] = useState<'all' | 'public' | 'private'>('all')
@@ -50,13 +52,23 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
   const [temperature, setTemperature] = useState(0.7)
   const [maxTokens, setMaxTokens] = useState(1000)
   const [promptbyApiKey, setPromptbyApiKey] = useState<string | null>(null)
-  const [codeType, setCodeType] = useState<'prompt' | 'flow'>('prompt')
+  const [codeType, setCodeType] = useState<'prompt' | 'flow'>(initialCodeType)
   const [activeTab, setActiveTab] = useState<'select' | 'configure'>('select')
   
   const { user } = useAuthStore()
   const { prompts, loading: promptsLoading, fetchUserPrompts } = usePromptStore()
   const { flows, loading: flowsLoading, fetchFlows } = useFlowStore()
   const [variableValues, setVariableValues] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (isOpen) {
+      setCodeType(initialCodeType)
+      setActiveTab('select')
+      setSelectedPrompt(null)
+      setSelectedFlow(null)
+      setSearchQuery('')
+    }
+  }, [isOpen, initialCodeType])
 
   useEffect(() => {
     if (isOpen && user) {
@@ -174,12 +186,14 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
     setSelectedPrompt(prompt)
     setSelectedFlow(null)
     setCodeType('prompt')
+    setActiveTab('configure')
   }
 
   const handleFlowSelect = (flow: Flow) => {
     setSelectedFlow(flow)
     setSelectedPrompt(null)
     setCodeType('flow')
+    setActiveTab('configure')
   }
 
   const copyToClipboard = async (text: string, id: string) => {
@@ -514,11 +528,11 @@ def run_flow():
             <Code className="text-indigo-400" size={20} />
             <div>
               <h2 className="text-xl font-semibold text-white">
-                Generate API Code
+                Generate {codeType === 'prompt' ? 'Prompt' : 'Flow'} API Code
               </h2>
               <p className="text-sm text-zinc-400">
                 {activeTab === 'select' 
-                  ? 'Select a prompt or flow to generate code' 
+                  ? `Select a ${codeType} to generate code` 
                   : selectedPrompt 
                     ? `Configuring code for prompt: ${selectedPrompt.title || 'Untitled'}` 
                     : `Configuring code for flow: ${selectedFlow?.name || 'Untitled'}`}
@@ -545,7 +559,7 @@ def run_flow():
                   : 'border-transparent text-zinc-400 hover:text-zinc-300'
               }`}
             >
-              1. Select
+              1. Select {codeType === 'prompt' ? 'Prompt' : 'Flow'}
             </button>
             <button
               onClick={() => setActiveTab('configure')}
@@ -582,25 +596,14 @@ def run_flow():
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search..."
+                        placeholder={`Search ${codeType === 'prompt' ? 'prompts' : 'flows'}...`}
                         className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                       />
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <Filter className="text-zinc-500" size={18} />
-                      <select
-                        value={codeType}
-                        onChange={(e) => setCodeType(e.target.value as 'prompt' | 'flow')}
-                        className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                      >
-                        <option value="prompt">Prompts</option>
-                        <option value="flow">Flows</option>
-                      </select>
-                    </div>
-
                     {codeType === 'prompt' && (
                       <div className="flex items-center gap-3">
+                        <Filter className="text-zinc-500" size={18} />
                         <select
                           value={filterAccess}
                           onChange={(e) => setFilterAccess(e.target.value as 'all' | 'public' | 'private')}
@@ -727,8 +730,8 @@ def run_flow():
                         {filteredFlows.map((flow) => (
                           <motion.div
                             key={flow.id}
-                            className={`group relative bg-zinc-800/30 border rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-indigo-500/50 hover:bg-zinc-800/50 ${
-                              selectedFlow?.id === flow.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-zinc-700/50'
+                            className={`group relative bg-zinc-800/30 border rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-purple-500/50 hover:bg-zinc-800/50 ${
+                              selectedFlow?.id === flow.id ? 'border-purple-500 bg-purple-500/10' : 'border-zinc-700/50'
                             }`}
                             onClick={() => handleFlowSelect(flow)}
                             whileHover={{ scale: 1.02 }}
@@ -757,7 +760,7 @@ def run_flow():
 
                             {/* Selection Indicator */}
                             <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+                              <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
                                 <div className="w-2 h-2 bg-white rounded-full" />
                               </div>
                             </div>
@@ -808,7 +811,7 @@ def run_flow():
                         {codeType === 'prompt' ? 'Prompt Details' : 'Flow Details'}
                       </h3>
                       
-                      <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
+                      <div className={`bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4 ${codeType === 'flow' ? 'border-l-4 border-l-purple-500' : 'border-l-4 border-l-indigo-500'}`}>
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="font-medium text-white">
                             {selectedPrompt ? (selectedPrompt.title || 'Untitled Prompt') : (selectedFlow?.name || 'Untitled Flow')}
@@ -837,8 +840,8 @@ def run_flow():
                       </div>
                     </div>
                     
-                    {/* Variables Section */}
-                    {extractedVariables.length > 0 && (
+                    {/* Variables Section - Only show for prompts */}
+                    {codeType === 'prompt' && extractedVariables.length > 0 && (
                       <div className="mb-6">
                         <h3 className="text-lg font-semibold text-white mb-2">Variables</h3>
                         <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-4">

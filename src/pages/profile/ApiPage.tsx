@@ -34,18 +34,10 @@ export const ApiPage: React.FC = () => {
   const [showApiDocsModal, setShowApiDocsModal] = useState(false)
   const [showApiLogsModal, setShowApiLogsModal] = useState(false)
   const [showCodeGeneratorModal, setShowCodeGeneratorModal] = useState(false)
+  const [codeGeneratorType, setCodeGeneratorType] = useState<'prompt' | 'flow'>('prompt')
   const [copied, setCopied] = useState<string | null>(null)
   const [apiKey, setApiKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python' | 'curl'>('javascript')
-  const [selectedProvider, setSelectedProvider] = useState<'openai' | 'anthropic' | 'google' | 'llama' | 'groq'>('openai')
-  const [selectedModel, setSelectedModel] = useState<string>('gpt-4o')
-  const [temperature, setTemperature] = useState(0.7)
-  const [maxTokens, setMaxTokens] = useState(1000)
-  const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null)
-  const [generatedCode, setGeneratedCode] = useState<string>('')
-  const [extractedVariables, setExtractedVariables] = useState<string[]>([])
-  const [variableValues, setVariableValues] = useState<Record<string, string>>({})
   const [aiProviderApiKey, setAiProviderApiKey] = useState<string>('')
   const [showApiProviderKey, setShowApiProviderKey] = useState(false)
   const [savingApiKey, setSavingApiKey] = useState(false)
@@ -59,27 +51,6 @@ export const ApiPage: React.FC = () => {
       loadAiProviderApiKey()
     }
   }, [user])
-
-  // Update model when provider changes
-  useEffect(() => {
-    switch (selectedProvider) {
-      case 'openai':
-        setSelectedModel('gpt-4o')
-        break
-      case 'anthropic':
-        setSelectedModel('claude-3-opus-20240229')
-        break
-      case 'google':
-        setSelectedModel('gemini-pro')
-        break
-      case 'llama':
-        setSelectedModel('llama-3-70b-instruct')
-        break
-      case 'groq':
-        setSelectedModel('llama3-8b-8192')
-        break
-    }
-  }, [selectedProvider])
 
   const fetchApiKey = async () => {
     if (!user) return
@@ -141,45 +112,9 @@ export const ApiPage: React.FC = () => {
     }
   }
 
-  const getProviderModels = () => {
-    switch (selectedProvider) {
-      case 'openai':
-        return [
-          { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
-          { id: 'gpt-4', name: 'GPT-4' },
-          { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
-          { id: 'gpt-4o', name: 'GPT-4o' }
-        ]
-      case 'anthropic':
-        return [
-          { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' },
-          { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet' },
-          { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' }
-        ]
-      case 'google':
-        return [
-          { id: 'gemini-pro', name: 'Gemini Pro' },
-          { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro' },
-          { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' }
-        ]
-      case 'llama':
-        return [
-          { id: 'llama-2-7b-chat', name: 'Llama 2 (7B) Chat' },
-          { id: 'llama-2-13b-chat', name: 'Llama 2 (13B) Chat' },
-          { id: 'llama-2-70b-chat', name: 'Llama 2 (70B) Chat' },
-          { id: 'llama-3-8b-instruct', name: 'Llama 3 (8B) Instruct' },
-          { id: 'llama-3-70b-instruct', name: 'Llama 3 (70B) Instruct' }
-        ]
-      case 'groq':
-        return [
-          { id: 'llama3-8b-8192', name: 'Llama 3 (8B)' },
-          { id: 'llama3-70b-8192', name: 'Llama 3 (70B)' },
-          { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B' },
-          { id: 'gemma-7b-it', name: 'Gemma 7B' }
-        ]
-      default:
-        return []
-    }
+  const handleOpenCodeGenerator = (type: 'prompt' | 'flow') => {
+    setCodeGeneratorType(type)
+    setShowCodeGeneratorModal(true)
   }
 
   if (authLoading) {
@@ -351,7 +286,7 @@ export const ApiPage: React.FC = () => {
                         type={showApiProviderKey ? "text" : "password"}
                         value={aiProviderApiKey}
                         onChange={(e) => setAiProviderApiKey(e.target.value)}
-                        placeholder={`Enter your ${selectedProvider} API key`}
+                        placeholder="Enter your AI provider API key"
                         className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-4 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 pr-10"
                       />
                       <button
@@ -456,15 +391,24 @@ export const ApiPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex-1 flex flex-col justify-center">
+                  <div className="flex-1 flex flex-col justify-center gap-4">
                     <button
-                      onClick={() => setShowCodeGeneratorModal(true)}
+                      onClick={() => handleOpenCodeGenerator('prompt')}
                       className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
                     >
                       <Code size={20} />
-                      <span>Generate API Code</span>
+                      <span>Generate Prompt API Code</span>
                     </button>
-                    <p className="text-center text-zinc-500 text-sm mt-3">
+                    
+                    <button
+                      onClick={() => handleOpenCodeGenerator('flow')}
+                      className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                    >
+                      <Zap size={20} />
+                      <span>Generate Flow API Code</span>
+                    </button>
+                    
+                    <p className="text-center text-zinc-500 text-sm mt-1">
                       Select a prompt or flow and generate code in your preferred language
                     </p>
                   </div>
@@ -535,6 +479,7 @@ export const ApiPage: React.FC = () => {
       <CodeGeneratorModal
         isOpen={showCodeGeneratorModal}
         onClose={() => setShowCodeGeneratorModal(false)}
+        initialCodeType={codeGeneratorType}
       />
 
       <BoltBadge />
