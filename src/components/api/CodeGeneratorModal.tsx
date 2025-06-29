@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Code, Filter, Eye, EyeOff, GitFork, Heart, Plus, Thermometer, ChevronDown, ChevronUp, Zap, Copy, CheckCircle, AlertCircle, Server, ArrowLeft } from 'lucide-react'
+import { Search, Code, X, Filter, Eye, EyeOff, GitFork, Heart, Plus, Thermometer, ChevronDown, ChevronUp, Zap, Copy, CheckCircle, AlertCircle, Server, ArrowLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePromptStore } from '../../store/promptStore'
 import { useAuthStore } from '../../store/authStore'
