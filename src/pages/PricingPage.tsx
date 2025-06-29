@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardContent, CardFooter } from '../components/ui/Card';
 import { GlassPanel } from '../components/ui/GlassPanel';
 import { useAuthStore } from '../store/authStore';
+import { useEffect } from 'react';
 
 export const PricingPage: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
