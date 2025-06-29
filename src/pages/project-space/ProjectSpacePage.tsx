@@ -185,7 +185,8 @@ export const ProjectSpacePage: React.FC = () => {
          content: node.content,
          nodeData: node,
          type: node.type,
-          activeNodeId: activeNodeId,
+         activeNodeId: activeNodeId,
+         currentUserId: user?.id,
         projectMembers: projectMembers,
          onEdit: (nodeId: string) => {
            const node = selectedProject?.nodes?.find(n => n.id === nodeId)
