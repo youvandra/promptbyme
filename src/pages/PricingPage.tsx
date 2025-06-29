@@ -103,7 +103,7 @@ export const PricingPage: React.FC = () => {
     },
     {
       question: 'Do you offer refunds?',
-      answer: 'We offer a 30-day money-back guarantee. If you're not satisfied with our service, contact us within 30 days of purchase for a full refund.'
+      answer: 'We offer a 30-day money-back guarantee. If you\'re not satisfied with our service, contact us within 30 days of purchase for a full refund.'
     },
     {
       question: 'What kind of support is included?',
