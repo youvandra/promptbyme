@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { usePromptStore } from '../../store/promptStore'
 import { useAuthStore } from '../../store/authStore'
 import { useFlowStore } from '../../store/flowStore'
+import { supabase } from '../../lib/supabase'
 
 interface Prompt {
   id: string
@@ -525,8 +526,6 @@ def run_flow():
   }
 
   if (!isOpen) return null
-
-  const selectedCount = selectedForComparison.size
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
