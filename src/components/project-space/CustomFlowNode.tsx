@@ -140,6 +140,10 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700/50 rounded-lg shadow-xl z-50 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <button
             onClick={(e) => {
+            }}
+          >
+          </button>
+        </div>
       </motion.div>
       
       {/* Output Handle (bottom) */}
