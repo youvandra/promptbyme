@@ -59,7 +59,7 @@ interface FlowState {
   
   // Execution
   executeFlow: (flowId: string) => Promise<void>
-  executeStep: (stepId: string) => Promise<string>
+  executeStep: (stepId: string, previousOutput?: string) => Promise<string>
   updateApiSettings: (settings: Partial<ApiSettings>) => Promise<void>
   clearOutputs: () => void
 }

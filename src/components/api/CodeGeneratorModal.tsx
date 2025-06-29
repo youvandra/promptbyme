@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { X, Copy, CheckCircle, Code, Search, Filter, Eye, Lock, GitFork, Heart, Wand2, ChevronDown, ChevronUp } from 'lucide-react'
+import { X, Copy, CheckCircle, Code, Search, Filter, Eye, EyeOff, GitFork, Heart, Wand2, ChevronDown, ChevronUp } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePromptStore } from '../../store/promptStore'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
+import { useFlowStore } from '../../store/flowStore'
 
 interface Prompt {
   id: string
@@ -15,6 +16,15 @@ interface Prompt {
   like_count?: number
   fork_count?: number
   original_prompt_id?: string | null
+}
+
+interface Flow {
+  id: string
+  name: string
+  description?: string
+  created_at: string
+  updated_at: string
+  steps: any[]
 }
 
 interface CodeGeneratorModalProps {
@@ -29,6 +39,7 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('')
   const [filterAccess, setFilterAccess] = useState<'all' | 'public' | 'private'>('all')
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null)
+  const [selectedFlow, setSelectedFlow] = useState<Flow | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
   const [supabaseUrl, setSupabaseUrl] = useState<string>('')
   const [extractedVariables, setExtractedVariables] = useState<string[]>([])
@@ -39,13 +50,17 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
   const [temperature, setTemperature] = useState(0.7)
   const [maxTokens, setMaxTokens] = useState(1000)
   const [promptbyApiKey, setPromptbyApiKey] = useState<string | null>(null)
+  const [codeType, setCodeType] = useState<'prompt' | 'flow'>('prompt')
   
   const { user } = useAuthStore()
-  const { prompts, loading, fetchUserPrompts } = usePromptStore()
+  const { prompts, loading: promptsLoading, fetchUserPrompts } = usePromptStore()
+  const { flows, loading: flowsLoading, fetchFlows } = useFlowStore()
+  const [variableValues, setVariableValues] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (isOpen && user) {
       fetchUserPrompts(user.id)
+      fetchFlows()
       
       // Get Supabase URL from environment
       const url = import.meta.env.VITE_SUPABASE_URL || ''
@@ -54,7 +69,7 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
       // Fetch the user's promptby.me API key
       fetchApiKey()
     }
-  }, [isOpen, user, fetchUserPrompts])
+  }, [isOpen, user, fetchUserPrompts, fetchFlows])
 
   const fetchApiKey = async () => {
     if (!user) return
@@ -82,10 +97,24 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
     if (selectedPrompt) {
       const variables = extractVariables(selectedPrompt.content)
       setExtractedVariables(variables)
+      
+      // Initialize variable values
+      const initialValues: Record<string, string> = {}
+      variables.forEach(variable => {
+        initialValues[variable] = ''
+      })
+      setVariableValues(initialValues)
+    } else if (selectedFlow) {
+      // For flows, we need to extract variables from all steps
+      // This would require fetching all steps and their content
+      // For simplicity, we'll just set an empty array for now
+      setExtractedVariables([])
+      setVariableValues({})
     } else {
       setExtractedVariables([])
+      setVariableValues({})
     }
-  }, [selectedPrompt])
+  }, [selectedPrompt, selectedFlow])
 
   // Update model when provider changes
   useEffect(() => {
@@ -125,8 +154,25 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
     return matchesSearch && matchesFilter
   })
 
+  // Filter flows based on search
+  const filteredFlows = flows.filter(flow => {
+    const matchesSearch = !searchQuery || 
+      flow.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (flow.description && flow.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    
+    return matchesSearch
+  })
+
   const handlePromptSelect = (prompt: Prompt) => {
     setSelectedPrompt(prompt)
+    setSelectedFlow(null)
+    setCodeType('prompt')
+  }
+
+  const handleFlowSelect = (flow: Flow) => {
+    setSelectedFlow(flow)
+    setSelectedPrompt(null)
+    setCodeType('flow')
   }
 
   const copyToClipboard = async (text: string, id: string) => {
@@ -150,13 +196,13 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
     return content.length <= maxLength ? content : content.substring(0, maxLength) + '...'
   }
 
-  // Generate JavaScript code snippet
-  const generateJsCode = (): string => {
+  // Generate JavaScript code snippet for prompt
+  const generateJsPromptCode = (): string => {
     if (!selectedPrompt) return ''
     
     let variablesObj = '{}';
     if (extractedVariables.length > 0) {
-      variablesObj = `{\n    ${extractedVariables.map(v => `${v}: "${v}Value"`).join(',\n    ')}\n  }`;
+      variablesObj = `{\n    ${extractedVariables.map(v => `${v}: "${variableValues[v] || `${v}Value`}"`).join(',\n    ')}\n  }`;
     }
     
     return `async function runPrompt() {
@@ -192,13 +238,56 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
 }`;
   }
 
-  // Generate Python code snippet
-  const generatePythonCode = (): string => {
+  // Generate JavaScript code snippet for flow
+  const generateJsFlowCode = (): string => {
+    if (!selectedFlow) return ''
+    
+    let variablesObj = '{}';
+    if (extractedVariables.length > 0) {
+      variablesObj = `{\n    ${extractedVariables.map(v => `${v}: "${variableValues[v] || `${v}Value`}"`).join(',\n    ')}\n  }`;
+    }
+    
+    return `async function runFlow() {
+  // Your promptby.me API key
+  const promptbyApiKey = "${promptbyApiKey || 'YOUR_PROMPTBY_ME_API_KEY'}";
+  
+  const response = await fetch("${supabaseUrl}/functions/v1/run-prompt-flow-api", {
+    method: "POST",
+    headers: {
+      "Authorization": \`Bearer \${promptbyApiKey}\`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      flow_id: "${selectedFlow.id}",
+      variables: ${variablesObj},
+      api_key: "YOUR_AI_PROVIDER_API_KEY",
+      provider: "${selectedProvider}",
+      model: "${selectedModel}",
+      temperature: ${temperature},
+      max_tokens: ${maxTokens}
+    })
+  });
+  
+  const data = await response.json();
+  
+  if (data.success) {
+    console.log("Final Output:", data.output);
+    console.log("Step Outputs:", data.step_outputs);
+    return data.output;
+  } else {
+    console.error("Error:", data.error);
+    throw new Error(data.error);
+  }
+}`;
+  }
+
+  // Generate Python code snippet for prompt
+  const generatePythonPromptCode = (): string => {
     if (!selectedPrompt) return ''
     
     let variablesDict = '{}';
     if (extractedVariables.length > 0) {
-      variablesDict = `{\n        ${extractedVariables.map(v => `"${v}": "${v}_value"`).join(',\n        ')}\n    }`;
+      variablesDict = `{\n        ${extractedVariables.map(v => `"${v}": "${variableValues[v] || `${v}_value`}"`).join(',\n        ')}\n    }`;
     }
     
     return `import requests
@@ -234,6 +323,117 @@ def run_prompt():
     else:
         print("Error:", data.get("error"))
         raise Exception(data.get("error"))`;
+  }
+
+  // Generate Python code snippet for flow
+  const generatePythonFlowCode = (): string => {
+    if (!selectedFlow) return ''
+    
+    let variablesDict = '{}';
+    if (extractedVariables.length > 0) {
+      variablesDict = `{\n        ${extractedVariables.map(v => `"${v}": "${variableValues[v] || `${v}_value`}"`).join(',\n        ')}\n    }`;
+    }
+    
+    return `import requests
+import json
+
+def run_flow():
+    # Your promptby.me API key
+    promptby_api_key = "${promptbyApiKey || 'YOUR_PROMPTBY_ME_API_KEY'}"
+    
+    url = "${supabaseUrl}/functions/v1/run-prompt-flow-api"
+    
+    headers = {
+        "Authorization": f"Bearer {promptby_api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "flow_id": "${selectedFlow.id}",
+        "variables": ${variablesDict},
+        "api_key": "YOUR_AI_PROVIDER_API_KEY",
+        "provider": "${selectedProvider}",
+        "model": "${selectedModel}",
+        "temperature": ${temperature},
+        "max_tokens": ${maxTokens}
+    }
+    
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+    
+    if data.get("success"):
+        print("Final Output:", data["output"])
+        print("Step Outputs:", data["step_outputs"])
+        return data["output"]
+    else:
+        print("Error:", data.get("error"))
+        raise Exception(data.get("error"))`;
+  }
+
+  // Generate cURL code snippet for prompt
+  const generateCurlPromptCode = (): string => {
+    if (!selectedPrompt) return ''
+    
+    let variablesJson = '{}';
+    if (extractedVariables.length > 0) {
+      variablesJson = `{\n      ${extractedVariables.map(v => `"${v}": "${variableValues[v] || `${v}Value`}"`).join(',\n      ')}\n    }`;
+    }
+    
+    return `curl -X POST "${supabaseUrl}/functions/v1/run-prompt-api" \\
+  -H "Authorization: Bearer ${promptbyApiKey || 'YOUR_PROMPTBY_ME_API_KEY'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "prompt_id": "${selectedPrompt.id}",
+    "variables": ${variablesJson},
+    "api_key": "YOUR_AI_PROVIDER_API_KEY",
+    "provider": "${selectedProvider}",
+    "model": "${selectedModel}",
+    "temperature": ${temperature},
+    "max_tokens": ${maxTokens}
+  }'`;
+  }
+
+  // Generate cURL code snippet for flow
+  const generateCurlFlowCode = (): string => {
+    if (!selectedFlow) return ''
+    
+    let variablesJson = '{}';
+    if (extractedVariables.length > 0) {
+      variablesJson = `{\n      ${extractedVariables.map(v => `"${v}": "${variableValues[v] || `${v}Value`}"`).join(',\n      ')}\n    }`;
+    }
+    
+    return `curl -X POST "${supabaseUrl}/functions/v1/run-prompt-flow-api" \\
+  -H "Authorization: Bearer ${promptbyApiKey || 'YOUR_PROMPTBY_ME_API_KEY'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "flow_id": "${selectedFlow.id}",
+    "variables": ${variablesJson},
+    "api_key": "YOUR_AI_PROVIDER_API_KEY",
+    "provider": "${selectedProvider}",
+    "model": "${selectedModel}",
+    "temperature": ${temperature},
+    "max_tokens": ${maxTokens}
+  }'`;
+  }
+
+  const generateCode = (): string => {
+    if (codeType === 'prompt') {
+      if (selectedLanguage === 'javascript') {
+        return generateJsPromptCode()
+      } else if (selectedLanguage === 'python') {
+        return generatePythonPromptCode()
+      } else {
+        return generateCurlPromptCode()
+      }
+    } else {
+      if (selectedLanguage === 'javascript') {
+        return generateJsFlowCode()
+      } else if (selectedLanguage === 'python') {
+        return generatePythonFlowCode()
+      } else {
+        return generateCurlFlowCode()
+      }
+    }
   }
 
   const getProviderModels = () => {
@@ -277,6 +477,13 @@ def run_prompt():
     }
   }
 
+  const handleVariableChange = (variable: string, value: string) => {
+    setVariableValues(prev => ({
+      ...prev,
+      [variable]: value
+    }))
+  }
+
   if (!isOpen) return null
 
   return (
@@ -309,7 +516,7 @@ def run_prompt():
 
         {/* Content */}
         <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
-          {/* Left side - Prompt selection */}
+          {/* Left side - Prompt/Flow selection */}
           <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-zinc-800/50 flex flex-col">
             {/* Search and Filter */}
             <div className="p-4 border-b border-zinc-800/50 flex-shrink-0">
@@ -320,7 +527,7 @@ def run_prompt():
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search prompts..."
+                    placeholder="Search..."
                     className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                   />
                 </div>
@@ -328,136 +535,219 @@ def run_prompt():
                 <div className="flex items-center gap-3">
                   <Filter className="text-zinc-500" size={18} />
                   <select
-                    value={filterAccess}
-                    onChange={(e) => setFilterAccess(e.target.value as 'all' | 'public' | 'private')}
+                    value={codeType}
+                    onChange={(e) => setCodeType(e.target.value as 'prompt' | 'flow')}
                     className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
                   >
-                    <option value="all">All Prompts</option>
-                    <option value="public">Public Only</option>
-                    <option value="private">Private Only</option>
+                    <option value="prompt">Prompts</option>
+                    <option value="flow">Flows</option>
                   </select>
                 </div>
+
+                {codeType === 'prompt' && (
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={filterAccess}
+                      onChange={(e) => setFilterAccess(e.target.value as 'all' | 'public' | 'private')}
+                      className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                    >
+                      <option value="all">All Prompts</option>
+                      <option value="public">Public Only</option>
+                      <option value="private">Private Only</option>
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
             
-            {/* Prompts List */}
+            {/* Prompts/Flows List */}
             <div className="flex-1 overflow-y-auto p-4">
-              {loading ? (
-                <div className="text-center py-12">
-                  <div className="flex items-center justify-center gap-2 text-zinc-400">
-                    <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-                    <span>Loading prompts...</span>
+              {codeType === 'prompt' ? (
+                // Prompts List
+                promptsLoading ? (
+                  <div className="text-center py-12">
+                    <div className="flex items-center justify-center gap-2 text-zinc-400">
+                      <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+                      <span>Loading prompts...</span>
+                    </div>
                   </div>
-                </div>
-              ) : filteredPrompts.length > 0 ? (
-                <div className="space-y-4">
-                  {filteredPrompts.map((prompt) => (
-                    <motion.div
-                      key={prompt.id}
-                      className={`group relative bg-zinc-800/30 border rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-indigo-500/50 hover:bg-zinc-800/50 ${
-                        selectedPrompt?.id === prompt.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-zinc-700/50'
-                      }`}
-                      onClick={() => handlePromptSelect(prompt)}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1 min-w-0">
-                          {prompt.title && (
-                            <h3 className="text-white font-medium text-sm mb-1 line-clamp-1">
-                              {prompt.title}
-                            </h3>
-                          )}
-                          <div className="flex items-center gap-2 text-xs text-zinc-500">
-                            <div className="flex items-center gap-1">
-                              {prompt.access === 'private' ? (
-                                <Lock size={10} className="text-amber-400" />
-                              ) : (
-                                <Eye size={10} className="text-emerald-400" />
-                              )}
-                              <span className={prompt.access === 'private' ? 'text-amber-400' : 'text-emerald-400'}>
-                                {prompt.access}
-                              </span>
+                ) : filteredPrompts.length > 0 ? (
+                  <div className="space-y-4">
+                    {filteredPrompts.map((prompt) => (
+                      <motion.div
+                        key={prompt.id}
+                        className={`group relative bg-zinc-800/30 border rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-indigo-500/50 hover:bg-zinc-800/50 ${
+                          selectedPrompt?.id === prompt.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-zinc-700/50'
+                        }`}
+                        onClick={() => handlePromptSelect(prompt)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1 min-w-0">
+                            {prompt.title && (
+                              <h3 className="text-white font-medium text-sm mb-1 line-clamp-1">
+                                {prompt.title}
+                              </h3>
+                            )}
+                            <div className="flex items-center gap-2 text-xs text-zinc-500">
+                              <div className="flex items-center gap-1">
+                                {prompt.access === 'private' ? (
+                                  <EyeOff size={10} className="text-amber-400" />
+                                ) : (
+                                  <Eye size={10} className="text-emerald-400" />
+                                )}
+                                <span className={prompt.access === 'private' ? 'text-amber-400' : 'text-emerald-400'}>
+                                  {prompt.access}
+                                </span>
+                              </div>
+                              <span>•</span>
+                              <span>{formatDate(prompt.created_at)}</span>
                             </div>
-                            <span>•</span>
-                            <span>{formatDate(prompt.created_at)}</span>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Content Preview */}
-                      <div className="text-zinc-300 text-sm leading-relaxed mb-3">
-                        {truncateContent(prompt.content)}
-                      </div>
+                        {/* Content Preview */}
+                        <div className="text-zinc-300 text-sm leading-relaxed mb-3">
+                          {truncateContent(prompt.content)}
+                        </div>
 
-                      {/* Stats */}
-                      {prompt.access === 'public' && (
-                        <div className="flex items-center gap-3 text-xs text-zinc-500">
-                          <div className="flex items-center gap-1">
-                            <Eye size={10} />
-                            <span>{prompt.views || 0}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Heart size={10} />
-                            <span>{prompt.like_count || 0}</span>
-                          </div>
-                          {prompt.original_prompt_id === null && (prompt.fork_count || 0) > 0 && (
+                        {/* Stats */}
+                        {prompt.access === 'public' && (
+                          <div className="flex items-center gap-3 text-xs text-zinc-500">
                             <div className="flex items-center gap-1">
-                              <GitFork size={10} />
-                              <span>{prompt.fork_count || 0}</span>
+                              <Eye size={10} />
+                              <span>{prompt.views || 0}</span>
                             </div>
-                          )}
-                        </div>
-                      )}
+                            <div className="flex items-center gap-1">
+                              <Heart size={10} />
+                              <span>{prompt.like_count || 0}</span>
+                            </div>
+                            {prompt.original_prompt_id === null && (prompt.fork_count || 0) > 0 && (
+                              <div className="flex items-center gap-1">
+                                <GitFork size={10} />
+                                <span>{prompt.fork_count || 0}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-                      {/* Selection Indicator */}
-                      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white rounded-full" />
+                        {/* Selection Indicator */}
+                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+                            <div className="w-2 h-2 bg-white rounded-full" />
+                          </div>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-2xl p-8">
+                      <Search className="mx-auto text-zinc-500 mb-4" size={48} />
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        {searchQuery || filterAccess !== 'all' ? 'No matching prompts' : 'No prompts found'}
+                      </h3>
+                      <p className="text-zinc-400">
+                        {searchQuery || filterAccess !== 'all'
+                          ? 'Try adjusting your search or filter'
+                          : 'Create your first prompt to get started'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                )
               ) : (
-                <div className="text-center py-12">
-                  <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-2xl p-8">
-                    <Search className="mx-auto text-zinc-500 mb-4" size={48} />
-                    <h3 className="text-lg font-semibold text-white mb-2">
-                      {searchQuery || filterAccess !== 'all' ? 'No matching prompts' : 'No prompts found'}
-                    </h3>
-                    <p className="text-zinc-400">
-                      {searchQuery || filterAccess !== 'all'
-                        ? 'Try adjusting your search or filter'
-                        : 'Create your first prompt to get started'
-                      }
-                    </p>
+                // Flows List
+                flowsLoading ? (
+                  <div className="text-center py-12">
+                    <div className="flex items-center justify-center gap-2 text-zinc-400">
+                      <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+                      <span>Loading flows...</span>
+                    </div>
                   </div>
-                </div>
+                ) : filteredFlows.length > 0 ? (
+                  <div className="space-y-4">
+                    {filteredFlows.map((flow) => (
+                      <motion.div
+                        key={flow.id}
+                        className={`group relative bg-zinc-800/30 border rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-indigo-500/50 hover:bg-zinc-800/50 ${
+                          selectedFlow?.id === flow.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-zinc-700/50'
+                        }`}
+                        onClick={() => handleFlowSelect(flow)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-white font-medium text-sm mb-1 line-clamp-1">
+                              {flow.name}
+                            </h3>
+                            <div className="flex items-center gap-2 text-xs text-zinc-500">
+                              <span>{formatDate(flow.created_at)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        {flow.description && (
+                          <div className="text-zinc-300 text-sm leading-relaxed mb-3">
+                            {truncateContent(flow.description)}
+                          </div>
+                        )}
+
+                        {/* Selection Indicator */}
+                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+                            <div className="w-2 h-2 bg-white rounded-full" />
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-2xl p-8">
+                      <Search className="mx-auto text-zinc-500 mb-4" size={48} />
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        {searchQuery ? 'No matching flows' : 'No flows found'}
+                      </h3>
+                      <p className="text-zinc-400">
+                        {searchQuery
+                          ? 'Try adjusting your search'
+                          : 'Create your first flow to get started'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                )
               )}
             </div>
           </div>
           
           {/* Right side - Code generation */}
           <div className="w-full md:w-1/2 flex flex-col">
-            {selectedPrompt ? (
+            {(selectedPrompt || selectedFlow) ? (
               <div className="flex-1 overflow-y-auto p-6">
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-white mb-2">
-                    {selectedPrompt.title || 'Untitled Prompt'}
+                    {selectedPrompt ? (selectedPrompt.title || 'Untitled Prompt') : (selectedFlow?.name || 'Untitled Flow')}
                   </h3>
                   
                   <div className="flex items-center gap-2 text-sm mb-4">
-                    <div className={`px-2 py-1 rounded text-xs ${
-                      selectedPrompt.access === 'private' 
-                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' 
-                        : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                    }`}>
-                      {selectedPrompt.access === 'private' ? 'Private' : 'Public'}
-                    </div>
+                    {selectedPrompt && (
+                      <div className={`px-2 py-1 rounded text-xs ${
+                        selectedPrompt.access === 'private' 
+                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' 
+                          : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                      }`}>
+                        {selectedPrompt.access === 'private' ? 'Private' : 'Public'}
+                      </div>
+                    )}
                     <div className="text-zinc-500 text-xs">
-                      ID: {selectedPrompt.id}
+                      ID: {selectedPrompt ? selectedPrompt.id : selectedFlow?.id}
                     </div>
                   </div>
                   
@@ -467,13 +757,19 @@ def run_prompt():
                         <Wand2 size={16} />
                         <span>Variables Detected</span>
                       </h4>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="space-y-3">
                         {extractedVariables.map((variable, index) => (
-                          <div
-                            key={index}
-                            className="px-2 py-1 bg-indigo-500/20 text-indigo-300 rounded-lg text-xs border border-indigo-500/30"
-                          >
-                            {`{{${variable}}}`}
+                          <div key={index}>
+                            <label className="block text-xs font-medium text-zinc-300 mb-1">
+                              {`{{${variable}}}`}
+                            </label>
+                            <input
+                              type="text"
+                              value={variableValues[variable] || ''}
+                              onChange={(e) => handleVariableChange(variable, e.target.value)}
+                              placeholder={`Enter value for ${variable}`}
+                              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 text-sm"
+                            />
                           </div>
                         ))}
                       </div>
@@ -608,13 +904,10 @@ def run_prompt():
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-md font-semibold text-white">
-                      {selectedLanguage === 'javascript' ? 'JavaScript/TypeScript' : 'Python'} Code
+                      {selectedLanguage === 'javascript' ? 'JavaScript/TypeScript' : selectedLanguage === 'python' ? 'Python' : 'cURL'}
                     </h4>
                     <button
-                      onClick={() => copyToClipboard(
-                        selectedLanguage === 'javascript' ? generateJsCode() : generatePythonCode(), 
-                        'code'
-                      )}
+                      onClick={() => copyToClipboard(generateCode(), 'code')}
                       className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
                       title="Copy to clipboard"
                     >
@@ -627,7 +920,7 @@ def run_prompt():
                   </div>
                   <div className="bg-zinc-800/50 p-4 rounded-lg">
                     <pre className="text-sm text-indigo-300 font-mono overflow-x-auto">
-                      <code>{selectedLanguage === 'javascript' ? generateJsCode() : generatePythonCode()}</code>
+                      <code>{generateCode()}</code>
                     </pre>
                   </div>
                 </div>
@@ -639,10 +932,10 @@ def run_prompt():
                     <Code size={32} className="text-indigo-400" />
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-2">
-                    Select a Prompt
+                    {codeType === 'prompt' ? 'Select a Prompt' : 'Select a Flow'}
                   </h3>
                   <p className="text-zinc-400 max-w-md">
-                    Choose a prompt from your collection to generate API code for integrating it into your applications.
+                    Choose a {codeType} from your collection to generate API code for integrating it into your applications.
                   </p>
                 </div>
               </div>

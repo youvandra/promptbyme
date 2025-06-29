@@ -6,7 +6,7 @@ import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { ApiKeyModal } from '../../components/api/ApiKeyModal'
 import { ApiDocsModal } from '../../components/api/ApiDocsModal'
 import { ApiLogsModal } from '../../components/api/ApiLogsModal'
-import { PromptSelectorModal } from '../../components/api/PromptSelectorModal'
+import { CodeGeneratorModal } from '../../components/api/CodeGeneratorModal'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
 import { useSecureStorage } from '../../hooks/useSecureStorage'
@@ -33,7 +33,7 @@ export const ApiPage: React.FC = () => {
   const [showApiKeyModal, setShowApiKeyModal] = useState(false)
   const [showApiDocsModal, setShowApiDocsModal] = useState(false)
   const [showApiLogsModal, setShowApiLogsModal] = useState(false)
-  const [showPromptSelectorModal, setShowPromptSelectorModal] = useState(false)
+  const [showCodeGeneratorModal, setShowCodeGeneratorModal] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [apiKey, setApiKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -80,13 +80,6 @@ export const ApiPage: React.FC = () => {
         break
     }
   }, [selectedProvider])
-
-  // Generate code when parameters change
-  useEffect(() => {
-    if (selectedPrompt) {
-      generateCode()
-    }
-  }, [selectedPrompt, selectedLanguage, selectedProvider, selectedModel, temperature, maxTokens, apiKey, variableValues, aiProviderApiKey])
 
   const fetchApiKey = async () => {
     if (!user) return
@@ -146,174 +139,6 @@ export const ApiPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to copy:', err)
     }
-  }
-
-  const handlePromptSelected = (prompt: Prompt) => {
-    setSelectedPrompt(prompt)
-    
-    // Extract variables from the prompt content
-    const variables = extractVariablesFromContent(prompt.content)
-    setExtractedVariables(variables)
-    
-    // Initialize variable values
-    const initialValues: Record<string, string> = {}
-    variables.forEach(variable => {
-      initialValues[variable] = ''
-    })
-    setVariableValues(initialValues)
-    
-    generateCode(prompt)
-  }
-
-  const extractVariablesFromContent = (content: string): string[] => {
-    const matches = content.match(/\{\{([^}]+)\}\}/g) || []
-    return [...new Set(matches.map(match => match.replace(/[{}]/g, '')))]
-  }
-
-  const handleVariableChange = (name: string, value: string) => {
-    setVariableValues(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  const generateCode = (promptObj = selectedPrompt) => {
-    if (!promptObj) return
-
-    let code = ''
-    if (selectedLanguage === 'javascript') {
-      code = generateJsCode(promptObj)
-    } else if (selectedLanguage === 'python') {
-      code = generatePythonCode(promptObj)
-    } else if (selectedLanguage === 'curl') {
-      code = generateCurlCode(promptObj)
-    }
-
-    setGeneratedCode(code)
-  }
-
-  // Generate JavaScript code
-  const generateJsCode = (prompt: Prompt): string => {
-    // Create variables object with user-provided values or placeholders
-    let variablesObj = '{}'
-    if (extractedVariables.length > 0) {
-      const variableEntries = extractedVariables.map(variable => {
-        const value = variableValues[variable] || `${variable}Value`
-        return `    ${variable}: "${value}"`
-      })
-      variablesObj = `{\n${variableEntries.join(',\n')}\n  }`
-    }
-    
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-    
-    return `async function runPrompt() {
-  // Your promptby.me API key
-  const promptbyApiKey = "${apiKey || 'YOUR_PROMPTBY_ME_API_KEY'}";
-  
-  const response = await fetch("${supabaseUrl}/functions/v1/run-prompt-api", {
-    method: "POST",
-    headers: {
-      "Authorization": \`Bearer \${promptbyApiKey}\`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      prompt_id: "${prompt.id}",
-      variables: ${variablesObj},
-      api_key: "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
-      provider: "${selectedProvider}",
-      model: "${selectedModel}",
-      temperature: ${temperature},
-      max_tokens: ${maxTokens}
-    })
-  });
-  
-  const data = await response.json();
-  
-  if (data.success) {
-    console.log("AI Response:", data.output);
-    return data.output;
-  } else {
-    console.error("Error:", data.error);
-    throw new Error(data.error);
-  }
-}`
-  }
-
-  // Generate Python code
-  const generatePythonCode = (prompt: Prompt): string => {
-    // Create variables dictionary with user-provided values or placeholders
-    let variablesDict = '{}'
-    if (extractedVariables.length > 0) {
-      const variableEntries = extractedVariables.map(variable => {
-        const value = variableValues[variable] || `${variable}_value`
-        return `        "${variable}": "${value}"`
-      })
-      variablesDict = `{\n${variableEntries.join(',\n')}\n    }`
-    }
-    
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-    
-    return `import requests
-import json
-
-def run_prompt():
-    # Your promptby.me API key
-    promptby_api_key = "${apiKey || 'YOUR_PROMPTBY_ME_API_KEY'}"
-    
-    url = "${supabaseUrl}/functions/v1/run-prompt-api"
-    
-    headers = {
-        "Authorization": f"Bearer {promptby_api_key}",
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "prompt_id": "${prompt.id}",
-        "variables": ${variablesDict},
-        "api_key": "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
-        "provider": "${selectedProvider}",
-        "model": "${selectedModel}",
-        "temperature": ${temperature},
-        "max_tokens": ${maxTokens}
-    }
-    
-    response = requests.post(url, headers=headers, json=payload)
-    data = response.json()
-    
-    if data.get("success"):
-        print("AI Response:", data["output"])
-        return data["output"]
-    else:
-        print("Error:", data.get("error"))
-        raise Exception(data.get("error"))`
-  }
-
-  // Generate cURL code
-  const generateCurlCode = (prompt: Prompt): string => {
-    // Create variables JSON with user-provided values or placeholders
-    let variablesJson = '{}'
-    if (extractedVariables.length > 0) {
-      const variableEntries = extractedVariables.map(variable => {
-        const value = variableValues[variable] || `${variable}Value`
-        return `      "${variable}": "${value}"`
-      })
-      variablesJson = `{\n${variableEntries.join(',\n')}\n    }`
-    }
-    
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-    
-    return `curl -X POST "${supabaseUrl}/functions/v1/run-prompt-api" \\
-  -H "Authorization: Bearer ${apiKey || 'YOUR_PROMPTBY_ME_API_KEY'}" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "prompt_id": "${prompt.id}",
-    "variables": ${variablesJson},
-    "api_key": "${aiProviderApiKey || 'YOUR_AI_PROVIDER_API_KEY'}",
-    "provider": "${selectedProvider}",
-    "model": "${selectedModel}",
-    "temperature": ${temperature},
-    "max_tokens": ${maxTokens}
-  }'`
   }
 
   const getProviderModels = () => {
@@ -447,7 +272,7 @@ def run_prompt():
                   </p>
                 </div>
                 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <button
                     onClick={() => setShowApiLogsModal(true)}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-lg transition-all duration-200"
@@ -556,7 +381,7 @@ def run_prompt():
                 </p>
               </div>
 
-              {/* Prompt Selection & Code Generation */}
+              {/* Generate API Code Section */}
               <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
@@ -564,229 +389,122 @@ def run_prompt():
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-white">Generate API Code</h2>
-                    <p className="text-zinc-400 text-sm">Select a prompt and generate code for API integration</p>
+                    <p className="text-zinc-400 text-sm">Generate code to integrate with your applications</p>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Left Column - Prompt Selection */}
-                  <div className="lg:col-span-1">
-                    {selectedPrompt ? (
-                      <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4 mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-white font-medium text-sm">
-                            {selectedPrompt.title || 'Selected Prompt'}
-                          </h3>
-                          <div className="flex items-center gap-2">
-                            <div className={`px-2 py-0.5 rounded text-xs ${
-                              selectedPrompt.access === 'private' 
-                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
-                                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                            }`}>
-                              {selectedPrompt.access}
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-zinc-300 text-sm mb-2 line-clamp-2">
-                          {selectedPrompt.content.substring(0, 100)}...
-                        </p>
-                        <div className="text-xs text-zinc-500">
-                          ID: {selectedPrompt.id}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-6 text-center">
-                        <p className="text-zinc-400 mb-4">No prompt selected</p>
-                      </div>
-                    )}
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1">
+                    <p className="text-zinc-300 mb-4">
+                      Generate code snippets to run your prompts and flows from your own applications. Choose from JavaScript, Python, or cURL.
+                    </p>
                     
-                    <button
-                      onClick={() => setShowPromptSelectorModal(true)}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200"
-                    >
-                      {selectedPrompt ? 'Change Prompt' : 'Select Prompt'}
-                    </button>
-
-                    {/* Variables Section - Only show if there are variables */}
-                    {extractedVariables.length > 0 && (
-                      <div className="mt-4">
-                        <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-4">
-                          <h4 className="text-sm font-medium text-indigo-300 mb-3 flex items-center gap-2">
-                            <Wand2 size={16} />
-                            <span>Variables</span>
-                          </h4>
-                          <div className="space-y-3">
-                            {extractedVariables.map((variable) => (
-                              <div key={variable}>
-                                <label className="block text-xs font-medium text-zinc-300 mb-1">
-                                  {`{{${variable}}}`}
-                                </label>
-                                <input
-                                  type="text"
-                                  value={variableValues[variable] || ''}
-                                  onChange={(e) => handleVariableChange(variable, e.target.value)}
-                                  placeholder={`Enter value for ${variable}`}
-                                  className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 text-sm"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Middle Column - Settings */}
-                  <div className="lg:col-span-1">
                     <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">
-                          Programming Language
-                        </label>
-                        <div className="grid grid-cols-3 gap-2">
-                          <button
-                            onClick={() => setSelectedLanguage('javascript')}
-                            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 text-sm ${
-                              selectedLanguage === 'javascript' 
-                                ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' 
-                                : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
-                            }`}
-                          >
-                            <span>JavaScript</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => setSelectedLanguage('python')}
-                            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 text-sm ${
-                              selectedLanguage === 'python' 
-                                ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' 
-                                : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
-                            }`}
-                          >
-                            <span>Python</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => setSelectedLanguage('curl')}
-                            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 text-sm ${
-                              selectedLanguage === 'curl' 
-                                ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' 
-                                : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
-                            }`}
-                          >
-                            <span>cURL</span>
-                          </button>
-                        </div>
+                      <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
+                        <h3 className="text-white font-medium mb-2">Available Endpoints</h3>
+                        <ul className="space-y-2 text-sm">
+                          <li className="flex items-start gap-2">
+                            <div className="bg-indigo-500/20 text-indigo-400 p-1 rounded mt-0.5">
+                              <Code size={14} />
+                            </div>
+                            <div>
+                              <p className="text-indigo-300 font-medium">run-prompt-api</p>
+                              <p className="text-zinc-400">Execute a single prompt with variables</p>
+                            </div>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <div className="bg-indigo-500/20 text-indigo-400 p-1 rounded mt-0.5">
+                              <Code size={14} />
+                            </div>
+                            <div>
+                              <p className="text-indigo-300 font-medium">run-prompt-flow-api</p>
+                              <p className="text-zinc-400">Run a complete prompt flow with all steps</p>
+                            </div>
+                          </li>
+                        </ul>
                       </div>
                       
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">
-                          AI Provider
-                        </label>
-                        <select
-                          value={selectedProvider}
-                          onChange={(e) => setSelectedProvider(e.target.value as any)}
-                          className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                        >
-                          <option value="openai">OpenAI</option>
-                          <option value="anthropic">Anthropic (Claude)</option>
-                          <option value="google">Google (Gemini)</option>
-                          <option value="llama">Llama</option>
-                          <option value="groq">Groq</option>
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">
-                          Model
-                        </label>
-                        <select
-                          value={selectedModel}
-                          onChange={(e) => setSelectedModel(e.target.value)}
-                          className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                        >
-                          {getProviderModels().map(model => (
-                            <option key={model.id} value={model.id}>{model.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
-                          <Thermometer size={16} className="text-indigo-400" />
-                          Temperature: {temperature}
-                        </label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="2"
-                          step="0.1"
-                          value={temperature}
-                          onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                          className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider"
-                        />
-                        <div className="flex justify-between text-xs text-zinc-500 mt-1">
-                          <span>Focused</span>
-                          <span>Creative</span>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
-                          <Zap size={16} className="text-indigo-400" />
-                          Max Tokens
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="8000"
-                          value={maxTokens}
-                          onChange={(e) => setMaxTokens(parseInt(e.target.value))}
-                          className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                        />
+                      <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
+                        <h3 className="text-white font-medium mb-2">Features</h3>
+                        <ul className="space-y-2 text-sm">
+                          <li className="flex items-start gap-2">
+                            <div className="bg-emerald-500/20 text-emerald-400 p-1 rounded mt-0.5">
+                              <CheckCircle size={14} />
+                            </div>
+                            <p className="text-zinc-300">Variable substitution</p>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <div className="bg-emerald-500/20 text-emerald-400 p-1 rounded mt-0.5">
+                              <CheckCircle size={14} />
+                            </div>
+                            <p className="text-zinc-300">Multiple AI providers</p>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <div className="bg-emerald-500/20 text-emerald-400 p-1 rounded mt-0.5">
+                              <CheckCircle size={14} />
+                            </div>
+                            <p className="text-zinc-300">Secure authentication</p>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <div className="bg-emerald-500/20 text-emerald-400 p-1 rounded mt-0.5">
+                              <CheckCircle size={14} />
+                            </div>
+                            <p className="text-zinc-300">Multi-step flow execution</p>
+                          </li>
+                        </ul>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Right Column - Generated Code */}
-                  <div className="lg:col-span-1">
-                    <div className="h-full flex flex-col">
-                      <div className="mb-3 flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-zinc-300">
-                          Generated Code
-                        </h3>
-                        {generatedCode && (
-                          <button
-                            onClick={() => copyToClipboard(generatedCode, 'code')}
-                            className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                            title="Copy to clipboard"
-                          >
-                            {copied === 'code' ? (
-                              <CheckCircle size={16} className="text-emerald-400" />
-                            ) : (
-                              <Copy size={16} />
-                            )}
-                          </button>
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-4 overflow-auto">
-                        {selectedPrompt ? (
-                          <pre className="text-xs text-indigo-300 font-mono whitespace-pre-wrap">
-                            {generatedCode}
-                          </pre>
-                        ) : (
-                          <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
-                            <p>Select a prompt to generate code</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                  <div className="flex-1 flex flex-col justify-center">
+                    <button
+                      onClick={() => setShowCodeGeneratorModal(true)}
+                      className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                    >
+                      <Code size={20} />
+                      <span>Generate API Code</span>
+                    </button>
+                    <p className="text-center text-zinc-500 text-sm mt-3">
+                      Select a prompt or flow and generate code in your preferred language
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Documentation Link - Removed from here and moved to header */}
+              {/* Documentation Link */}
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-indigo-600/20 rounded-lg flex items-center justify-center">
+                      <FileText size={20} className="text-indigo-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold text-white">API Documentation</h2>
+                      <p className="text-zinc-400 text-sm">Detailed guides and reference for the API</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setShowApiDocsModal(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-lg transition-all duration-200"
+                    >
+                      <FileText size={16} />
+                      <span>View Documentation</span>
+                    </button>
+                    
+                    <a
+                      href="/docs/api-reference.md"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-300 hover:text-white border border-zinc-700/50 rounded-lg transition-all duration-200"
+                    >
+                      <ExternalLink size={16} />
+                      <span>Raw Markdown</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -813,11 +531,10 @@ def run_prompt():
         onClose={() => setShowApiLogsModal(false)}
       />
       
-      {/* Prompt Selector Modal */}
-      <PromptSelectorModal
-        isOpen={showPromptSelectorModal}
-        onClose={() => setShowPromptSelectorModal(false)}
-        onSelectPrompt={handlePromptSelected}
+      {/* Code Generator Modal */}
+      <CodeGeneratorModal
+        isOpen={showCodeGeneratorModal}
+        onClose={() => setShowCodeGeneratorModal(false)}
       />
 
       <BoltBadge />
