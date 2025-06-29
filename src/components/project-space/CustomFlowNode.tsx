@@ -33,7 +33,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       
       {/* Node Content */}
       <motion.div 
-        className={`w-[250px] h-[120px] ${getNodeColor()} backdrop-blur-sm border rounded-xl p-4 shadow-lg flex flex-col items-start ${
+        className={`w-[250px] h-[150px] ${getNodeColor()} backdrop-blur-sm border rounded-xl p-4 shadow-lg flex flex-col items-start ${
           selected ? 'ring-2 ring-white/50' : ''
         }`}
         onDoubleClick={() => data.onViewDetails(id)}
@@ -83,7 +83,7 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         </div>
         
         {/* Node Content */}
-        <div className="text-xs text-zinc-300 mt-2 whitespace-pre-wrap w-full max-h-[60px] overflow-hidden">
+        <div className="text-xs text-zinc-300 mt-2 whitespace-pre-wrap w-full max-h-[80px] overflow-hidden">
           {data.content ? (data.content.length > 150 ? `${data.content.substring(0, 150)}...` : data.content) : ''}
         </div>
       </motion.div>
