@@ -1,13 +1,33 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import * as Purchases from '@revenuecat/purchases-js';
 import { Check, X, HelpCircle, ArrowRight, Zap } from 'lucide-react';
 import { Section } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardContent, CardFooter } from '../components/ui/Card';
 import { GlassPanel } from '../components/ui/GlassPanel';
+import { useAuthStore } from '../store/authStore';
 
 export const PricingPage: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const { user } = useAuthStore();
+  
+  // Initialize RevenueCat SDK
+  useEffect(() => {
+    if (user) {
+      try {
+        // Configure RevenueCat with the user's ID as the appUserId
+        Purchases.configure({
+          apiKey: 'rcb_utECfCCZVOJKVPQcrykYAIchIDaO',
+          appUserId: user.id,
+        });
+        
+        console.log('RevenueCat SDK initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize RevenueCat SDK:', error);
+      }
+    }
+  }, [user]);
   
   // Pricing plans
   const plans = [
