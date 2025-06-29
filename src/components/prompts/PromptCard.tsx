@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Copy, Trash2, Eye, Lock, ExternalLink, GitFork, Maximize2, History, Edit3, Share2, FolderOpen, Move, Play, FileText, Image, Unlock } from 'lucide-react'
+import { Copy, Trash2, Eye, Lock, ExternalLink, GitFork, Maximize2, History, Edit3, Share2, FolderOpen, Move, Play, FileText, Image } from 'lucide-react'
 import { marked } from 'marked'
 import { motion } from 'framer-motion'
 import { getAppTagById } from '../../lib/appTags'
@@ -7,7 +7,6 @@ import { ContextMenu } from '../ui/ContextMenu'
 import { supabase } from '../../lib/supabase'
 import { VariableFillModal } from './VariableFillModal'
 import { useNavigate } from 'react-router-dom'
-import { LockPromptModal } from './LockPromptModal'
 
 interface Folder {
   id: string
@@ -31,7 +30,6 @@ interface PromptCardProps {
   outputSample?: string | null
   mediaUrls?: string[] | null
   folders?: Folder[]
-  isPasswordProtected?: boolean
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
   onView?: (id: string) => void
@@ -41,7 +39,6 @@ interface PromptCardProps {
   showActions?: boolean
   enableContextMenu?: boolean
   showUseButton?: boolean
-  onPromptUpdated?: () => void
 }
 
 // Memoized date formatter to avoid repeated calculations
@@ -123,7 +120,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   outputSample = null,
   mediaUrls = null,
   folders = [],
-  isPasswordProtected = false,
   onEdit,
   onDelete,
   onView,
@@ -133,7 +129,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   showActions = true,
   enableContextMenu = false,
   showUseButton = false,
-  onPromptUpdated
 }) => {
   const [contextMenu, setContextMenu] = useState<{
     isOpen: boolean
@@ -145,7 +140,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({
     y: 0
   })
   const [showVariableModal, setShowVariableModal] = useState(false)
-  const [showLockModal, setShowLockModal] = useState(false)
   const [copied, setCopied] = useState(false)
   const [userDisplayName, setUserDisplayName] = useState<string | null>(null)
   const [isRunning, setIsRunning] = useState(false)
@@ -328,16 +322,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({
     await copyToClipboard(link)
   }
 
-  const handleLockPrompt = () => {
-    setShowLockModal(true)
-  }
-
-  const handleLockPromptSuccess = () => {
-    if (onPromptUpdated) {
-      onPromptUpdated()
-    }
-  }
-
   // Function to determine if a URL is an image
   const isImageUrl = (url: string) => {
     return url.match(/\.(jpeg|jpg|gif|png)$/i) !== null
@@ -382,31 +366,10 @@ export const PromptCard: React.FC<PromptCardProps> = ({
       onClick: () => onEdit?.(id)
     },
     {
-      id: 'copy',
-      label: 'Copy Content',
-      icon: <Copy size={16} />,
-      onClick: handleCopyContent
-    },
-    {
       id: 'share',
       label: 'Share Link',
       icon: <Share2 size={16} />,
       onClick: handleShareLink
-    },
-    {
-      id: 'lock',
-      label: isPasswordProtected ? 'Change Password' : 'Lock Prompt',
-      icon: isPasswordProtected ? <Lock size={16} /> : <Lock size={16} />,
-      onClick: handleLockPrompt,
-      variant: isPasswordProtected ? 'warning' : 'default'
-    },
-    {
-      id: 'unlock',
-      label: 'Remove Password',
-      icon: <Unlock size={16} />,
-      onClick: handleLockPrompt,
-      variant: 'warning',
-      hidden: !isPasswordProtected
     },
     {
       id: 'move',
@@ -444,7 +407,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
       },
       variant: 'danger' as const
     }
-  ], [id, folders, tags, title, content, onEdit, onDelete, onViewHistory, onMoveToFolder, navigate, handleRunClick, isPasswordProtected])
+  ], [id, folders, tags, title, content, onEdit, onDelete, onViewHistory, onMoveToFolder, navigate, handleRunClick])
 
   const CardWrapper = enableContextMenu ? motion.div : 'div'
   const cardProps = enableContextMenu ? {
@@ -618,14 +581,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               </div>
             )}
             
-            {/* Password Protected Indicator */}
-            {isPasswordProtected && (
-              <div className="flex items-center gap-1.5 mb-3 px-2 py-1 bg-amber-500/10 border border-amber-500/30 rounded text-xs text-amber-400 w-fit">
-                <Lock size={10} />
-                <span>Password Protected</span>
-              </div>
-            )}
-            
             <div 
               className="text-zinc-300 text-sm sm:text-base leading-relaxed prose prose-invert prose-sm sm:prose-base max-w-none flex-1"
               dangerouslySetInnerHTML={renderedContent}
@@ -733,7 +688,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
           isOpen={contextMenu.isOpen}
           x={contextMenu.x}
           y={contextMenu.y}
-          items={contextMenuItems.filter(item => !item.hidden)}
+          items={contextMenuItems}
           onClose={closeContextMenu}
         />
       )}
@@ -745,15 +700,6 @@ export const PromptCard: React.FC<PromptCardProps> = ({
         promptContent={content}
         promptTitle={title}
         onVariablesFilled={handleVariablesFilled}
-      />
-
-      {/* Lock Prompt Modal */}
-      <LockPromptModal
-        isOpen={showLockModal}
-        onClose={() => setShowLockModal(false)}
-        promptId={id}
-        isPasswordProtected={isPasswordProtected || false}
-        onSuccess={handleLockPromptSuccess}
       />
     </>
   )
