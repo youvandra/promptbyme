@@ -170,34 +170,36 @@ export const PromptImportModal: React.FC<PromptImportModalProps> = ({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      {prompt.title && (
-                        <h3 className="text-white font-medium text-sm mb-1 line-clamp-1">
-                          {prompt.title}
-                        </h3>
-                      )}
-                      <div className="flex items-center gap-2 text-xs text-zinc-500">
-                        <div className="flex items-center gap-1">
-                          {prompt.access === 'private' ? (
-                            <Lock size={10} className="text-amber-400" />
-                          ) : (
-                            <Eye size={10} className="text-emerald-400" />
-                          )}
-                          <span className={prompt.access === 'private' ? 'text-amber-400' : 'text-emerald-400'}>
-                            <p className="text-xs text-zinc-400">
-                              by {prompt.user?.display_name || 'Unknown'} • ID: {prompt.id.substring(0, 8)}...
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-zinc-500 mt-1">
-                            {prompt.access}
-                          </span>
-                        </div>
-                        <span>•</span>
-                        <span>{formatDate(prompt.created_at)}</span>
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    {prompt.title && (
+                      <h3 className="text-white font-medium text-sm mb-1 line-clamp-1">
+                        {prompt.title}
+                      </h3>
+                    )}
+                
+                    <div className="flex items-center gap-2 text-xs text-zinc-500 flex-wrap">
+                      <div className="flex items-center gap-1">
+                        {prompt.access === 'private' ? (
+                          <Lock size={10} className="text-amber-400" />
+                        ) : (
+                          <Eye size={10} className="text-emerald-400" />
+                        )}
+                        <span className={prompt.access === 'private' ? 'text-amber-400' : 'text-emerald-400'}>
+                          {prompt.access}
+                        </span>
                       </div>
+                
+                      <span className="text-zinc-400">
+                        • by {prompt.user?.display_name || 'Unknown'} • ID: {prompt.id.substring(0, 8)}...
+                      </span>
+                
+                      <span>• {formatDate(prompt.created_at)}</span>
                     </div>
+                  </div>
+                </div>
+
                     
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
