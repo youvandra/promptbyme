@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Copy, Trash2, Eye, Lock, ExternalLink, GitFork, Maximize2, History, Edit3, Share2, FolderOpen, Move, Play } from 'lucide-react'
+import { Copy, Trash2, Eye, Lock, ExternalLink, GitFork, Maximize2, History, Edit3, Share2, FolderOpen, Move, Play, FileText, Image } from 'lucide-react'
 import { marked } from 'marked'
 import { motion } from 'framer-motion'
 import { getAppTagById } from '../../lib/appTags'
@@ -26,6 +26,9 @@ interface PromptCardProps {
   currentVersion?: number
   totalVersions?: number
   tags?: string[] | null
+  notes?: string | null
+  outputSample?: string | null
+  mediaUrls?: string[] | null
   folders?: Folder[]
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
@@ -113,6 +116,9 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   currentVersion = 1,
   totalVersions = 1,
   tags = null,
+  notes = null,
+  outputSample = null,
+  mediaUrls = null,
   folders = [],
   onEdit,
   onDelete,
@@ -145,6 +151,9 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   const hasMultipleVersions = React.useMemo(() => totalVersions > 1, [totalVersions])
   const shouldTruncate = React.useMemo(() => content.length > 200, [content.length])
   const displayContent = React.useMemo(() => truncateText(content), [content])
+  const hasNotes = React.useMemo(() => notes !== null && notes !== '', [notes])
+  const hasOutputSample = React.useMemo(() => outputSample !== null && outputSample !== '', [outputSample])
+  const hasMedia = React.useMemo(() => mediaUrls !== null && mediaUrls.length > 0, [mediaUrls])
 
   // Memoize rendered content to avoid re-processing markdown
   const renderedContent = React.useMemo(() => {
@@ -311,6 +320,11 @@ export const PromptCard: React.FC<PromptCardProps> = ({
     if (!userDisplayName) return
     const link = `${window.location.origin}/${userDisplayName}/${id}`
     await copyToClipboard(link)
+  }
+
+  // Function to determine if a URL is an image
+  const isImageUrl = (url: string) => {
+    return url.match(/\.(jpeg|jpg|gif|png)$/i) !== null
   }
 
   // Memoize context menu items to avoid recreation on every render
@@ -542,6 +556,32 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                 {tags.length > 3 && (
                   <div className="px-2 py-1 bg-zinc-800/30 border border-zinc-700/30 rounded text-xs text-zinc-400">
                     +{tags.length - 3} more
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Media Indicator */}
+            {hasMedia && (
+              <div className="flex items-center gap-1.5 mb-3 text-xs text-zinc-400">
+                <Image size={12} />
+                <span>{mediaUrls!.length} media file{mediaUrls!.length !== 1 ? 's' : ''}</span>
+              </div>
+            )}
+            
+            {/* Notes & Output Indicators */}
+            {(hasNotes || hasOutputSample) && (
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                {hasNotes && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-zinc-800/30 border border-zinc-700/30 rounded text-xs text-zinc-400">
+                    <FileText size={10} />
+                    <span>Notes</span>
+                  </div>
+                )}
+                {hasOutputSample && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-zinc-800/30 border border-zinc-700/30 rounded text-xs text-zinc-400">
+                    <Eye size={10} />
+                    <span>Output Sample</span>
                   </div>
                 )}
               </div>
