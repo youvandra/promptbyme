@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Purchases from '@revenuecat/purchases-js';
+import * as Purchases from '@revenuecat/purchases-js';
 import { Check, X, HelpCircle, ArrowRight, Zap, XCircle } from 'lucide-react';
 import { Section } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
@@ -23,7 +23,8 @@ export const PricingPage: React.FC = () => {
     if (user) {
       try {
         // Configure RevenueCat with the user's ID as the appUserId
-        Purchases.configure({
+        const purchasesInstance = Purchases.getSharedInstance();
+        purchasesInstance.configure({
           apiKey: 'rcb_utECfCCZVOJKVPQcrykYAIchIDaO',
           appUserId: user.id
         });
@@ -47,7 +48,8 @@ export const PricingPage: React.FC = () => {
     setError(null);
     
     try {
-      const offerings = await Purchases.getOfferings();
+      const purchasesInstance = Purchases.getSharedInstance();
+      const offerings = await purchasesInstance.getOfferings();
       
       if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
         setOfferings(offerings.current);
@@ -85,7 +87,8 @@ export const PricingPage: React.FC = () => {
     
     setLoading(true);
     try {
-      const { customerInfo } = await Purchases.purchaseProduct(productIdentifier);
+      const purchasesInstance = Purchases.getSharedInstance();
+      const { customerInfo } = await purchasesInstance.purchaseProduct(productIdentifier);
       
       if (customerInfo.entitlements.active['premium']) {
         // User has active premium entitlement
