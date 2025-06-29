@@ -172,7 +172,7 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto"
+            className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-64 max-h-64 overflow-y-auto"
           >
             <div className="p-2">
               {/* None option */}
