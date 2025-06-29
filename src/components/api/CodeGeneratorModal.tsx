@@ -989,7 +989,7 @@ def run_flow():
                                 showAiProviderKey
                                   ? aiProviderApiKey
                                   : aiProviderApiKey
-                                    ? aiProviderApiKey.slice(0, 10) + "••••••" + aiProviderApiKey.slice(-4)
+                                    ? aiProviderApiKey.slice(0, 15) + "••••••" + aiProviderApiKey.slice(-4)
                                     : ''
                               }
                               onChange={(e) => setAiProviderApiKey(e.target.value)}
