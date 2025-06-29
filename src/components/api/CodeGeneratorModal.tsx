@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Copy, CheckCircle, Code, Search, Filter, Eye, EyeOff, GitFork, Heart, Wand2, ChevronDown, ChevronUp } from 'lucide-react'
+import { X, Copy, CheckCircle, Code, Search, Filter, Eye, EyeOff, GitFork, Heart, Wand2, ChevronDown, ChevronUp, Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePromptStore } from '../../store/promptStore'
 import { useAuthStore } from '../../store/authStore'
@@ -43,7 +43,7 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
   const [copied, setCopied] = useState<string | null>(null)
   const [supabaseUrl, setSupabaseUrl] = useState<string>('')
   const [extractedVariables, setExtractedVariables] = useState<string[]>([])
-  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python'>('javascript')
+  const [selectedLanguage, setSelectedLanguage] = useState<'javascript' | 'python' | 'curl'>('javascript')
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'anthropic' | 'google' | 'llama' | 'groq'>('openai')
   const [selectedModel, setSelectedModel] = useState<string>('gpt-4o')
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
@@ -51,6 +51,7 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
   const [maxTokens, setMaxTokens] = useState(1000)
   const [promptbyApiKey, setPromptbyApiKey] = useState<string | null>(null)
   const [codeType, setCodeType] = useState<'prompt' | 'flow'>('prompt')
+  const [activeTab, setActiveTab] = useState<'select' | 'configure'>('select')
   
   const { user } = useAuthStore()
   const { prompts, loading: promptsLoading, fetchUserPrompts } = usePromptStore()
@@ -104,12 +105,18 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
         initialValues[variable] = ''
       })
       setVariableValues(initialValues)
+      
+      // Move to configure tab when a prompt is selected
+      setActiveTab('configure')
     } else if (selectedFlow) {
       // For flows, we need to extract variables from all steps
       // This would require fetching all steps and their content
       // For simplicity, we'll just set an empty array for now
       setExtractedVariables([])
       setVariableValues({})
+      
+      // Move to configure tab when a flow is selected
+      setActiveTab('configure')
     } else {
       setExtractedVariables([])
       setVariableValues({})
@@ -484,6 +491,10 @@ def run_flow():
     }))
   }
 
+  const handleBackToSelection = () => {
+    setActiveTab('select')
+  }
+
   if (!isOpen) return null
 
   return (
@@ -501,9 +512,18 @@ def run_flow():
         <div className="flex items-center justify-between p-6 border-b border-zinc-800/50 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Code className="text-indigo-400" size={20} />
-            <h2 className="text-xl font-semibold text-white">
-              Generate API Code
-            </h2>
+            <div>
+              <h2 className="text-xl font-semibold text-white">
+                Generate API Code
+              </h2>
+              <p className="text-sm text-zinc-400">
+                {activeTab === 'select' 
+                  ? 'Select a prompt or flow to generate code' 
+                  : selectedPrompt 
+                    ? `Configuring code for prompt: ${selectedPrompt.title || 'Untitled'}` 
+                    : `Configuring code for flow: ${selectedFlow?.name || 'Untitled'}`}
+              </p>
+            </div>
           </div>
           
           <button
@@ -514,303 +534,377 @@ def run_flow():
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
-          {/* Left side - Prompt/Flow selection */}
-          <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-zinc-800/50 flex flex-col">
-            {/* Search and Filter */}
-            <div className="p-4 border-b border-zinc-800/50 flex-shrink-0">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search..."
-                    className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                  />
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Filter className="text-zinc-500" size={18} />
-                  <select
-                    value={codeType}
-                    onChange={(e) => setCodeType(e.target.value as 'prompt' | 'flow')}
-                    className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                  >
-                    <option value="prompt">Prompts</option>
-                    <option value="flow">Flows</option>
-                  </select>
-                </div>
-
-                {codeType === 'prompt' && (
-                  <div className="flex items-center gap-3">
-                    <select
-                      value={filterAccess}
-                      onChange={(e) => setFilterAccess(e.target.value as 'all' | 'public' | 'private')}
-                      className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                    >
-                      <option value="all">All Prompts</option>
-                      <option value="public">Public Only</option>
-                      <option value="private">Private Only</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Prompts/Flows List */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {codeType === 'prompt' ? (
-                // Prompts List
-                promptsLoading ? (
-                  <div className="text-center py-12">
-                    <div className="flex items-center justify-center gap-2 text-zinc-400">
-                      <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-                      <span>Loading prompts...</span>
-                    </div>
-                  </div>
-                ) : filteredPrompts.length > 0 ? (
-                  <div className="space-y-4">
-                    {filteredPrompts.map((prompt) => (
-                      <motion.div
-                        key={prompt.id}
-                        className={`group relative bg-zinc-800/30 border rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-indigo-500/50 hover:bg-zinc-800/50 ${
-                          selectedPrompt?.id === prompt.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-zinc-700/50'
-                        }`}
-                        onClick={() => handlePromptSelect(prompt)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {/* Header */}
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1 min-w-0">
-                            {prompt.title && (
-                              <h3 className="text-white font-medium text-sm mb-1 line-clamp-1">
-                                {prompt.title}
-                              </h3>
-                            )}
-                            <div className="flex items-center gap-2 text-xs text-zinc-500">
-                              <div className="flex items-center gap-1">
-                                {prompt.access === 'private' ? (
-                                  <EyeOff size={10} className="text-amber-400" />
-                                ) : (
-                                  <Eye size={10} className="text-emerald-400" />
-                                )}
-                                <span className={prompt.access === 'private' ? 'text-amber-400' : 'text-emerald-400'}>
-                                  {prompt.access}
-                                </span>
-                              </div>
-                              <span>•</span>
-                              <span>{formatDate(prompt.created_at)}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Content Preview */}
-                        <div className="text-zinc-300 text-sm leading-relaxed mb-3">
-                          {truncateContent(prompt.content)}
-                        </div>
-
-                        {/* Stats */}
-                        {prompt.access === 'public' && (
-                          <div className="flex items-center gap-3 text-xs text-zinc-500">
-                            <div className="flex items-center gap-1">
-                              <Eye size={10} />
-                              <span>{prompt.views || 0}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Heart size={10} />
-                              <span>{prompt.like_count || 0}</span>
-                            </div>
-                            {prompt.original_prompt_id === null && (prompt.fork_count || 0) > 0 && (
-                              <div className="flex items-center gap-1">
-                                <GitFork size={10} />
-                                <span>{prompt.fork_count || 0}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Selection Indicator */}
-                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
-                            <div className="w-2 h-2 bg-white rounded-full" />
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-2xl p-8">
-                      <Search className="mx-auto text-zinc-500 mb-4" size={48} />
-                      <h3 className="text-lg font-semibold text-white mb-2">
-                        {searchQuery || filterAccess !== 'all' ? 'No matching prompts' : 'No prompts found'}
-                      </h3>
-                      <p className="text-zinc-400">
-                        {searchQuery || filterAccess !== 'all'
-                          ? 'Try adjusting your search or filter'
-                          : 'Create your first prompt to get started'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                )
-              ) : (
-                // Flows List
-                flowsLoading ? (
-                  <div className="text-center py-12">
-                    <div className="flex items-center justify-center gap-2 text-zinc-400">
-                      <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-                      <span>Loading flows...</span>
-                    </div>
-                  </div>
-                ) : filteredFlows.length > 0 ? (
-                  <div className="space-y-4">
-                    {filteredFlows.map((flow) => (
-                      <motion.div
-                        key={flow.id}
-                        className={`group relative bg-zinc-800/30 border rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-indigo-500/50 hover:bg-zinc-800/50 ${
-                          selectedFlow?.id === flow.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-zinc-700/50'
-                        }`}
-                        onClick={() => handleFlowSelect(flow)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        {/* Header */}
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-white font-medium text-sm mb-1 line-clamp-1">
-                              {flow.name}
-                            </h3>
-                            <div className="flex items-center gap-2 text-xs text-zinc-500">
-                              <span>{formatDate(flow.created_at)}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Description */}
-                        {flow.description && (
-                          <div className="text-zinc-300 text-sm leading-relaxed mb-3">
-                            {truncateContent(flow.description)}
-                          </div>
-                        )}
-
-                        {/* Selection Indicator */}
-                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
-                            <div className="w-2 h-2 bg-white rounded-full" />
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-2xl p-8">
-                      <Search className="mx-auto text-zinc-500 mb-4" size={48} />
-                      <h3 className="text-lg font-semibold text-white mb-2">
-                        {searchQuery ? 'No matching flows' : 'No flows found'}
-                      </h3>
-                      <p className="text-zinc-400">
-                        {searchQuery
-                          ? 'Try adjusting your search'
-                          : 'Create your first flow to get started'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
+        {/* Tabs */}
+        <div className="border-b border-zinc-800/50">
+          <div className="flex px-6">
+            <button
+              onClick={() => setActiveTab('select')}
+              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                activeTab === 'select'
+                  ? 'border-indigo-500 text-indigo-400'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-300'
+              }`}
+            >
+              1. Select
+            </button>
+            <button
+              onClick={() => setActiveTab('configure')}
+              disabled={!selectedPrompt && !selectedFlow}
+              className={`px-4 py-3 border-b-2 font-medium transition-colors ${
+                activeTab === 'configure'
+                  ? 'border-indigo-500 text-indigo-400'
+                  : 'border-transparent text-zinc-400 hover:text-zinc-300 disabled:text-zinc-600 disabled:hover:text-zinc-600'
+              }`}
+            >
+              2. Configure & Generate
+            </button>
           </div>
-          
-          {/* Right side - Code generation */}
-          <div className="w-full md:w-1/2 flex flex-col">
-            {(selectedPrompt || selectedFlow) ? (
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    {selectedPrompt ? (selectedPrompt.title || 'Untitled Prompt') : (selectedFlow?.name || 'Untitled Flow')}
-                  </h3>
-                  
-                  <div className="flex items-center gap-2 text-sm mb-4">
-                    {selectedPrompt && (
-                      <div className={`px-2 py-1 rounded text-xs ${
-                        selectedPrompt.access === 'private' 
-                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' 
-                          : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                      }`}>
-                        {selectedPrompt.access === 'private' ? 'Private' : 'Public'}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-hidden">
+          <AnimatePresence mode="wait">
+            {activeTab === 'select' ? (
+              <motion.div
+                key="select"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                className="h-full flex flex-col"
+              >
+                {/* Search and Filter */}
+                <div className="p-6 border-b border-zinc-800/50 flex-shrink-0">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search..."
+                        className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Filter className="text-zinc-500" size={18} />
+                      <select
+                        value={codeType}
+                        onChange={(e) => setCodeType(e.target.value as 'prompt' | 'flow')}
+                        className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                      >
+                        <option value="prompt">Prompts</option>
+                        <option value="flow">Flows</option>
+                      </select>
+                    </div>
+
+                    {codeType === 'prompt' && (
+                      <div className="flex items-center gap-3">
+                        <select
+                          value={filterAccess}
+                          onChange={(e) => setFilterAccess(e.target.value as 'all' | 'public' | 'private')}
+                          className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                        >
+                          <option value="all">All Prompts</option>
+                          <option value="public">Public Only</option>
+                          <option value="private">Private Only</option>
+                        </select>
                       </div>
                     )}
-                    <div className="text-zinc-500 text-xs">
-                      ID: {selectedPrompt ? selectedPrompt.id : selectedFlow?.id}
-                    </div>
                   </div>
+                </div>
+                
+                {/* Prompts/Flows List */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    {codeType === 'prompt' ? 'Select a Prompt' : 'Select a Flow'}
+                  </h3>
                   
-                  {extractedVariables.length > 0 && (
-                    <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-4 mb-4">
-                      <h4 className="text-sm font-medium text-indigo-300 mb-2 flex items-center gap-2">
-                        <Wand2 size={16} />
-                        <span>Variables Detected</span>
-                      </h4>
-                      <div className="space-y-3">
-                        {extractedVariables.map((variable, index) => (
-                          <div key={index}>
-                            <label className="block text-xs font-medium text-zinc-300 mb-1">
-                              {`{{${variable}}}`}
-                            </label>
-                            <input
-                              type="text"
-                              value={variableValues[variable] || ''}
-                              onChange={(e) => handleVariableChange(variable, e.target.value)}
-                              placeholder={`Enter value for ${variable}`}
-                              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 text-sm"
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Language & Provider Selection */}
-                  <div className="mb-6">
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">
-                          Language
-                        </label>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setSelectedLanguage('javascript')}
-                            className={`flex-1 px-3 py-2 rounded-lg transition-all duration-200 ${
-                              selectedLanguage === 'javascript' 
-                                ? 'bg-indigo-600/20 border border-indigo-500/30 text-indigo-300' 
-                                : 'bg-zinc-800/30 border border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
-                            }`}
-                          >
-                            JavaScript
-                          </button>
-                          <button
-                            onClick={() => setSelectedLanguage('python')}
-                            className={`flex-1 px-3 py-2 rounded-lg transition-all duration-200 ${
-                              selectedLanguage === 'python' 
-                                ? 'bg-indigo-600/20 border border-indigo-500/30 text-indigo-300' 
-                                : 'bg-zinc-800/30 border border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
-                            }`}
-                          >
-                            Python
-                          </button>
+                  {codeType === 'prompt' ? (
+                    // Prompts List
+                    promptsLoading ? (
+                      <div className="text-center py-12">
+                        <div className="flex items-center justify-center gap-2 text-zinc-400">
+                          <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+                          <span>Loading prompts...</span>
                         </div>
                       </div>
+                    ) : filteredPrompts.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {filteredPrompts.map((prompt) => (
+                          <motion.div
+                            key={prompt.id}
+                            className={`group relative bg-zinc-800/30 border rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-indigo-500/50 hover:bg-zinc-800/50 ${
+                              selectedPrompt?.id === prompt.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-zinc-700/50'
+                            }`}
+                            onClick={() => handlePromptSelect(prompt)}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            {/* Header */}
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1 min-w-0">
+                                {prompt.title && (
+                                  <h3 className="text-white font-medium text-sm mb-1 line-clamp-1">
+                                    {prompt.title}
+                                  </h3>
+                                )}
+                                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                  <div className="flex items-center gap-1">
+                                    {prompt.access === 'private' ? (
+                                      <EyeOff size={10} className="text-amber-400" />
+                                    ) : (
+                                      <Eye size={10} className="text-emerald-400" />
+                                    )}
+                                    <span className={prompt.access === 'private' ? 'text-amber-400' : 'text-emerald-400'}>
+                                      {prompt.access}
+                                    </span>
+                                  </div>
+                                  <span>•</span>
+                                  <span>{formatDate(prompt.created_at)}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Content Preview */}
+                            <div className="text-zinc-300 text-sm leading-relaxed mb-3">
+                              {truncateContent(prompt.content)}
+                            </div>
+
+                            {/* Stats */}
+                            {prompt.access === 'public' && (
+                              <div className="flex items-center gap-3 text-xs text-zinc-500">
+                                <div className="flex items-center gap-1">
+                                  <Eye size={10} />
+                                  <span>{prompt.views || 0}</span>
+                                </div>
+                                {prompt.original_prompt_id === null && (prompt.fork_count || 0) > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <GitFork size={10} />
+                                    <span>{prompt.fork_count || 0}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Selection Indicator */}
+                            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white rounded-full" />
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-2xl p-8">
+                          <Search className="mx-auto text-zinc-500 mb-4" size={48} />
+                          <h3 className="text-lg font-semibold text-white mb-2">
+                            {searchQuery || filterAccess !== 'all' ? 'No matching prompts' : 'No prompts found'}
+                          </h3>
+                          <p className="text-zinc-400">
+                            {searchQuery || filterAccess !== 'all'
+                              ? 'Try adjusting your search or filter'
+                              : 'Create your first prompt to get started'
+                            }
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    // Flows List
+                    flowsLoading ? (
+                      <div className="text-center py-12">
+                        <div className="flex items-center justify-center gap-2 text-zinc-400">
+                          <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
+                          <span>Loading flows...</span>
+                        </div>
+                      </div>
+                    ) : filteredFlows.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {filteredFlows.map((flow) => (
+                          <motion.div
+                            key={flow.id}
+                            className={`group relative bg-zinc-800/30 border rounded-xl p-4 cursor-pointer transition-all duration-200 hover:border-indigo-500/50 hover:bg-zinc-800/50 ${
+                              selectedFlow?.id === flow.id ? 'border-indigo-500 bg-indigo-500/10' : 'border-zinc-700/50'
+                            }`}
+                            onClick={() => handleFlowSelect(flow)}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            {/* Header */}
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-white font-medium text-sm mb-1 line-clamp-1">
+                                  {flow.name}
+                                </h3>
+                                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                                  <span>{formatDate(flow.created_at)}</span>
+                                  <span>•</span>
+                                  <span>{flow.steps?.length || 0} steps</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Description */}
+                            {flow.description && (
+                              <div className="text-zinc-300 text-sm leading-relaxed mb-3">
+                                {truncateContent(flow.description)}
+                              </div>
+                            )}
+
+                            {/* Selection Indicator */}
+                            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white rounded-full" />
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="bg-zinc-800/30 border border-zinc-700/50 rounded-2xl p-8">
+                          <Search className="mx-auto text-zinc-500 mb-4" size={48} />
+                          <h3 className="text-lg font-semibold text-white mb-2">
+                            {searchQuery ? 'No matching flows' : 'No flows found'}
+                          </h3>
+                          <p className="text-zinc-400">
+                            {searchQuery
+                              ? 'Try adjusting your search'
+                              : 'Create your first flow to get started'
+                            }
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="configure"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+                className="h-full flex flex-col md:flex-row"
+              >
+                {/* Left Column - Configuration */}
+                <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-zinc-800/50 flex flex-col">
+                  <div className="p-6 border-b border-zinc-800/50">
+                    <button
+                      onClick={handleBackToSelection}
+                      className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors mb-4"
+                    >
+                      <ChevronUp size={16} className="rotate-90" />
+                      <span>Back to selection</span>
+                    </button>
+                    
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-white mb-2">
+                        {codeType === 'prompt' ? 'Prompt Details' : 'Flow Details'}
+                      </h3>
                       
-                      <div>
-                        <label className="block text-sm font-medium text-zinc-300 mb-2">
-                          Provider
-                        </label>
+                      <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-white">
+                            {selectedPrompt ? (selectedPrompt.title || 'Untitled Prompt') : (selectedFlow?.name || 'Untitled Flow')}
+                          </h4>
+                          
+                          {selectedPrompt && (
+                            <div className={`px-2 py-1 rounded text-xs ${
+                              selectedPrompt.access === 'private' 
+                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' 
+                                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                            }`}>
+                              {selectedPrompt.access === 'private' ? 'Private' : 'Public'}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="text-xs text-zinc-500 mb-3">
+                          ID: {selectedPrompt ? selectedPrompt.id : selectedFlow?.id}
+                        </div>
+                        
+                        <div className="text-sm text-zinc-300 line-clamp-3">
+                          {selectedPrompt 
+                            ? truncateContent(selectedPrompt.content, 200)
+                            : (selectedFlow?.description || 'No description available')}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Variables Section */}
+                    {extractedVariables.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold text-white mb-2">Variables</h3>
+                        <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-xl p-4">
+                          <div className="space-y-3">
+                            {extractedVariables.map((variable, index) => (
+                              <div key={index}>
+                                <label className="block text-xs font-medium text-zinc-300 mb-1">
+                                  {`{{${variable}}}`}
+                                </label>
+                                <input
+                                  type="text"
+                                  value={variableValues[variable] || ''}
+                                  onChange={(e) => handleVariableChange(variable, e.target.value)}
+                                  placeholder={`Enter value for ${variable}`}
+                                  className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 text-sm"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Language Selection */}
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-white mb-2">Language</h3>
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          onClick={() => setSelectedLanguage('javascript')}
+                          className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 ${
+                            selectedLanguage === 'javascript' 
+                              ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' 
+                              : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
+                          }`}
+                        >
+                          <span>JavaScript</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => setSelectedLanguage('python')}
+                          className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 ${
+                            selectedLanguage === 'python' 
+                              ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' 
+                              : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
+                          }`}
+                        >
+                          <span>Python</span>
+                        </button>
+                        
+                        <button
+                          onClick={() => setSelectedLanguage('curl')}
+                          className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 ${
+                            selectedLanguage === 'curl' 
+                              ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-300' 
+                              : 'bg-zinc-800/30 border-zinc-700/30 text-zinc-400 hover:bg-zinc-800/50'
+                          }`}
+                        >
+                          <span>cURL</span>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* AI Provider Settings */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-2">AI Provider</h3>
+                      <div className="space-y-4">
                         <select
                           value={selectedProvider}
                           onChange={(e) => setSelectedProvider(e.target.value as any)}
@@ -822,125 +916,121 @@ def run_flow():
                           <option value="llama">Llama</option>
                           <option value="groq">Groq</option>
                         </select>
+                        
+                        {/* Advanced Options */}
+                        <div>
+                          <button
+                            onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                            className="flex items-center gap-2 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+                          >
+                            {showAdvancedOptions ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            <span>Advanced Options</span>
+                          </button>
+                          
+                          <AnimatePresence>
+                            {showAdvancedOptions && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden mt-3"
+                              >
+                                <div className="space-y-4 bg-zinc-800/30 border border-zinc-700/30 rounded-lg p-4">
+                                  <div>
+                                    <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                      Model
+                                    </label>
+                                    <select
+                                      value={selectedModel}
+                                      onChange={(e) => setSelectedModel(e.target.value)}
+                                      className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                                    >
+                                      {getProviderModels().map(model => (
+                                        <option key={model.id} value={model.id}>{model.name}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  
+                                  <div>
+                                    <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
+                                      <Thermometer size={16} className="text-indigo-400" />
+                                      Temperature: {temperature}
+                                    </label>
+                                    <input
+                                      type="range"
+                                      min="0"
+                                      max="2"
+                                      step="0.1"
+                                      value={temperature}
+                                      onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                                      className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider"
+                                    />
+                                    <div className="flex justify-between text-xs text-zinc-500 mt-1">
+                                      <span>Focused</span>
+                                      <span>Creative</span>
+                                    </div>
+                                  </div>
+                                  
+                                  <div>
+                                    <label className="block text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
+                                      <Zap size={16} className="text-indigo-400" />
+                                      Max Tokens
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max="8000"
+                                      value={maxTokens}
+                                      onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+                                      className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                                    />
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
                       </div>
                     </div>
-                    
-                    {/* Advanced Options */}
-                    <div className="mb-4">
-                      <button
-                        onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
-                        className="flex items-center gap-2 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-                      >
-                        {showAdvancedOptions ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                        <span>Advanced Options</span>
-                      </button>
-                    </div>
-                    
-                    <AnimatePresence>
-                      {showAdvancedOptions && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden mb-4"
-                        >
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-zinc-800/30 border border-zinc-700/30 rounded-lg p-4">
-                            <div>
-                              <label className="block text-sm font-medium text-zinc-300 mb-2">
-                                Model
-                              </label>
-                              <select
-                                value={selectedModel}
-                                onChange={(e) => setSelectedModel(e.target.value)}
-                                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                              >
-                                {getProviderModels().map(model => (
-                                  <option key={model.id} value={model.id}>{model.name}</option>
-                                ))}
-                              </select>
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm font-medium text-zinc-300 mb-2">
-                                Temperature: {temperature}
-                              </label>
-                              <input
-                                type="range"
-                                min="0"
-                                max="2"
-                                step="0.1"
-                                value={temperature}
-                                onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                                className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider"
-                              />
-                              <div className="flex justify-between text-xs text-zinc-500 mt-1">
-                                <span>Focused</span>
-                                <span>Creative</span>
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm font-medium text-zinc-300 mb-2">
-                                Max Tokens
-                              </label>
-                              <input
-                                type="number"
-                                min="1"
-                                max="8000"
-                                value={maxTokens}
-                                onChange={(e) => setMaxTokens(parseInt(e.target.value))}
-                                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                              />
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </div>
                 </div>
                 
-                {/* Code Output */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-md font-semibold text-white">
-                      {selectedLanguage === 'javascript' ? 'JavaScript/TypeScript' : selectedLanguage === 'python' ? 'Python' : 'cURL'}
-                    </h4>
-                    <button
-                      onClick={() => copyToClipboard(generateCode(), 'code')}
-                      className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-                      title="Copy to clipboard"
-                    >
-                      {copied === 'code' ? (
-                        <CheckCircle size={16} className="text-emerald-400" />
-                      ) : (
-                        <Copy size={16} />
-                      )}
-                    </button>
-                  </div>
-                  <div className="bg-zinc-800/50 p-4 rounded-lg">
-                    <pre className="text-sm text-indigo-300 font-mono overflow-x-auto">
-                      <code>{generateCode()}</code>
-                    </pre>
+                {/* Right Column - Code Output */}
+                <div className="w-full md:w-1/2 flex flex-col">
+                  <div className="p-6 flex-1 overflow-y-auto">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-white">
+                        Generated Code
+                      </h3>
+                      <button
+                        onClick={() => copyToClipboard(generateCode(), 'code')}
+                        className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                        title="Copy to clipboard"
+                      >
+                        {copied === 'code' ? (
+                          <CheckCircle size={16} className="text-emerald-400" />
+                        ) : (
+                          <Copy size={16} />
+                        )}
+                      </button>
+                    </div>
+                    
+                    <div className="bg-zinc-800/50 p-4 rounded-lg h-[calc(100vh-300px)] overflow-auto">
+                      <pre className="text-sm text-indigo-300 font-mono">
+                        <code>{generateCode()}</code>
+                      </pre>
+                    </div>
+                    
+                    <div className="mt-4 text-xs text-zinc-500">
+                      <p>This code snippet demonstrates how to call the {codeType === 'prompt' ? 'run-prompt-api' : 'run-prompt-flow-api'} endpoint.</p>
+                      <p>Remember to replace "YOUR_AI_PROVIDER_API_KEY" with your actual API key.</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center p-6">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-indigo-600/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <Code size={32} className="text-indigo-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
-                    {codeType === 'prompt' ? 'Select a Prompt' : 'Select a Flow'}
-                  </h3>
-                  <p className="text-zinc-400 max-w-md">
-                    Choose a {codeType} from your collection to generate API code for integrating it into your applications.
-                  </p>
-                </div>
-              </div>
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
 
         {/* Footer */}
@@ -951,6 +1041,15 @@ def run_flow():
           >
             Close
           </button>
+          
+          {activeTab === 'select' && (selectedPrompt || selectedFlow) && (
+            <button
+              onClick={() => setActiveTab('configure')}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200"
+            >
+              Continue
+            </button>
+          )}
         </div>
       </motion.div>
     </div>
