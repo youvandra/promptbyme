@@ -55,6 +55,7 @@ export const CodeGeneratorModal: React.FC<CodeGeneratorModalProps> = ({
   const [aiProviderApiKey, setAiProviderApiKey] = useState<string | null>(null)
   const [codeType, setCodeType] = useState<'prompt' | 'flow'>(initialCodeType)
   const [activeTab, setActiveTab] = useState<'select' | 'configure'>('select')
+  const [selectedForComparison, setSelectedForComparison] = useState<Set<string>>(new Set())
   
   const { user } = useAuthStore()
   const { prompts, loading: promptsLoading, fetchUserPrompts } = usePromptStore()
@@ -592,7 +593,7 @@ def run_flow():
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
           <AnimatePresence mode="wait">
             {activeTab === 'select' ? (
               <motion.div
@@ -809,7 +810,7 @@ def run_flow():
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
-                className="h-full flex flex-col md:flex-row overflow-hidden"
+                className="h-full flex flex-col md:flex-row overflow-y-auto"
               >
                 {/* Left Column - Configuration */}
                 <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-zinc-800/50 flex flex-col">
@@ -818,7 +819,7 @@ def run_flow():
                       onClick={handleBackToSelection}
                       className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors mb-4"
                     >
-                      <ChevronUp size={16} className="rotate-90" />
+                      <ArrowLeft size={16} />
                       <span>Back to selection</span>
                     </button>
                     
