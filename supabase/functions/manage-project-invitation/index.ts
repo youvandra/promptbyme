@@ -145,23 +145,6 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Add entry to audit log if accepted
-    if (action === 'accept') {
-      try {
-        await supabaseClient
-          .from('team_audit_log')
-          .insert({
-            project_id: project_id,
-            user_id: user.id,
-            action: 'joined_project',
-            details: { invitation_id: invitation.id }
-          })
-      } catch (logError) {
-        console.error('Failed to log action:', logError)
-        // Don't fail the request if logging fails
-      }
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
