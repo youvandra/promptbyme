@@ -374,7 +374,7 @@ export const PromptFlowPage: React.FC = () => {
                             .filter(flow => flow.user_id === user?.id)
                             .map(flow => ({
                               value: flow.id,
-                              label: flow.name/>
+                              label: flow.name
                             }))}
                           value={selectedFlowId || ''}
                           onChange={handleFlowChange}
