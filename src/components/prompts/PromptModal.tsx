@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { X, Copy, Edit3, Save, Eye, Lock, GitFork, ExternalLink, Calendar, User, History, FileText, Image, Download, Upload, Plus, Trash2 } from 'lucide-react'
+import { X, Copy, Edit3, Share2, Save, Eye, Lock, GitFork, ExternalLink, Calendar, User, History, FileText, Image, Download, Upload, Plus, Trash2 } from 'lucide-react'
 import { marked } from 'marked'
 import { Database } from '../lib/supabase'
 import { getAppTagById } from '../../lib/appTags'
@@ -453,7 +453,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
                       className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
                       title="Copy link"
                     >
-                      <ExternalLink size={16} />
+                      <Share2 size={16} />
                     </button>
                   )}
                   
