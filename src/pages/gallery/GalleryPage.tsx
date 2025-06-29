@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft, Menu, Eye, Lock, GitFork, Users, ChevronDown, FolderPlus, Tag } from 'lucide-react'
+import { FolderOpen, Search, Filter, Grid, List, Plus, ArrowLeft, Menu, Eye, Lock, GitFork, Users, ChevronDown, FolderPlus, Tag, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PromptCard } from '../../components/prompts/PromptCard'
 import { PromptModal } from '../../components/prompts/PromptModal'
@@ -11,7 +11,6 @@ import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
 import { CustomSelect, SelectOption } from '../../components/ui/CustomSelect'
-import { TagFilterDropdown } from '../../components/ui/TagFilterDropdown'
 import { usePromptStore } from '../../store/promptStore'
 import { useFolderStore } from '../../store/folderStore'
 import { getAppTagById } from '../../lib/appTags'
@@ -74,6 +73,7 @@ export const GalleryPage: React.FC = () => {
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
   }, [])
+
   // Memoize filtered prompts to avoid recalculation on every render
   const filteredPrompts = React.useMemo(() => {
     return prompts.filter(prompt => {
@@ -397,11 +397,28 @@ export const GalleryPage: React.FC = () => {
                     className="w-full sm:w-48"
                   />
                   
-                  <TagFilterDropdown
-                    selectedTag={selectedAppTagFilter}
-                    onTagChange={setSelectedAppTagFilter}
-                    className="w-full sm:w-48"
-                  />
+                  {/* App Tag Filter */}
+                  <div className="w-full sm:w-48">
+                    <div className="flex items-center gap-2 px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white hover:border-zinc-600/50 transition-all duration-200 cursor-pointer"
+                      onClick={() => setSelectedAppTagFilter(null)}>
+                      <Tag size={16} className="text-indigo-400" />
+                      <span className="text-sm truncate">
+                        {selectedAppTagFilter 
+                          ? getAppTagById(selectedAppTagFilter)?.name || 'Unknown Tag'
+                          : 'All Apps'}
+                      </span>
+                      {selectedAppTagFilter && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAppTagFilter(null);
+                          }}
+                          className="ml-auto p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded-full transition-colors">
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-1">
