@@ -284,8 +284,8 @@ export const HomePage: React.FC = () => {
                     />
                     <div>
                       <p className="text-white font-medium">{testimonial.author}</p>
-                      <p className="text-zinc-400 text-sm">{testimonial.role}</p>
-                    </div>
+                 <Button size="lg" variant="outline" to="/features">
+                   View Features
                   </div>
                 </div>
               </GlassPanel>

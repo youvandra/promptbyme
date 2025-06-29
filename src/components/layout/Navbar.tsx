@@ -43,10 +43,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       ]
     },
     { 
-      name: 'Pricing', 
-      path: '/pricing' 
-    },
-    { 
       name: 'About', 
       path: '/about',
       dropdown: [

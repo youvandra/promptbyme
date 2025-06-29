@@ -10,7 +10,6 @@ export const Footer: React.FC = () => {
       title: 'Product',
       links: [
         { name: 'Features', path: '/features' },
-        { name: 'Pricing', path: '/pricing' },
         { name: 'Testimonials', path: '/#testimonials' },
         { name: 'FAQ', path: '/faq' },
       ],
