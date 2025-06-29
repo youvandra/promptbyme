@@ -51,7 +51,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [showVariableModal, setShowVariableModal] = useState(false)
   const [userDisplayName, setUserDisplayName] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'content' | 'notes' | 'output'>('content')
+  const [activeTab, setActiveTab] = useState<'content' | 'notes' | 'output' | 'media'>('content')
   const [showMediaPreview, setShowMediaPreview] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   
@@ -257,6 +257,7 @@ export const PromptModal: React.FC<PromptModalProps> = ({
 
   const isForkedPrompt = prompt?.original_prompt_id !== null
   const hasMultipleVersions = (prompt?.total_versions || 1) > 1
+  const hasMedia = prompt?.media_urls && prompt.media_urls.length > 0
 
   if (!isOpen || !prompt) return null
 
@@ -504,6 +505,19 @@ export const PromptModal: React.FC<PromptModalProps> = ({
                 Output Sample
                 {prompt.output_sample && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>}
               </button>
+              {hasMedia && (
+                <button
+                  onClick={() => setActiveTab('media')}
+                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
+                    activeTab === 'media'
+                      ? 'bg-indigo-600/20 text-indigo-400'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                  }`}
+                >
+                  Media
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>
+                </button>
+              )}
             </div>
           </div>
 
@@ -529,53 +543,6 @@ export const PromptModal: React.FC<PromptModalProps> = ({
                         </div>
                       )
                     })()}
-                  </div>
-                )}
-                
-                {/* Media Files */}
-                {prompt.media_urls && prompt.media_urls.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
-                      <Image size={16} className="text-indigo-400" />
-                      Media Files
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {prompt.media_urls.map((url, index) => (
-                        <div key={index} className="relative group">
-                          {isImageUrl(url) ? (
-                            <div 
-                              className="aspect-square bg-zinc-800 rounded-lg overflow-hidden cursor-pointer"
-                              onClick={() => handlePreviewMedia(url)}
-                            >
-                              <img 
-                                src={url} 
-                                alt={`Media ${index + 1}`}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <div 
-                              className="aspect-square bg-zinc-800 rounded-lg flex flex-col items-center justify-center cursor-pointer p-2"
-                              onClick={() => window.open(url, '_blank')}
-                            >
-                              <FileText size={24} className="text-zinc-400 mb-2" />
-                              <span className="text-xs text-zinc-400 text-center truncate w-full">
-                                {getFileNameFromUrl(url)}
-                              </span>
-                            </div>
-                          )}
-                          
-                          {/* Download button */}
-                          <button
-                            onClick={() => downloadMedia(url)}
-                            className="absolute bottom-1 right-1 p-1.5 bg-zinc-800/80 text-zinc-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                            title="Download"
-                          >
-                            <Download size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 )}
                 
@@ -690,6 +657,52 @@ export const PromptModal: React.FC<PromptModalProps> = ({
                     <p>No output sample available for this prompt</p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'media' && prompt.media_urls && prompt.media_urls.length > 0 && (
+              <div className="space-y-6">
+                <h4 className="text-sm font-medium text-zinc-300 mb-3 flex items-center gap-2">
+                  <Image size={16} className="text-indigo-400" />
+                  Media Files
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {prompt.media_urls.map((url, index) => (
+                    <div key={index} className="relative group">
+                      {isImageUrl(url) ? (
+                        <div 
+                          className="aspect-square bg-zinc-800 rounded-lg overflow-hidden cursor-pointer"
+                          onClick={() => handlePreviewMedia(url)}
+                        >
+                          <img 
+                            src={url} 
+                            alt={`Media ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div 
+                          className="aspect-square bg-zinc-800 rounded-lg flex flex-col items-center justify-center cursor-pointer p-2"
+                          onClick={() => window.open(url, '_blank')}
+                        >
+                          <FileText size={24} className="text-zinc-400 mb-2" />
+                          <span className="text-xs text-zinc-400 text-center truncate w-full">
+                            {getFileNameFromUrl(url)}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {/* Download button */}
+                      <button
+                        onClick={() => downloadMedia(url)}
+                        className="absolute bottom-1 right-1 p-1.5 bg-zinc-800/80 text-zinc-300 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        title="Download"
+                      >
+                        <Download size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

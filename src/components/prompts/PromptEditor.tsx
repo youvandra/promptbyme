@@ -411,40 +411,68 @@ Write clear, specific instructions for the best AI results."
               </label>
               
               <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
-                {/* Upload Button */}
-                <div className="mb-4">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    multiple
-                    accept="image/jpeg,image/png,image/gif,application/pdf"
-                  />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingMedia}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg transition-all duration-200"
-                  >
-                    {uploadingMedia ? (
-                      <>
+                {/* Upload Button - Centered when no media, small + button when media exists */}
+                {mediaUrls.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      multiple
+                      accept="image/jpeg,image/png,image/gif,application/pdf"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingMedia}
+                      className="flex flex-col items-center gap-3 px-6 py-4 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl transition-all duration-200 mb-3"
+                    >
+                      {uploadingMedia ? (
+                        <>
+                          <div className="w-6 h-6 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                          <span>Uploading... {uploadProgress}%</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload size={24} />
+                          <span>Upload Files</span>
+                        </>
+                      )}
+                    </button>
+                    <p className="text-xs text-zinc-500">
+                      Supported formats: JPG, PNG, GIF, PDF. Max size: 5MB per file.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mb-4 flex justify-between items-center">
+                    <p className="text-sm text-zinc-400">
+                      {mediaUrls.length} file{mediaUrls.length !== 1 ? 's' : ''} attached
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      multiple
+                      accept="image/jpeg,image/png,image/gif,application/pdf"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingMedia}
+                      className="flex items-center gap-2 p-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg transition-all duration-200"
+                      title="Add more files"
+                    >
+                      {uploadingMedia ? (
                         <div className="w-4 h-4 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
-                        <span>Uploading... {uploadProgress}%</span>
-                      </>
-                    ) : (
-                      <>
-                        <Upload size={16} />
-                        <span>Upload Files</span>
-                      </>
-                    )}
-                  </button>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Supported formats: JPG, PNG, GIF, PDF. Max size: 5MB per file.
-                  </p>
-                </div>
+                      ) : (
+                        <Plus size={16} />
+                      )}
+                    </button>
+                  </div>
+                )}
                 
                 {/* Media Preview */}
-                {mediaUrls.length > 0 ? (
+                {mediaUrls.length > 0 && (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {mediaUrls.map((url, index) => (
                       <div key={index} className="relative group">
@@ -499,11 +527,6 @@ Write clear, specific instructions for the best AI results."
                         </div>
                       </div>
                     ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 text-zinc-500">
-                    <Image className="mx-auto mb-2 opacity-30" size={32} />
-                    <p>No media files attached</p>
                   </div>
                 )}
               </div>
