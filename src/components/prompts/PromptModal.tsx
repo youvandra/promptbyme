@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { X, Copy, Edit3, Share2, Save, Key, Eye, Lock, GitFork, ExternalLink, Calendar, User, History, FileText, Image, Download, Upload, Plus, Trash2, Unlock } from 'lucide-react'
+import { X, Copy, Edit3, Share2, Save, Eye, Lock, GitFork, ExternalLink, Calendar, User, History, FileText, Image, Download, Upload, Plus, Trash2, Unlock } from 'lucide-react'
 import { marked } from 'marked'
 import { Database } from '../../lib/supabase'
 import { getAppTagById } from '../../lib/appTags'
