@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Save, GitBranch, Eye, EyeOff, History, Image, X, FileText, Upload, Trash2, Download } from 'lucide-react'
+import { Save, GitBranch, Plus, Eye, EyeOff, History, Image, X, FileText, Upload, Trash2, Download } from 'lucide-react'
 import { PromptVersionHistory } from './PromptVersionHistory'
 import { PromptFolderSelector } from '../folders/PromptFolderSelector'
 import { TagSelector } from '../tags/TagSelector'
