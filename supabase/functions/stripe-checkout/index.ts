@@ -94,9 +94,38 @@ Deno.serve(async (req) => {
      */
     if (customer && customer.customer_id) {
       try {
-        await stripe.customers.retrieve(customer.customer_id);
-        customerId = customer.customer_id;
-        console.log(`Using existing Stripe customer ${customerId} for user ${user.id}`);
+        const retrievedStripeCustomer = await stripe.customers.retrieve(customer.customer_id);
+        
+        // Check if customer exists and is not deleted
+        if (retrievedStripeCustomer && !retrievedStripeCustomer.deleted) {
+          customerId = customer.customer_id;
+          console.log(`Using existing Stripe customer ${customerId} for user ${user.id}`);
+        } else {
+          console.log(`Stripe customer ${customer.customer_id} is deleted, creating new customer for user ${user.id}`);
+          
+          // Delete the stale customer record from our database
+          const { error: deleteError } = await supabase
+            .from('stripe_customers')
+            .delete()
+            .eq('customer_id', customer.customer_id);
+            
+          if (deleteError) {
+            console.error('Failed to delete stale customer record:', deleteError);
+          }
+          
+          // Also clean up any associated subscription records
+          const { error: deleteSubError } = await supabase
+            .from('stripe_subscriptions')
+            .delete()
+            .eq('customer_id', customer.customer_id);
+            
+          if (deleteSubError) {
+            console.error('Failed to delete stale subscription record:', deleteSubError);
+          }
+          
+          // Set customerId to null so we create a new customer below
+          customerId = null;
+        }
       } catch (stripeError: any) {
         if (stripeError.code === 'resource_missing') {
           console.log(`Stripe customer ${customer.customer_id} no longer exists, creating new customer for user ${user.id}`);

@@ -12,7 +12,7 @@ export const PricingPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const { user } = useAuthStore()
-  const { setToast } = useToast()
+  const { showToast } = useToast()
 
   const handleSubscribe = async () => {
     if (!user) return
@@ -32,13 +32,13 @@ export const PricingPage: React.FC = () => {
       
       if (error) {
         console.error('Stripe checkout error:', error)
-        setToast('Failed to create checkout session. Please try again.', 'error')
+        showToast('Failed to create checkout session. Please try again.', 'error')
         throw error
       }
       
       if (!data || !data.url) {
         console.error('Invalid response from checkout function:', data)
-        setToast('Failed to create checkout session. Please try again.', 'error')
+        showToast('Failed to create checkout session. Please try again.', 'error')
         return
       }
       
@@ -46,7 +46,7 @@ export const PricingPage: React.FC = () => {
       window.location.href = data.url
     } catch (error) {
       console.error('Error creating checkout session:', error)
-      setToast('Failed to create checkout session. Please try again.', 'error')
+      showToast('Failed to create checkout session. Please try again.', 'error')
     } finally {
       setCheckoutLoading(false)
     }
@@ -70,13 +70,13 @@ export const PricingPage: React.FC = () => {
       
       if (error) {
         console.error('Stripe checkout error:', error)
-        setToast('Failed to create checkout session. Please try again.', 'error')
+        showToast('Failed to create checkout session. Please try again.', 'error')
         throw error
       }
       
       if (!data || !data.url) {
         console.error('Invalid response from checkout function:', data)
-        setToast('Failed to create checkout session. Please try again.', 'error')
+        showToast('Failed to create checkout session. Please try again.', 'error')
         return
       }
       
@@ -84,7 +84,7 @@ export const PricingPage: React.FC = () => {
       window.location.href = data.url
     } catch (error) {
       console.error('Error creating checkout session:', error)
-      setToast('Failed to create checkout session. Please try again.', 'error')
+      showToast('Failed to create checkout session. Please try again.', 'error')
     } finally {
       setCheckoutLoading(false)
     }
@@ -108,13 +108,13 @@ export const PricingPage: React.FC = () => {
       
       if (error) {
         console.error('Stripe checkout error:', error)
-        setToast('Failed to create checkout session. Please try again.', 'error')
+        showToast('Failed to create checkout session. Please try again.', 'error')
         throw error
       }
       
       if (!data || !data.url) {
         console.error('Invalid response from checkout function:', data)
-        setToast('Failed to create checkout session. Please try again.', 'error')
+        showToast('Failed to create checkout session. Please try again.', 'error')
         return
       }
       
@@ -122,7 +122,7 @@ export const PricingPage: React.FC = () => {
       window.location.href = data.url
     } catch (error) {
       console.error('Error creating checkout session:', error)
-      setToast('Failed to create checkout session. Please try again.', 'error')
+      showToast('Failed to create checkout session. Please try again.', 'error')
     } finally {
       setCheckoutLoading(false)
     }
