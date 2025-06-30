@@ -190,7 +190,7 @@ export const PricingPage: React.FC = () => {
         'Unlimited prompt',
         'Unlimited prompt flows',
         'Team collaboration',
-        'Playground access'
+        'Playground access',
         '10 team members'
       ],
       priceId: PRODUCTS.PRO_SUBSCRIPTION.priceId,
