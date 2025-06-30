@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { HomePage } from './pages/home/HomePage'
+import { PricingPage } from './pages/PricingPage'
 import { SharedPromptPage } from './pages/shared-prompt/SharedPromptPage'
 import { GalleryPage } from './pages/gallery/GalleryPage'
 import { ProfilePage } from './pages/profile/ProfilePage'
@@ -17,6 +18,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
         <Route path="/playground" element={<PlaygroundPage />} />
         <Route path="/project-space" element={<DashboardPage />} />
         <Route path="/prompt-flow" element={<PromptFlowPage />} />
