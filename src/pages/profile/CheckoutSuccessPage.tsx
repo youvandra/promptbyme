@@ -118,6 +118,8 @@ export const CheckoutSuccessPage: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
       
       <BoltBadge />
     </div>
