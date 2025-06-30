@@ -664,6 +664,7 @@ export const ProfilePage: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  </div>
                   {/* Subscription Management */}
                   <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -672,7 +673,7 @@ export const ProfilePage: React.FC = () => {
                     </h3>
                     <SubscriptionManager />
                   </div>
-                  </div>
+                  
                 </div>
               </div>
             </div>
