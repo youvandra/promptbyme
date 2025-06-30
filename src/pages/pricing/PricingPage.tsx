@@ -260,7 +260,7 @@ export const PricingPage: React.FC = () => {
               {/* Running Text Banner */}
               <div className="bg-indigo-600/80 text-white font-bold py-3 mb-8 rounded-xl overflow-hidden text-center">
                 <div className="running-text text-lg">
-                  FREE UNTIL BOLT HACKATHON IS RUNNING
+                   Users in the Pro Plan during the World's Largest Hackathon organized by Bolt is currently underway
                 </div>
               </div>
               
