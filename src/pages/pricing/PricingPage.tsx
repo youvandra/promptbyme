@@ -6,11 +6,13 @@ import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { PRODUCTS } from '../../stripe-config'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
+import { useToast } from '../../hooks/useToast'
 
 export const PricingPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const { user } = useAuthStore()
+  const { setToast } = useToast()
 
   const handleSubscribe = async () => {
     if (!user) return
@@ -19,7 +21,7 @@ export const PricingPage: React.FC = () => {
       setCheckoutLoading(true)
       
       // Call the Stripe checkout edge function
-      const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           price_id: PRODUCTS.BASIC_SUBSCRIPTION.priceId,
           success_url: `${window.location.origin}/profile?checkout=success`,
@@ -29,13 +31,22 @@ export const PricingPage: React.FC = () => {
       })
       
       if (error) {
+        console.error('Stripe checkout error:', error)
+        setToast('Failed to create checkout session. Please try again.', 'error')
         throw error
       }
       
+      if (!data || !data.url) {
+        console.error('Invalid response from checkout function:', data)
+        setToast('Failed to create checkout session. Please try again.', 'error')
+        return
+      }
+      
       // Redirect to Stripe Checkout
-      window.location.href = url
+      window.location.href = data.url
     } catch (error) {
       console.error('Error creating checkout session:', error)
+      setToast('Failed to create checkout session. Please try again.', 'error')
     } finally {
       setCheckoutLoading(false)
     }
@@ -48,7 +59,7 @@ export const PricingPage: React.FC = () => {
       setCheckoutLoading(true)
       
       // Call the Stripe checkout edge function
-      const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           price_id: PRODUCTS.PRO_SUBSCRIPTION.priceId,
           success_url: `${window.location.origin}/profile?checkout=success`,
@@ -58,13 +69,22 @@ export const PricingPage: React.FC = () => {
       })
       
       if (error) {
+        console.error('Stripe checkout error:', error)
+        setToast('Failed to create checkout session. Please try again.', 'error')
         throw error
       }
       
+      if (!data || !data.url) {
+        console.error('Invalid response from checkout function:', data)
+        setToast('Failed to create checkout session. Please try again.', 'error')
+        return
+      }
+      
       // Redirect to Stripe Checkout
-      window.location.href = url
+      window.location.href = data.url
     } catch (error) {
       console.error('Error creating checkout session:', error)
+      setToast('Failed to create checkout session. Please try again.', 'error')
     } finally {
       setCheckoutLoading(false)
     }
@@ -77,7 +97,7 @@ export const PricingPage: React.FC = () => {
       setCheckoutLoading(true)
       
       // Call the Stripe checkout edge function
-      const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
           price_id: PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId,
           success_url: `${window.location.origin}/profile?checkout=success`,
@@ -87,13 +107,22 @@ export const PricingPage: React.FC = () => {
       })
       
       if (error) {
+        console.error('Stripe checkout error:', error)
+        setToast('Failed to create checkout session. Please try again.', 'error')
         throw error
       }
       
+      if (!data || !data.url) {
+        console.error('Invalid response from checkout function:', data)
+        setToast('Failed to create checkout session. Please try again.', 'error')
+        return
+      }
+      
       // Redirect to Stripe Checkout
-      window.location.href = url
+      window.location.href = data.url
     } catch (error) {
       console.error('Error creating checkout session:', error)
+      setToast('Failed to create checkout session. Please try again.', 'error')
     } finally {
       setCheckoutLoading(false)
     }
