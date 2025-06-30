@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { CreditCard, CheckCircle, AlertTriangle, Zap, Shield, Clock } from 'lucide-react'
+import { CreditCard, CheckCircle, AlertTriangle, Zap, Shield, Clock, ExternalLink } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
 
@@ -178,7 +178,7 @@ const SubscriptionManager: React.FC = () => {
                 <div className="flex items-center gap-2 mt-1">
                   {getStatusBadge(subscription.status)}
                   {subscription.current_period_end && subscription.status === 'active' && (
-                    <div className="text-xs text-zinc-400">
+                    <div className="text-xs text-zinc-400 ml-2">
                       Renews: {formatDate(subscription.current_period_end)}
                     </div>
                   )}
@@ -189,9 +189,10 @@ const SubscriptionManager: React.FC = () => {
           
           {subscription?.status === 'active' && (
             <button
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm"
-              onClick={() => window.open('https://app.revenuecat.com/settings/subscription', '_blank')}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm flex items-center gap-2"
+              onClick={() => window.open('https://revenuecat.com/settings', '_blank')}
             >
+              <ExternalLink size={14} />
               Manage Subscription
             </button>
           )}
@@ -224,11 +225,12 @@ const SubscriptionManager: React.FC = () => {
                 <h4 className="font-medium text-white">Basic Plan</h4>
               </div>
               <p className="text-sm text-zinc-400 mb-3">Perfect for individual creators.</p>
-              <div className="text-lg font-bold text-white mb-3">$9.99<span className="text-sm font-normal text-zinc-400">/month</span></div>
+              <div className="text-lg font-bold text-white mb-3">$9.99<span className="text-sm font-normal text-zinc-400">/mo</span></div>
               <button
-                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-                onClick={() => window.open('https://app.revenuecat.com/buy/basic', '_blank')}
+                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+                onClick={() => window.open('https://revenuecat.com/subscribe/basic', '_blank')}
               >
+                <CreditCard size={14} />
                 Upgrade to Basic
               </button>
             </div>
@@ -241,11 +243,12 @@ const SubscriptionManager: React.FC = () => {
                 <h4 className="font-medium text-white">Pro Plan</h4>
               </div>
               <p className="text-sm text-zinc-400 mb-3">For power users and small teams.</p>
-              <div className="text-lg font-bold text-white mb-3">$19.99<span className="text-sm font-normal text-zinc-400">/month</span></div>
+              <div className="text-lg font-bold text-white mb-3">$19.99<span className="text-sm font-normal text-zinc-400">/mo</span></div>
               <button
-                className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm"
-                onClick={() => window.open('https://app.revenuecat.com/buy/pro', '_blank')}
+                className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm flex items-center justify-center gap-2"
+                onClick={() => window.open('https://revenuecat.com/subscribe/pro', '_blank')}
               >
+                <CreditCard size={14} />
                 Upgrade to Pro
               </button>
             </div>
@@ -253,7 +256,7 @@ const SubscriptionManager: React.FC = () => {
           
           <div className="mt-4 text-center">
             <a 
-              href="https://app.revenuecat.com/contact/enterprise" 
+              href="mailto:enterprise@promptby.me" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
@@ -269,9 +272,10 @@ const SubscriptionManager: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white">Payment Methods</h3>
           <button
-            className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-            onClick={() => window.open('https://app.revenuecat.com/settings/payment', '_blank')}
+            className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+            onClick={() => window.open('https://revenuecat.com/settings/payment', '_blank')}
           >
+            <ExternalLink size={12} />
             Manage
           </button>
         </div>
@@ -279,7 +283,7 @@ const SubscriptionManager: React.FC = () => {
         <div className="flex items-center gap-3 p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg">
           <CreditCard size={20} className="text-zinc-400" />
           <div>
-            <p className="text-sm text-zinc-300">Payment methods are managed through RevenueCat</p>
+            <p className="text-sm text-zinc-300">Payment methods are managed securely through RevenueCat</p>
             <p className="text-xs text-zinc-500">Your payment information is securely stored by our payment provider</p>
           </div>
         </div>

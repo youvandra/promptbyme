@@ -53,6 +53,8 @@ import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
 import { useProjectSpaceStore, FlowNode } from '../../store/projectSpaceStore'
+import { useSubscription } from '../../hooks/useSubscription'
+import { UpgradeMessage } from '../../components/subscription/UpgradeMessage'
 
 export const ProjectSpacePage: React.FC = () => {
   const navigate = useNavigate()
@@ -71,6 +73,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [sourceNodeId, setSourceNodeId] = useState<string | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
+  const { isBasicOrHigher, loading: subscriptionLoading } = useSubscription()
   const [inviteRole, setInviteRole] = useState<'viewer' | 'editor' | 'admin'>('editor')
   const [isInviting, setIsInviting] = useState(false)
   const [projectNameInput, setProjectNameInput] = useState('')
@@ -465,7 +468,7 @@ useEffect(() => {
   }
 
   // Loading state
-  if (authLoading || loading) {
+  if (authLoading || loading || subscriptionLoading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="text-zinc-400">
@@ -474,6 +477,47 @@ useEffect(() => {
             <span>Loading project space...</span>
           </div>
         </div>
+      </div>
+    )
+  }
+
+  // Check if user has required subscription for Project Space
+  if (!isBasicOrHigher()) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white relative">
+        <div className="flex min-h-screen lg:pl-64">
+          {/* Side Navbar */}
+          <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+          
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col min-h-screen">
+            {/* Mobile Header */}
+            <header className="lg:hidden relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
+              <div className="px-4 py-4">
+                <div className="flex items-center justify-between">
+                  <button
+                    data-menu-button
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    className="text-zinc-400 hover:text-white transition-colors p-1"
+                  >
+                    <Menu size={20} />
+                  </button>
+                  
+                  <h1 className="text-lg font-semibold text-white">
+                    Project Space
+                  </h1>
+                  
+                  <div className="w-6" />
+                </div>
+              </div>
+            </header>
+
+            {/* Upgrade Message */}
+            <UpgradeMessage feature="project-space" minPlan="basic" />
+          </div>
+        </div>
+        
+        <BoltBadge />
       </div>
     )
   }
