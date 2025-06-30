@@ -49,8 +49,8 @@ const SubscriptionManager: React.FC = () => {
         let plan: 'free' | 'basic' | 'pro' | 'enterprise' = 'free'
         
         if (subscriptionData.price_id === PRODUCTS.PRO_SUBSCRIPTION.priceId) {
-+          plan = 'pro'
-+        } else if (subscriptionData.price_id === PRODUCTS.BASIC_SUBSCRIPTION.priceId) {
+          plan = 'pro'
+        } else if (subscriptionData.price_id === PRODUCTS.BASIC_SUBSCRIPTION.priceId) {
            plan = 'basic'
          }
         
@@ -125,9 +125,9 @@ const SubscriptionManager: React.FC = () => {
            success_url: `${window.location.origin}/profile?checkout=success`,
            cancel_url: `${window.location.origin}/profile?checkout=canceled`,
            mode: 'subscription'
+         }
+       })
              
-  const formatDate = (dateString?: string) => {
-       
        if (error) {
          throw error
        }
@@ -141,6 +141,7 @@ const SubscriptionManager: React.FC = () => {
      }
    }
        
+  const formatDate = (dateString?: string) => {
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
