@@ -10,7 +10,6 @@ import { ProjectSpacePage } from './pages/project-space/ProjectSpacePage'
 import { DashboardPage } from './pages/project-space/DashboardPage'
 import { PromptFlowPage } from './pages/prompt-flow/PromptFlowPage'
 import { ApiPage } from './pages/profile/ApiPage'
-import { PricingPage } from './pages/pricing/PricingPage'
 
 function App() {
   return (
@@ -24,7 +23,6 @@ function App() {
         <Route path="/project/:projectId" element={<ProjectSpacePage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/api" element={<ApiPage />} />
-        <Route path="/pricing" element={<PricingPage />} />
         <Route path="/:username" element={<PublicProfilePage />} />
         <Route path="/:username/:id" element={<SharedPromptPage />} />
       </Routes>
