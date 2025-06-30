@@ -10,6 +10,7 @@ import { ProjectSpacePage } from './pages/project-space/ProjectSpacePage'
 import { DashboardPage } from './pages/project-space/DashboardPage'
 import { PromptFlowPage } from './pages/prompt-flow/PromptFlowPage'
 import { ApiPage } from './pages/profile/ApiPage'
+import { CheckoutSuccessPage } from './pages/profile/CheckoutSuccessPage'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/project/:projectId" element={<ProjectSpacePage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/api" element={<ApiPage />} />
+       <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
         <Route path="/:username" element={<PublicProfilePage />} />
         <Route path="/:username/:id" element={<SharedPromptPage />} />
       </Routes>

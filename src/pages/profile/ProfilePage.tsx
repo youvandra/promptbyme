@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe, FileText, CreditCard } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -31,10 +31,12 @@ export const ProfilePage: React.FC = () => {
   const [showImportExportModal, setShowImportExportModal] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
+  const [checkoutStatus, setCheckoutStatus] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const { copied, copyToClipboard } = useClipboard()
   
+  const location = useLocation()
   const [formData, setFormData] = useState({
     email: '',
     displayName: '',
@@ -48,6 +50,26 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     initialize()
   }, [initialize])
+
+  // Check for checkout status in URL query params
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const checkout = params.get('checkout')
+    if (checkout) {
+      setCheckoutStatus(checkout)
+      
+      // Show toast message based on checkout status
+      if (checkout === 'success') {
+        setToast({ message: 'Subscription activated successfully!', type: 'success' })
+      } else if (checkout === 'canceled') {
+        setToast({ message: 'Checkout was canceled', type: 'error' })
+      }
+      
+      // Clear the query parameter from the URL
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, document.title, newUrl)
+    }
+  }, [location])
 
   useEffect(() => {
     if (user) {
@@ -287,9 +309,19 @@ export const ProfilePage: React.FC = () => {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="text-zinc-400">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-            <span>Loading profile...</span>
+                </div>
+                
+                {/* Subscription Management */}
+                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <CreditCard size={20} className="text-indigo-400" />
+                    Subscription
+                  </h3>
+                  
+                  <SubscriptionManager />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -614,7 +646,7 @@ export const ProfilePage: React.FC = () => {
                 </div>
 
                 {/* Account Settings */}
-                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
                   <h3 className="text-lg font-semibold text-white mb-4">
                     Privacy & Notifications
                   </h3>

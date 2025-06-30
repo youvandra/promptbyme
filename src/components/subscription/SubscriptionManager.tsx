@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { CreditCard, CheckCircle, AlertTriangle, Zap, Shield, Clock } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
+import { PRODUCTS } from '../../stripe-config'
+import { useNavigate } from 'react-router-dom'
 
 interface Subscription {
   id: string
@@ -13,7 +15,9 @@ interface Subscription {
 const SubscriptionManager: React.FC = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
   const { user } = useAuthStore()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (user) {
@@ -24,47 +28,92 @@ const SubscriptionManager: React.FC = () => {
   const fetchSubscription = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('user_subscriptions')
+      
+      // Check if user has a Stripe subscription
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from('stripe_user_subscriptions')
         .select('*')
-        .eq('user_id', user?.id)
-        .single()
+        .maybeSingle()
 
-      if (error) {
-        console.error('Error fetching subscription:', error)
-        // If no subscription found, create a free one
-        if (error.code === 'PGRST116') {
-          await createFreeSubscription()
+      if (subscriptionError) {
+        console.error('Error fetching subscription:', subscriptionError)
+        // Default to free plan if there's an error
+        setSubscription({
+          id: 'free',
+          plan: 'free',
+          status: 'active'
+        })
+        return
+      }
+
+      if (subscriptionData && subscriptionData.subscription_id) {
+        // User has a subscription
+        const status = subscriptionData.subscription_status === 'active' ? 'active' : 
+                      subscriptionData.subscription_status === 'past_due' ? 'past_due' : 
+                      'canceled'
+        
+        // Determine plan based on price_id
+        let plan: 'free' | 'basic' | 'pro' | 'enterprise' = 'free'
+        
+        if (subscriptionData.price_id === PRODUCTS.MONTHLY_SUBSCRIPTION.priceId) {
+          plan = 'basic'
         }
+        
+        setSubscription({
+          id: subscriptionData.subscription_id,
+          plan,
+          status,
+          current_period_end: subscriptionData.current_period_end ? 
+            new Date(subscriptionData.current_period_end * 1000).toISOString() : 
+            undefined
+        })
       } else {
-        setSubscription(data)
+        // No subscription, default to free plan
+        setSubscription({
+          id: 'free',
+          plan: 'free',
+          status: 'active'
+        })
       }
     } catch (error) {
       console.error('Error in subscription fetch:', error)
+      // Default to free plan if there's an error
+      setSubscription({
+        id: 'free',
+        plan: 'free',
+        status: 'active'
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const createFreeSubscription = async () => {
+  const handleSubscribe = async () => {
+    if (!user) return
+    
     try {
-      const { data, error } = await supabase
-        .from('user_subscriptions')
-        .insert({
-          user_id: user?.id,
-          plan: 'free',
-          status: 'active'
-        })
-        .select()
-        .single()
-
+      setCheckoutLoading(true)
+      
+      // Call the Stripe checkout edge function
+      const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          price_id: PRODUCTS.MONTHLY_SUBSCRIPTION.priceId,
+          success_url: `${window.location.origin}/profile?checkout=success`,
+          cancel_url: `${window.location.origin}/profile?checkout=canceled`,
+          mode: 'subscription'
+        }
+      })
+      
       if (error) {
-        console.error('Error creating free subscription:', error)
-      } else {
-        setSubscription(data)
+        throw error
       }
+      
+      // Redirect to Stripe Checkout
+      window.location.href = url
     } catch (error) {
-      console.error('Error in create subscription:', error)
+      console.error('Error creating checkout session:', error)
+    } finally {
+      setCheckoutLoading(false)
     }
   }
 
@@ -187,10 +236,10 @@ const SubscriptionManager: React.FC = () => {
             </div>
           </div>
           
-          {subscription?.status === 'active' && (
+          {subscription?.status === 'active' && subscription.plan !== 'free' && (
             <button
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm"
-              onClick={() => window.open('https://app.revenuecat.com/settings/subscription', '_blank')}
+              onClick={() => window.open('https://billing.stripe.com/p/login/test_28o5nA9Rl9Oi9OM288', '_blank')}
             >
               Manage Subscription
             </button>
@@ -215,51 +264,31 @@ const SubscriptionManager: React.FC = () => {
         <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-white mb-4">Upgrade Your Plan</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             <div className="bg-zinc-800/50 border border-zinc-700/50 hover:border-indigo-500/50 rounded-lg p-4 transition-all duration-200 cursor-pointer">
               <div className="flex items-center gap-2 mb-2">
                 <div className="p-1.5 bg-blue-600/20 rounded-md">
                   <Shield size={16} className="text-blue-400" />
                 </div>
-                <h4 className="font-medium text-white">Basic Plan</h4>
+                <h4 className="font-medium text-white">Monthly Subscription</h4>
               </div>
               <p className="text-sm text-zinc-400 mb-3">Perfect for individual creators.</p>
-              <div className="text-lg font-bold text-white mb-3">$9.99<span className="text-sm font-normal text-zinc-400">/month</span></div>
+              <div className="text-lg font-bold text-white mb-3">$10.00<span className="text-sm font-normal text-zinc-400">/month</span></div>
               <button
                 className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
-                onClick={() => window.open('https://app.revenuecat.com/buy/basic', '_blank')}
+                onClick={handleSubscribe}
+                disabled={checkoutLoading}
               >
-                Upgrade to Basic
+                {checkoutLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  'Subscribe Now'
+                )}
               </button>
             </div>
-            
-            <div className="bg-zinc-800/50 border border-zinc-700/50 hover:border-indigo-500/50 rounded-lg p-4 transition-all duration-200 cursor-pointer">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 bg-indigo-600/20 rounded-md">
-                  <Shield size={16} className="text-indigo-400" />
-                </div>
-                <h4 className="font-medium text-white">Pro Plan</h4>
-              </div>
-              <p className="text-sm text-zinc-400 mb-3">For power users and small teams.</p>
-              <div className="text-lg font-bold text-white mb-3">$19.99<span className="text-sm font-normal text-zinc-400">/month</span></div>
-              <button
-                className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm"
-                onClick={() => window.open('https://app.revenuecat.com/buy/pro', '_blank')}
-              >
-                Upgrade to Pro
-              </button>
-            </div>
-          </div>
-          
-          <div className="mt-4 text-center">
-            <a 
-              href="#" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-            >
-              Need an Enterprise plan? Contact us
-            </a>
           </div>
         </div>
       )}
@@ -268,18 +297,20 @@ const SubscriptionManager: React.FC = () => {
       <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white">Payment Methods</h3>
-          <button
-            className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-            onClick={() => window.open('https://app.revenuecat.com/settings/payment', '_blank')}
-          >
-            Manage
-          </button>
+          {subscription?.status === 'active' && subscription.plan !== 'free' && (
+            <button
+              className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+              onClick={() => window.open('https://billing.stripe.com/p/login/test_28o5nA9Rl9Oi9OM288', '_blank')}
+            >
+              Manage
+            </button>
+          )}
         </div>
         
         <div className="flex items-center gap-3 p-3 bg-zinc-800/50 border border-zinc-700/50 rounded-lg">
           <CreditCard size={20} className="text-zinc-400" />
           <div>
-            <p className="text-sm text-zinc-300">Payment methods are managed through RevenueCat</p>
+            <p className="text-sm text-zinc-300">Payment methods are managed through Stripe</p>
             <p className="text-xs text-zinc-500">Your payment information is securely stored by our payment provider</p>
           </div>
         </div>
