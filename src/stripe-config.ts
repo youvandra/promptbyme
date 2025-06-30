@@ -17,7 +17,7 @@ export const PRODUCTS: Record<string, StripeProduct> = {
     name: 'Pro Teams Plan',
     description: 'Enterprise-grade solution for larger teams with premium support',
     mode: 'subscription'
-  }
+  },
   PRO_SUBSCRIPTION: {
     priceId: 'price_1RfX9LDBQ23Gbj5Chxtu1qWh',
     name: 'Pro Plan',
