@@ -160,8 +160,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
       icon: Code,
       label: 'API',
       description: 'Developer API access'
-    },
-
+    }
   ]
 
   const isActive = (path: string) => location.pathname === path
@@ -285,12 +284,10 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                   <div className="flex-1">
                     <p className="font-medium text-sm">{item.label}</p>
                     <p className="text-xs opacity-70">{item.description}</p>
-              
-              {/* Pricing */}
-              <div className="p-2 border-b border-zinc-800/30">
-                <Link
-                  to="/pricing"
-                  onClick={onToggle}
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         </nav>
         
@@ -333,7 +330,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
               </Link>
             </div>
               
-            {/* Pricing */}
             {/* Sign Out Button */}
             <div className="p-2 border-b border-zinc-800/30">
               <button
