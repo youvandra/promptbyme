@@ -90,9 +90,49 @@ Deno.serve(async (req) => {
     let customerId;
 
     /**
+     * Verify that the existing customer ID is still valid in Stripe
+     */
+    if (customer && customer.customer_id) {
+      try {
+        await stripe.customers.retrieve(customer.customer_id);
+        customerId = customer.customer_id;
+        console.log(`Using existing Stripe customer ${customerId} for user ${user.id}`);
+      } catch (stripeError: any) {
+        if (stripeError.code === 'resource_missing') {
+          console.log(`Stripe customer ${customer.customer_id} no longer exists, creating new customer for user ${user.id}`);
+          
+          // Delete the stale customer record from our database
+          const { error: deleteError } = await supabase
+            .from('stripe_customers')
+            .delete()
+            .eq('customer_id', customer.customer_id);
+            
+          if (deleteError) {
+            console.error('Failed to delete stale customer record:', deleteError);
+          }
+          
+          // Also clean up any associated subscription records
+          const { error: deleteSubError } = await supabase
+            .from('stripe_subscriptions')
+            .delete()
+            .eq('customer_id', customer.customer_id);
+            
+          if (deleteSubError) {
+            console.error('Failed to delete stale subscription record:', deleteSubError);
+          }
+          
+          // Set customerId to null so we create a new customer below
+          customerId = null;
+        } else {
+          throw stripeError;
+        }
+      }
+    }
+
+    /**
      * In case we don't have a mapping yet, the customer does not exist and we need to create one.
      */
-    if (!customer || !customer.customer_id) {
+    if (!customerId) {
       const newCustomer = await stripe.customers.create({
         email: user.email,
         metadata: {
@@ -145,8 +185,6 @@ Deno.serve(async (req) => {
 
       console.log(`Successfully set up new customer ${customerId} with subscription record`);
     } else {
-      customerId = customer.customer_id;
-
       if (mode === 'subscription') {
         // Verify subscription exists for existing customer
         const { data: subscription, error: getSubscriptionError } = await supabase
