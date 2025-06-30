@@ -7,10 +7,12 @@ import { PRODUCTS } from '../../stripe-config'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
 import { useToast } from '../../hooks/useToast'
+import { Toast } from '../../components/ui/Toast'
 
 export const PricingPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState<Record<string, boolean>>({})
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const { user } = useAuthStore()
   const { showToast } = useToast()
 
@@ -18,7 +20,7 @@ export const PricingPage: React.FC = () => {
     if (!user) return
     
     try {
-      setCheckoutLoading(true)
+      setCheckoutLoading(prev => ({ ...prev, [PRODUCTS.BASIC_SUBSCRIPTION.priceId]: true }))
       
       // Call the Stripe checkout edge function
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
@@ -47,8 +49,9 @@ export const PricingPage: React.FC = () => {
     } catch (error) {
       console.error('Error creating checkout session:', error)
       showToast('Failed to create checkout session. Please try again.', 'error')
+      setToast({ message: 'Failed to create checkout session. Please try again.', type: 'error' })
     } finally {
-      setCheckoutLoading(false)
+      setCheckoutLoading(prev => ({ ...prev, [PRODUCTS.BASIC_SUBSCRIPTION.priceId]: false }))
     }
   }
 
@@ -56,7 +59,7 @@ export const PricingPage: React.FC = () => {
     if (!user) return
     
     try {
-      setCheckoutLoading(true)
+      setCheckoutLoading(prev => ({ ...prev, [PRODUCTS.PRO_SUBSCRIPTION.priceId]: true }))
       
       // Call the Stripe checkout edge function
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
@@ -85,8 +88,9 @@ export const PricingPage: React.FC = () => {
     } catch (error) {
       console.error('Error creating checkout session:', error)
       showToast('Failed to create checkout session. Please try again.', 'error')
+      setToast({ message: 'Failed to create checkout session. Please try again.', type: 'error' })
     } finally {
-      setCheckoutLoading(false)
+      setCheckoutLoading(prev => ({ ...prev, [PRODUCTS.PRO_SUBSCRIPTION.priceId]: false }))
     }
   }
 
@@ -94,7 +98,7 @@ export const PricingPage: React.FC = () => {
     if (!user) return
     
     try {
-      setCheckoutLoading(true)
+      setCheckoutLoading(prev => ({ ...prev, [PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId]: true }))
       
       // Call the Stripe checkout edge function
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
@@ -123,8 +127,9 @@ export const PricingPage: React.FC = () => {
     } catch (error) {
       console.error('Error creating checkout session:', error)
       showToast('Failed to create checkout session. Please try again.', 'error')
+      setToast({ message: 'Failed to create checkout session. Please try again.', type: 'error' })
     } finally {
-      setCheckoutLoading(false)
+      setCheckoutLoading(prev => ({ ...prev, [PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId]: false }))
     }
   }
 
@@ -152,6 +157,7 @@ export const PricingPage: React.FC = () => {
       buttonText: 'Current Plan',
       buttonAction: () => {},
       buttonDisabled: true,
+      priceId: '',
       highlighted: false,
       icon: <Zap className="text-zinc-400" size={24} />
     },
@@ -169,9 +175,10 @@ export const PricingPage: React.FC = () => {
         'API access',
         'Playground access'
       ],
+      priceId: PRODUCTS.BASIC_SUBSCRIPTION.priceId,
       buttonText: user ? 'Subscribe Now' : 'Sign In to Subscribe',
       buttonAction: user ? handleSubscribe : () => {},
-      buttonDisabled: checkoutLoading || !user,
+      buttonDisabled: checkoutLoading[PRODUCTS.BASIC_SUBSCRIPTION.priceId] || !user,
       highlighted: true,
       icon: <Shield className="text-indigo-400" size={24} />
     },
@@ -188,9 +195,10 @@ export const PricingPage: React.FC = () => {
         'Unlimited prompt flows',
         '10 team members'
       ],
+      priceId: PRODUCTS.PRO_SUBSCRIPTION.priceId,
       buttonText: user ? 'Subscribe Now' : 'Sign In to Subscribe',
       buttonAction: user ? handleSubscribePro : () => {},
-      buttonDisabled: checkoutLoading || !user,
+      buttonDisabled: checkoutLoading[PRODUCTS.PRO_SUBSCRIPTION.priceId] || !user,
       highlighted: false,
       icon: <Shield className="text-purple-400" size={24} />
     },
@@ -207,9 +215,10 @@ export const PricingPage: React.FC = () => {
         'Custom integrations',
         'Advanced security'
       ],
+      priceId: PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId,
       buttonText: user ? 'Subscribe Now' : 'Sign In to Subscribe',
       buttonAction: user ? handleSubscribeProTeams : () => {},
-      buttonDisabled: checkoutLoading || !user,
+      buttonDisabled: checkoutLoading[PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId] || !user,
       highlighted: false,
       icon: <Shield className="text-blue-400" size={24} />
     }
@@ -305,11 +314,11 @@ export const PricingPage: React.FC = () => {
                         disabled={plan.buttonDisabled}
                         className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
                           plan.highlighted
-                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-indigo-600/50'
+                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-indigo-600/50 disabled:cursor-not-allowed'
                             : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 disabled:bg-zinc-800/50'
                         } disabled:cursor-not-allowed`}
                       >
-                        {checkoutLoading && plan.highlighted ? (
+                        {checkoutLoading[plan.priceId] ? (
                           <div className="flex items-center justify-center gap-2">
                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             <span>Processing...</span>
@@ -489,6 +498,15 @@ export const PricingPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       <BoltBadge />
     </div>
