@@ -114,6 +114,7 @@ const SubscriptionManager: React.FC = () => {
 
   const handleSubscribePro = async () => {
     if (!user) return
+    
     try {
        setCheckoutLoading(true)
        
@@ -126,6 +127,20 @@ const SubscriptionManager: React.FC = () => {
            mode: 'subscription'
              
   const formatDate = (dateString?: string) => {
+       
+       if (error) {
+         throw error
+       }
+       
+       // Redirect to Stripe Checkout
+       window.location.href = url
+     } catch (error) {
+       console.error('Error creating checkout session:', error)
+     } finally {
+       setCheckoutLoading(false)
+     }
+   }
+       
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -146,16 +161,16 @@ const SubscriptionManager: React.FC = () => {
       case 'basic':
         return {
           name: 'Basic Plan',
-          color: 'bg-blue-600',
-          icon: <Shield className="text-blue-400" />,
+          color: 'bg-indigo-600',
+          icon: <Shield className="text-indigo-400" />,
           features: ['Unlimited prompts', 'Full version control', 'Private sharing', 'API access']
         }
       case 'pro':
         return {
           name: 'Pro Plan',
-          color: 'bg-indigo-600',
-          icon: <Shield className="text-indigo-400" />,
-          features: ['Unlimited prompts', 'Team collaboration', 'Advanced analytics', 'Priority support']
+          color: 'bg-purple-600',
+          icon: <Shield className="text-purple-400" />,
+          features: ['Everything in Basic', 'Team collaboration', 'Advanced analytics', 'Priority support', 'Unlimited prompt flows']
         }
       case 'enterprise':
         return {
@@ -270,20 +285,28 @@ const SubscriptionManager: React.FC = () => {
       {/* Upgrade Options */}
       {(subscription?.plan === 'free' || !subscription) && (
         <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Upgrade Your Plan</h3>
+          <h3 className="text-lg font-semibold text-white mb-6">Upgrade Your Plan</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-            <div className="bg-zinc-800/50 border border-zinc-700/50 hover:border-indigo-500/50 rounded-lg p-4 transition-all duration-200 cursor-pointer">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 bg-blue-600/20 rounded-md">
-                  <Shield size={16} className="text-blue-400" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-zinc-800/50 border border-zinc-700/50 hover:border-indigo-500/50 rounded-lg p-5 transition-all duration-200 cursor-pointer">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 bg-indigo-600/20 rounded-md">
+                  <Shield size={16} className="text-indigo-400" />
                 </div>
-                <h4 className="font-medium text-white">Monthly Subscription</h4>
+                <h4 className="font-medium text-white">Basic Plan</h4>
               </div>
-              <p className="text-sm text-zinc-400 mb-3">Perfect for individual creators.</p>
-              <div className="text-lg font-bold text-white mb-3">$10.00<span className="text-sm font-normal text-zinc-400">/month</span></div>
+              <p className="text-sm text-zinc-400 mb-3">Perfect for individual creators</p>
+              <div className="text-lg font-bold text-white mb-4">$10.00<span className="text-sm font-normal text-zinc-400">/month</span></div>
+              <ul className="space-y-2 mb-4">
+                {getPlanDetails('basic').features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <CheckCircle size={14} className="text-indigo-400 mt-1 flex-shrink-0" />
+                    <span className="text-zinc-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
               <button
-                className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+                className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium"
                 onClick={handleSubscribe}
                 disabled={checkoutLoading}
               >
@@ -293,10 +316,86 @@ const SubscriptionManager: React.FC = () => {
                     <span>Processing...</span>
                   </div>
                 ) : (
-                  'Subscribe Now'
+                  'Choose Basic'
                 )}
               </button>
             </div>
+            
+            <div className="bg-zinc-800/50 border border-purple-500/30 hover:border-purple-500/50 rounded-lg p-5 transition-all duration-200 cursor-pointer relative">
+              <div className="absolute -top-3 right-4 bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                RECOMMENDED
+              </div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 bg-purple-600/20 rounded-md">
+                  <Shield size={16} className="text-purple-400" />
+                </div>
+                <h4 className="font-medium text-white">Pro Plan</h4>
+              </div>
+              <p className="text-sm text-zinc-400 mb-3">For teams and power users</p>
+              <div className="text-lg font-bold text-white mb-4">$25.00<span className="text-sm font-normal text-zinc-400">/month</span></div>
+              <ul className="space-y-2 mb-4">
+                {getPlanDetails('pro').features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <CheckCircle size={14} className="text-purple-400 mt-1 flex-shrink-0" />
+                    <span className="text-zinc-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={handleSubscribePro}
+                disabled={checkoutLoading}
+                className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium"
+              >
+                {checkoutLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  'Choose Pro'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Upgrade from Basic to Pro */}
+      {subscription?.plan === 'basic' && (
+        <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Upgrade to Pro</h3>
+          
+          <div className="bg-zinc-800/50 border border-purple-500/30 hover:border-purple-500/50 rounded-lg p-5 transition-all duration-200 cursor-pointer">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 bg-purple-600/20 rounded-md">
+                <Shield size={16} className="text-purple-400" />
+              </div>
+              <h4 className="font-medium text-white">Pro Plan</h4>
+            </div>
+            <p className="text-sm text-zinc-400 mb-3">Unlock advanced features and team collaboration</p>
+            <div className="text-lg font-bold text-white mb-4">$25.00<span className="text-sm font-normal text-zinc-400">/month</span></div>
+            <ul className="space-y-2 mb-4">
+              {getPlanDetails('pro').features.filter(f => !getPlanDetails('basic').features.includes(f)).map((feature, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm">
+                  <CheckCircle size={14} className="text-purple-400 mt-1 flex-shrink-0" />
+                  <span className="text-zinc-300">{feature}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={handleSubscribePro}
+              disabled={checkoutLoading}
+              className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium"
+            >
+              {checkoutLoading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Processing...</span>
+                </div>
+              ) : (
+                'Upgrade to Pro'
+              )}
+            </button>
           </div>
         </div>
       )}
