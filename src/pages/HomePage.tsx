@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Zap, Shield, Layers, Users, Globe, ChevronDown } from 'lucide-react';
+import { ArrowRight, Plus, Zap, Shield, Layers, Users, Globe, ChevronDown } from 'lucide-react';
 import { Section } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
