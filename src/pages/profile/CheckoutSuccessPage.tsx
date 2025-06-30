@@ -4,13 +4,43 @@ import { CheckCircle, ArrowLeft } from 'lucide-react'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
+import { supabase } from '../../lib/supabase'
 
 export const CheckoutSuccessPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [subscriptionDetails, setSubscriptionDetails] = useState<any>(null)
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuthStore()
   const [countdown, setCountdown] = useState(5)
+
+  // Fetch subscription details
+  useEffect(() => {
+    if (user) {
+      fetchSubscriptionDetails()
+    }
+  }, [user])
+
+  const fetchSubscriptionDetails = async () => {
+    try {
+      setLoading(true)
+      
+      // Check if user has a Stripe subscription
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from('stripe_user_subscriptions')
+        .select('*')
+        .maybeSingle()
+
+      if (!subscriptionError && subscriptionData) {
+        setSubscriptionDetails(subscriptionData)
+      }
+    } catch (error) {
+      console.error('Error fetching subscription details:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Redirect to profile page after 5 seconds
   useEffect(() => {
@@ -53,9 +83,24 @@ export const CheckoutSuccessPage: React.FC = () => {
                 Payment Successful!
               </h1>
               
-              <p className="text-zinc-300 mb-8">
-                Thank you for your subscription. Your account has been successfully upgraded.
+              <p className="text-zinc-300 mb-4">
+                Thank you for your subscription! Your account has been successfully upgraded.
               </p>
+              
+              {subscriptionDetails && (
+                <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4 mb-6">
+                  <p className="text-sm text-zinc-400 mb-2">
+                    Your subscription is now <span className="text-emerald-400 font-medium">active</span>
+                  </p>
+                  <p className="text-sm text-zinc-400">
+                    Plan: <span className="text-white font-medium">
+                      {subscriptionDetails.price_id === 'price_1RfI93DBQ23Gbj5CiqTXSOek' ? 'Basic' : 
+                       subscriptionDetails.price_id === 'price_1RfX9LDBQ23Gbj5Chxtu1qWh' ? 'Pro' : 
+                       'Subscription'}
+                    </span>
+                  </p>
+                </div>
+              )}
               
               <p className="text-zinc-400 mb-8">
                 Redirecting to your profile in {countdown} seconds...

@@ -3,9 +3,9 @@ import { Menu, CheckCircle, X, DollarSign, Zap, Shield, Users, FolderOpen, Code,
 import { Link } from 'react-router-dom'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
+import { PRODUCTS } from '../../stripe-config'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
-import { PRODUCTS } from '../../stripe-config'
 
 export const PricingPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -21,7 +21,7 @@ export const PricingPage: React.FC = () => {
       // Call the Stripe checkout edge function
       const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
-          price_id: PRODUCTS.MONTHLY_SUBSCRIPTION.priceId,
+          price_id: PRODUCTS.BASIC_SUBSCRIPTION.priceId,
           success_url: `${window.location.origin}/profile?checkout=success`,
           cancel_url: `${window.location.origin}/profile?checkout=canceled`,
           mode: 'subscription'
@@ -41,12 +41,49 @@ export const PricingPage: React.FC = () => {
     }
   }
 
+  const handleSubscribePro = async () => {
+    if (!user) return
+    
+    try {
+      setCheckoutLoading(true)
+      
+      // Call the Stripe checkout edge function
+      const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          price_id: PRODUCTS.PRO_SUBSCRIPTION.priceId,
+          success_url: `${window.location.origin}/profile?checkout=success`,
+          cancel_url: `${window.location.origin}/profile?checkout=canceled`,
+          mode: 'subscription'
+        }
+      })
+      
+      if (error) {
+        throw error
+      }
+      
+      // Redirect to Stripe Checkout
+      window.location.href = url
+    } catch (error) {
+      console.error('Error creating checkout session:', error)
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
   const plans = [
     {
       name: 'Free',
       price: '$0',
       period: 'forever',
-      description: 'Perfect for getting started',
+      description: 'Get started with basic features',
       features: [
         '5 prompt gallery',
         '1 team',
@@ -61,7 +98,7 @@ export const PricingPage: React.FC = () => {
       icon: <Zap className="text-zinc-400" size={24} />
     },
     {
-      name: 'Basic',
+      name: 'Basic Plan',
       price: '$10',
       period: 'per month',
       description: 'For individual creators',
@@ -78,7 +115,25 @@ export const PricingPage: React.FC = () => {
       buttonAction: user ? handleSubscribe : () => {},
       buttonDisabled: checkoutLoading || !user,
       highlighted: true,
-      icon: <Shield className="text-blue-400" size={24} />
+      icon: <Shield className="text-indigo-400" size={24} />
+    },
+    {
+      name: 'Pro Plan',
+      price: '$30',
+      period: 'per month',
+      description: 'For teams and power users',
+      features: [
+        'Everything in Basic',
+        'Team collaboration',
+        'Advanced analytics',
+        'Priority support',
+        'Unlimited prompt flows'
+      ],
+      buttonText: user ? 'Subscribe Now' : 'Sign In to Subscribe',
+      buttonAction: user ? handleSubscribePro : () => {},
+      buttonDisabled: checkoutLoading || !user,
+      highlighted: false,
+      icon: <Shield className="text-purple-400" size={24} />
     }
   ]
 
@@ -121,12 +176,12 @@ export const PricingPage: React.FC = () => {
                   Simple, Transparent Pricing
                 </h1>
                 <p className="text-xl text-zinc-400">
-                  Choose the plan that's right for you
+                  Choose the plan that fits your needs
                 </p>
               </div>
 
               {/* Pricing Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
                 {plans.map((plan, index) => (
                   <div 
                     key={index}
@@ -201,6 +256,7 @@ export const PricingPage: React.FC = () => {
                         <th className="py-4 px-6 text-left text-zinc-400 font-medium">Feature</th>
                         <th className="py-4 px-6 text-center text-zinc-400 font-medium">Free</th>
                         <th className="py-4 px-6 text-center text-zinc-400 font-medium">Basic</th>
+                        <th className="py-4 px-6 text-center text-zinc-400 font-medium">Pro</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -211,6 +267,7 @@ export const PricingPage: React.FC = () => {
                         </td>
                         <td className="py-4 px-6 text-center text-zinc-300">5 prompts</td>
                         <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
+                        <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
                       </tr>
                       <tr className="border-b border-zinc-800/50">
                         <td className="py-4 px-6 text-white flex items-center gap-2">
@@ -219,6 +276,7 @@ export const PricingPage: React.FC = () => {
                         </td>
                         <td className="py-4 px-6 text-center text-zinc-300">1</td>
                         <td className="py-4 px-6 text-center text-zinc-300">3</td>
+                        <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
                       </tr>
                       <tr className="border-b border-zinc-800/50">
                         <td className="py-4 px-6 text-white flex items-center gap-2">
@@ -227,6 +285,7 @@ export const PricingPage: React.FC = () => {
                         </td>
                         <td className="py-4 px-6 text-center text-zinc-300">2</td>
                         <td className="py-4 px-6 text-center text-zinc-300">10</td>
+                        <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
                       </tr>
                       <tr className="border-b border-zinc-800/50">
                         <td className="py-4 px-6 text-white flex items-center gap-2">
@@ -239,11 +298,32 @@ export const PricingPage: React.FC = () => {
                         <td className="py-4 px-6 text-center text-zinc-300">
                           <CheckCircle size={16} className="inline text-emerald-400" />
                         </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <CheckCircle size={16} className="inline text-emerald-400" />
+                        </td>
                       </tr>
                       <tr className="border-b border-zinc-800/50">
                         <td className="py-4 px-6 text-white flex items-center gap-2">
                           <Code size={16} className="text-indigo-400" />
                           <span>API Access</span>
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <X size={16} className="inline text-red-400" />
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <CheckCircle size={16} className="inline text-emerald-400" />
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <CheckCircle size={16} className="inline text-emerald-400" />
+                        </td>
+                      </tr>
+                      <tr className="border-b border-zinc-800/50">
+                        <td className="py-4 px-6 text-white flex items-center gap-2">
+                          <Users size={16} className="text-indigo-400" />
+                          <span>Team Collaboration</span>
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <X size={16} className="inline text-red-400" />
                         </td>
                         <td className="py-4 px-6 text-center text-zinc-300">
                           <X size={16} className="inline text-red-400" />
