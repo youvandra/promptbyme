@@ -167,13 +167,11 @@ export const PricingPage: React.FC = () => {
       period: 'per month',
       description: 'Perfect for individual creators',
       features: [
-        'Unlimited prompt gallery',
+        '20 prompt gallery',
         '3 teams',
         '10 prompt flows',
         'Full version control',
         'Private sharing',
-        'API access',
-        'Playground access'
       ],
       priceId: PRODUCTS.BASIC_SUBSCRIPTION.priceId,
       buttonText: user ? 'Subscribe Now' : 'Sign In to Subscribe',
@@ -189,10 +187,10 @@ export const PricingPage: React.FC = () => {
       description: 'For teams and power users',
       features: [
         'Everything in Basic',
-        'Team collaboration',
-        'Advanced analytics',
-        'Priority support',
+        'Unlimited prompt',
         'Unlimited prompt flows',
+        'Team collaboration',
+        'Playground access'
         '10 team members'
       ],
       priceId: PRODUCTS.PRO_SUBSCRIPTION.priceId,
@@ -210,10 +208,8 @@ export const PricingPage: React.FC = () => {
       features: [
         'Everything in Pro',
         'Unlimited team members',
+        'API access',
         'Dedicated support',
-        'SLA guarantees',
-        'Custom integrations',
-        'Advanced security'
       ],
       priceId: PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId,
       buttonText: user ? 'Subscribe Now' : 'Sign In to Subscribe',
