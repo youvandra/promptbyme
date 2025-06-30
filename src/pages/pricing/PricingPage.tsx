@@ -266,7 +266,22 @@ export const PricingPage: React.FC = () => {
                   Choose the plan that fits your needs
                 </p>
               </div>
-
+         {/* Stripe Buy Button */}
+          <div className="mt-8 text-center">
+            <h3 className="text-xl font-semibold text-white mb-4">Ready to get started?</h3>
+            <div className="max-w-md mx-auto">
+              <div dangerouslySetInnerHTML={{ 
+                __html: `
+                  <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+                  <stripe-buy-button
+                    buy-button-id="buy_btn_1RfYFiDBQ23Gbj5C5e1pp8gI"
+                    publishable-key="pk_test_51RarxRDBQ23Gbj5CR6zKYQ5q2nqXUbR0zs0LLAFRaNTewJYB6Q9EVWpKaugpvQcNkxugkT2s8IgAwZzSpgPrBF8H00nRJPhTOo"
+                  >
+                  </stripe-buy-button>
+                `
+              }} />
+            </div>
+          </div>
               {/* Pricing Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
                 {plans.map((plan, index) => (
@@ -336,22 +351,7 @@ export const PricingPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Stripe Buy Button */}
-          <div className="mt-8 text-center">
-            <h3 className="text-xl font-semibold text-white mb-4">Ready to get started?</h3>
-            <div className="max-w-md mx-auto">
-              <div dangerouslySetInnerHTML={{ 
-                __html: `
-                  <script async src="https://js.stripe.com/v3/buy-button.js"></script>
-                  <stripe-buy-button
-                    buy-button-id="buy_btn_1RfYFiDBQ23Gbj5C5e1pp8gI"
-                    publishable-key="pk_test_51RarxRDBQ23Gbj5CR6zKYQ5q2nqXUbR0zs0LLAFRaNTewJYB6Q9EVWpKaugpvQcNkxugkT2s8IgAwZzSpgPrBF8H00nRJPhTOo"
-                  >
-                  </stripe-buy-button>
-                `
-              }} />
-            </div>
-          </div>
+ 
         </div>
       </div>
 
