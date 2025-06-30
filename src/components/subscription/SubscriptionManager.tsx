@@ -48,9 +48,11 @@ const SubscriptionManager: React.FC = () => {
         // Determine plan based on price_id
         let plan: 'free' | 'basic' | 'pro' | 'enterprise' = 'free'
         
-        if (subscriptionData.price_id === PRODUCTS.MONTHLY_SUBSCRIPTION.priceId) {
-          plan = 'basic'
-        }
+        if (subscriptionData.price_id === PRODUCTS.PRO_SUBSCRIPTION.priceId) {
++          plan = 'pro'
++        } else if (subscriptionData.price_id === PRODUCTS.BASIC_SUBSCRIPTION.priceId) {
+           plan = 'basic'
+         }
         
         setSubscription({
           id: subscriptionData.subscription_id,
@@ -90,7 +92,7 @@ const SubscriptionManager: React.FC = () => {
       // Call the Stripe checkout edge function
       const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
-          price_id: PRODUCTS.MONTHLY_SUBSCRIPTION.priceId,
+          price_id: PRODUCTS.BASIC_SUBSCRIPTION.priceId,
           success_url: `${window.location.origin}/profile?checkout=success`,
           cancel_url: `${window.location.origin}/profile?checkout=canceled`,
           mode: 'subscription'
@@ -110,6 +112,19 @@ const SubscriptionManager: React.FC = () => {
     }
   }
 
+  const handleSubscribePro = async () => {
+    if (!user) return
+    try {
+       setCheckoutLoading(true)
+       
+       // Call the Stripe checkout edge function
+       const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
+         body: {
+           price_id: PRODUCTS.PRO_SUBSCRIPTION.priceId,
+           success_url: `${window.location.origin}/profile?checkout=success`,
+           cancel_url: `${window.location.origin}/profile?checkout=canceled`,
+           mode: 'subscription'
+             
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-US', {
