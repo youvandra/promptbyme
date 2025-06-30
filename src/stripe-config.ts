@@ -6,16 +6,16 @@ export interface StripeProduct {
 }
 
 export const PRODUCTS: Record<string, StripeProduct> = {
-  MONTHLY_SUBSCRIPTION: {
+  BASIC_SUBSCRIPTION: {
     priceId: 'price_1RfI93DBQ23Gbj5CiqTXSOek',
-    name: 'Monthly Subs',
+    name: 'Basic Plan',
     description: 'Monthly subscription to promptby.me',
     mode: 'subscription'
   },
-+  PRO_SUBSCRIPTION: {
-+    priceId: 'price_1RfI93DBQ23Gbj5CiqTXSOek',
-+    name: 'Pro Plan',
-+    description: 'Pro subscription to promptby.me',
-+    mode: 'subscription'
+  PRO_SUBSCRIPTION: {
+    priceId: 'price_1RfI93DBQ23Gbj5CiqTXSOek',
+    name: 'Pro Plan',
+    description: 'Pro subscription to promptby.me',
+    mode: 'subscription'
    }
 };
