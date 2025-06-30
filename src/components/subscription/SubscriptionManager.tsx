@@ -253,12 +253,12 @@ const SubscriptionManager: React.FC = () => {
           
           <div className="mt-4 text-center">
             <a 
-              href="https://app.revenuecat.com/buy/pro" 
+              href="#" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
             >
-              Upgrade to Pro
+              Need an Enterprise plan? Contact us
             </a>
           </div>
         </div>
