@@ -25,10 +25,8 @@ import { FlowManagementModal } from '../../components/prompt-flow/FlowManagement
 import { FlowStepItem } from '../../components/prompt-flow/FlowStepItem';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
 import { CustomSelect, SelectOption } from '../../components/ui/CustomSelect';
-import { useSubscription } from '../../hooks/useSubscription';
 import { useAuthStore } from '../../store/authStore';
 import { useFlowStore, FlowStep } from '../../store/flowStore';
-import { UpgradeMessage } from '../../components/subscription/UpgradeMessage';
 
 export const PromptFlowPage: React.FC = () => {
   const navigate = useNavigate();
@@ -42,7 +40,6 @@ export const PromptFlowPage: React.FC = () => {
   const [showUnsetVariablesConfirmModal, setShowUnsetVariablesConfirmModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedFlowId, setSelectedFlowId] = useState<string | null>(null);
-  const { isProOrHigher, loading: subscriptionLoading } = useSubscription();
   const [showFlowManagementModal, setShowFlowManagementModal] = useState(false);
   
   const { user, loading: authLoading } = useAuthStore();
@@ -287,7 +284,7 @@ export const PromptFlowPage: React.FC = () => {
   };
 
   // Loading state
-  if (authLoading || loading || subscriptionLoading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
         <div className="text-zinc-400">
@@ -296,47 +293,6 @@ export const PromptFlowPage: React.FC = () => {
             <span>Loading prompt flows...</span>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // Check if user has required subscription for Prompt Flow
-  if (!isProOrHigher()) {
-    return (
-      <div className="min-h-screen bg-zinc-950 text-white relative">
-        <div className="flex min-h-screen lg:pl-64">
-          {/* Side Navbar */}
-          <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-          
-          {/* Main Content Area */}
-          <div className="flex-1 flex flex-col min-h-screen">
-            {/* Mobile Header */}
-            <header className="lg:hidden relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
-              <div className="px-4 py-4">
-                <div className="flex items-center justify-between">
-                  <button
-                    data-menu-button
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="text-zinc-400 hover:text-white transition-colors p-1"
-                  >
-                    <Menu size={20} />
-                  </button>
-                  
-                  <h1 className="text-lg font-semibold text-white">
-                    Prompt Flow
-                  </h1>
-                  
-                  <div className="w-6" />
-                </div>
-              </div>
-            </header>
-
-            {/* Upgrade Message */}
-            <UpgradeMessage feature="prompt-flow" minPlan="pro" />
-          </div>
-        </div>
-        
-        <BoltBadge />
       </div>
     );
   }
