@@ -353,6 +353,19 @@ html {
 .depth-layer-4 { z-index: 40; }
 .depth-layer-5 { z-index: 50; }
 
+/* Running text animation */
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.running-text {
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  animation: marquee 15s linear infinite;
+}
+
 /* React Flow Node Customization */
 .react-flow__node {
   background: transparent !important;

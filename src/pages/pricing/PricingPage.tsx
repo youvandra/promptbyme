@@ -257,6 +257,13 @@ export const PricingPage: React.FC = () => {
           {/* Content */}
           <div className="relative z-10 flex-1">
             <div className="w-full max-w-7xl px-6 mx-auto py-12">
+              {/* Running Text Banner */}
+              <div className="bg-indigo-600/80 text-white font-bold py-3 mb-8 rounded-xl overflow-hidden text-center">
+                <div className="running-text text-lg">
+                  FREE UNTIL BOLT HACKATHON IS RUNNING
+                </div>
+              </div>
+              
               {/* Page Header */}
               <div className="text-center max-w-3xl mx-auto mb-16">
                 <h1 className="text-4xl font-bold text-white mb-4">
