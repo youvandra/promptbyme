@@ -72,11 +72,13 @@ export const useSubscription = () => {
     try {
       const { data, error } = await supabase
         .from('user_subscriptions')
-        .insert([{
+        .upsert([{
           user_id: user.id,
           plan: 'free',
           status: 'active'
-        }])
+        }], {
+          onConflict: 'user_id'
+        })
         .select()
         .single()
 
