@@ -73,10 +73,8 @@ export const CheckoutSuccessPage: React.FC = () => {
         
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-h-screen">
-                    {subscriptionDetails.price_id === PRODUCTS.BASIC_SUBSCRIPTION.priceId ? 'Basic' : 
-                     subscriptionDetails.price_id === PRODUCTS.PRO_SUBSCRIPTION.priceId ? 'Pro' : 
-                     subscriptionDetails.price_id === PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId ? 'Pro Teams' : 
-                     'Unknown Plan'}
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="max-w-md w-full text-center">
               <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle size={40} className="text-emerald-400" />
               </div>
@@ -96,9 +94,10 @@ export const CheckoutSuccessPage: React.FC = () => {
                   </p>
                   <p className="text-sm text-zinc-400">
                     Plan: <span className="text-white font-medium">
-                      {subscriptionDetails.price_id === 'price_1RfI93DBQ23Gbj5CiqTXSOek' ? 'Basic' : 
-                       subscriptionDetails.price_id === 'price_1RfX9LDBQ23Gbj5Chxtu1qWh' ? 'Pro' : 
-                       'Subscription'}
+                      {subscriptionDetails.price_id === PRODUCTS.BASIC_SUBSCRIPTION.priceId ? 'Basic' : 
+                       subscriptionDetails.price_id === PRODUCTS.PRO_SUBSCRIPTION.priceId ? 'Pro' : 
+                       subscriptionDetails.price_id === PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId ? 'Pro Teams' : 
+                       'Unknown Plan'}
                     </span>
                   </p>
                 </div>
@@ -119,7 +118,6 @@ export const CheckoutSuccessPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
       
       <BoltBadge />
     </div>
