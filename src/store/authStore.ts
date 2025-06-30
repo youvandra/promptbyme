@@ -94,7 +94,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initialize: async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session }, error } = await supabase.auth.getSession()
+      
+      // Handle invalid refresh token errors
+      if (error && (
+        error.message.includes('Invalid Refresh Token') || 
+        error.message.includes('Refresh Token Not Found')
+      )) {
+        // Clear the invalid session
+        await supabase.auth.signOut()
+        set({ user: null, loading: false })
+        return
+      }
+      
       set({ user: session?.user ?? null, loading: false })
 
       supabase.auth.onAuthStateChange((event, session) => {
@@ -102,6 +114,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       })
     } catch (error) {
       console.error('Auth initialization error:', error)
+      // If there's any other error during initialization, clear the session
+      try {
+        await supabase.auth.signOut()
+      } catch (signOutError) {
+        console.error('Error clearing session:', signOutError)
+      }
       set({ loading: false })
     }
   },
