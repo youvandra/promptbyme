@@ -58,8 +58,10 @@ const SubscriptionManager: React.FC = () => {
         if (subscriptionData.price_id === PRODUCTS.PRO_SUBSCRIPTION.priceId) {
           plan = 'pro'
         } else if (subscriptionData.price_id === PRODUCTS.BASIC_SUBSCRIPTION.priceId) {
-           plan = 'basic'
-         }
+          plan = 'basic'
+        } else if (subscriptionData.price_id === PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId) {
+          plan = 'enterprise'
+        }
         
         setSubscription({
           id: subscriptionData.subscription_id,
@@ -148,6 +150,35 @@ const SubscriptionManager: React.FC = () => {
     }
   }
 
+  const handleSubscribeProTeams = async () => {
+    if (!user) return
+
+    try {
+      setCheckoutLoading(true)
+      
+      // Call the Stripe checkout edge function
+      const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          price_id: PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId,
+          success_url: `${window.location.origin}/profile?checkout=success`,
+          cancel_url: `${window.location.origin}/profile?checkout=canceled`,
+          mode: 'subscription'
+        }
+      })
+      
+      if (error) {
+        throw error
+      }
+      
+      // Redirect to Stripe Checkout
+      window.location.href = url
+    } catch (error) {
+      console.error('Error creating checkout session:', error)
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -176,16 +207,16 @@ const SubscriptionManager: React.FC = () => {
       case 'pro':
         return {
           name: 'Pro Plan',
-          color: 'bg-purple-600',
-          icon: <Shield className="text-purple-400" size={24} />,
-          features: ['Everything in Basic', 'Team collaboration', 'Advanced analytics', 'Priority support', 'Unlimited prompt flows']
+          color: 'bg-indigo-600',
+          icon: <Shield className="text-indigo-400" size={24} />,
+          features: ['Everything in Basic', 'Team collaboration', 'Advanced analytics', 'Priority support', 'Unlimited prompt flows', '10 team members']
         }
       case 'enterprise':
         return {
-          name: 'Enterprise Plan',
+          name: 'Pro Teams Plan',
           color: 'bg-purple-600',
           icon: <Shield className="text-purple-400" />,
-          features: ['Custom solutions', 'Dedicated support', 'SLA guarantees', 'Custom integrations']
+          features: ['Everything in Pro', 'Unlimited team members', 'Dedicated support', 'SLA guarantees', 'Custom integrations', 'Advanced security']
         }
       default:
         return {
