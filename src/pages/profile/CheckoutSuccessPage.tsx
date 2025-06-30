@@ -5,6 +5,7 @@ import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
+import { PRODUCTS } from '../../stripe-config'
 
 export const CheckoutSuccessPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -72,9 +73,10 @@ export const CheckoutSuccessPage: React.FC = () => {
         
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-h-screen">
-          {/* Content */}
-          <div className="relative z-10 flex-1 flex items-center justify-center">
-            <div className="w-full max-w-md px-6 py-12 text-center">
+                    {subscriptionDetails.price_id === PRODUCTS.BASIC_SUBSCRIPTION.priceId ? 'Basic' : 
+                     subscriptionDetails.price_id === PRODUCTS.PRO_SUBSCRIPTION.priceId ? 'Pro' : 
+                     subscriptionDetails.price_id === PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId ? 'Pro Teams' : 
+                     'Unknown Plan'}
               <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle size={40} className="text-emerald-400" />
               </div>

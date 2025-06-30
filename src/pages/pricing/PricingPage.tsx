@@ -70,6 +70,35 @@ export const PricingPage: React.FC = () => {
     }
   }
 
+  const handleSubscribeProTeams = async () => {
+    if (!user) return
+    
+    try {
+      setCheckoutLoading(true)
+      
+      // Call the Stripe checkout edge function
+      const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          price_id: PRODUCTS.PRO_TEAMS_SUBSCRIPTION.priceId,
+          success_url: `${window.location.origin}/profile?checkout=success`,
+          cancel_url: `${window.location.origin}/profile?checkout=canceled`,
+          mode: 'subscription'
+        }
+      })
+      
+      if (error) {
+        throw error
+      }
+      
+      // Redirect to Stripe Checkout
+      window.location.href = url
+    } catch (error) {
+      console.error('Error creating checkout session:', error)
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -83,7 +112,7 @@ export const PricingPage: React.FC = () => {
       name: 'Free',
       price: '$0',
       period: 'forever',
-      description: 'Get started with basic features',
+      description: 'Basic features to get started',
       features: [
         '5 prompt gallery',
         '1 team',
@@ -101,7 +130,7 @@ export const PricingPage: React.FC = () => {
       name: 'Basic Plan',
       price: '$10',
       period: 'per month',
-      description: 'For individual creators',
+      description: 'Perfect for individual creators',
       features: [
         'Unlimited prompt gallery',
         '3 teams',
@@ -127,13 +156,33 @@ export const PricingPage: React.FC = () => {
         'Team collaboration',
         'Advanced analytics',
         'Priority support',
-        'Unlimited prompt flows'
+        'Unlimited prompt flows',
+        '10 team members'
       ],
       buttonText: user ? 'Subscribe Now' : 'Sign In to Subscribe',
       buttonAction: user ? handleSubscribePro : () => {},
       buttonDisabled: checkoutLoading || !user,
       highlighted: false,
       icon: <Shield className="text-purple-400" size={24} />
+    },
+    {
+      name: 'Pro Teams Plan',
+      price: '$100',
+      period: 'per month',
+      description: 'Enterprise-grade solution',
+      features: [
+        'Everything in Pro',
+        'Unlimited team members',
+        'Dedicated support',
+        'SLA guarantees',
+        'Custom integrations',
+        'Advanced security'
+      ],
+      buttonText: user ? 'Subscribe Now' : 'Sign In to Subscribe',
+      buttonAction: user ? handleSubscribeProTeams : () => {},
+      buttonDisabled: checkoutLoading || !user,
+      highlighted: false,
+      icon: <Shield className="text-blue-400" size={24} />
     }
   ]
 
@@ -257,6 +306,7 @@ export const PricingPage: React.FC = () => {
                         <th className="py-4 px-6 text-center text-zinc-400 font-medium">Free</th>
                         <th className="py-4 px-6 text-center text-zinc-400 font-medium">Basic</th>
                         <th className="py-4 px-6 text-center text-zinc-400 font-medium">Pro</th>
+                        <th className="py-4 px-6 text-center text-zinc-400 font-medium">Pro Teams</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -268,6 +318,7 @@ export const PricingPage: React.FC = () => {
                         <td className="py-4 px-6 text-center text-zinc-300">5 prompts</td>
                         <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
                         <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
+                        <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
                       </tr>
                       <tr className="border-b border-zinc-800/50">
                         <td className="py-4 px-6 text-white flex items-center gap-2">
@@ -276,6 +327,7 @@ export const PricingPage: React.FC = () => {
                         </td>
                         <td className="py-4 px-6 text-center text-zinc-300">1</td>
                         <td className="py-4 px-6 text-center text-zinc-300">3</td>
+                        <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
                         <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
                       </tr>
                       <tr className="border-b border-zinc-800/50">
@@ -286,6 +338,7 @@ export const PricingPage: React.FC = () => {
                         <td className="py-4 px-6 text-center text-zinc-300">2</td>
                         <td className="py-4 px-6 text-center text-zinc-300">10</td>
                         <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
+                        <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
                       </tr>
                       <tr className="border-b border-zinc-800/50">
                         <td className="py-4 px-6 text-white flex items-center gap-2">
@@ -294,6 +347,9 @@ export const PricingPage: React.FC = () => {
                         </td>
                         <td className="py-4 px-6 text-center text-zinc-300">
                           <X size={16} className="inline text-red-400" />
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <CheckCircle size={16} className="inline text-emerald-400" />
                         </td>
                         <td className="py-4 px-6 text-center text-zinc-300">
                           <CheckCircle size={16} className="inline text-emerald-400" />
@@ -316,11 +372,53 @@ export const PricingPage: React.FC = () => {
                         <td className="py-4 px-6 text-center text-zinc-300">
                           <CheckCircle size={16} className="inline text-emerald-400" />
                         </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <CheckCircle size={16} className="inline text-emerald-400" />
+                        </td>
                       </tr>
                       <tr className="border-b border-zinc-800/50">
                         <td className="py-4 px-6 text-white flex items-center gap-2">
                           <Users size={16} className="text-indigo-400" />
                           <span>Team Collaboration</span>
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <X size={16} className="inline text-red-400" />
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <X size={16} className="inline text-red-400" />
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <CheckCircle size={16} className="inline text-emerald-400" />
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <CheckCircle size={16} className="inline text-emerald-400" />
+                        </td>
+                      </tr>
+                      <tr className="border-b border-zinc-800/50">
+                        <td className="py-4 px-6 text-white flex items-center gap-2">
+                          <Users size={16} className="text-indigo-400" />
+                          <span>Team Members</span>
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          1
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          3
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          10
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          Unlimited
+                        </td>
+                      </tr>
+                      <tr className="border-b border-zinc-800/50">
+                        <td className="py-4 px-6 text-white flex items-center gap-2">
+                          <Shield size={16} className="text-indigo-400" />
+                          <span>Dedicated Support</span>
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <X size={16} className="inline text-red-400" />
                         </td>
                         <td className="py-4 px-6 text-center text-zinc-300">
                           <X size={16} className="inline text-red-400" />
