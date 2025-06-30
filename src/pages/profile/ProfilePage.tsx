@@ -5,7 +5,6 @@ import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
 import { ImportExportPromptsModal } from '../../components/prompts/ImportExportPromptsModal'
-import SubscriptionManager from '../../components/subscription/SubscriptionManager'
 import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
 import { useClipboard } from '../../hooks/useClipboard'
@@ -665,15 +664,6 @@ export const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                   </div>
-                  {/* Subscription Management */}
-                  <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
-                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                      <CreditCard size={20} className="text-indigo-400" />
-                      Subscription
-                    </h3>
-                    <SubscriptionManager />
-                  </div>
-                  
                 </div>
               </div>
             </div>

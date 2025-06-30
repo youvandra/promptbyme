@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { CreditCard, CheckCircle, AlertTriangle, Zap, Shield, Clock } from 'lucide-react'
+import { CreditCard, CheckCircle, AlertTriangle, Zap, Shield, Clock, DollarSign } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { supabase } from '../../lib/supabase'
 import { PRODUCTS } from '../../stripe-config'
 import { useNavigate } from 'react-router-dom'
 
-interface Subscription {
-  id: string
-  plan: 'free' | 'basic' | 'pro' | 'enterprise'
-  status: 'active' | 'past_due' | 'canceled' | 'inactive'
-  current_period_end?: string
-}
-
 const SubscriptionManager: React.FC = () => {
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [subscription, setSubscription] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const { user } = useAuthStore()
@@ -140,7 +133,7 @@ const SubscriptionManager: React.FC = () => {
           name: 'Basic Plan',
           color: 'bg-blue-600',
           icon: <Shield className="text-blue-400" />,
-          features: ['50 prompts', 'Full version control', 'Private sharing', 'API access']
+          features: ['Unlimited prompts', 'Full version control', 'Private sharing', 'API access']
         }
       case 'pro':
         return {

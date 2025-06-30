@@ -1,0 +1,289 @@
+import React, { useState } from 'react'
+import { Menu, CheckCircle, X, DollarSign, Zap, Shield, Users, FolderOpen, Code, Play } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { BoltBadge } from '../../components/ui/BoltBadge'
+import { SideNavbar } from '../../components/navigation/SideNavbar'
+import { useAuthStore } from '../../store/authStore'
+import { supabase } from '../../lib/supabase'
+import { PRODUCTS } from '../../stripe-config'
+
+export const PricingPage: React.FC = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const { user } = useAuthStore()
+
+  const handleSubscribe = async () => {
+    if (!user) return
+    
+    try {
+      setCheckoutLoading(true)
+      
+      // Call the Stripe checkout edge function
+      const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          price_id: PRODUCTS.MONTHLY_SUBSCRIPTION.priceId,
+          success_url: `${window.location.origin}/profile?checkout=success`,
+          cancel_url: `${window.location.origin}/profile?checkout=canceled`,
+          mode: 'subscription'
+        }
+      })
+      
+      if (error) {
+        throw error
+      }
+      
+      // Redirect to Stripe Checkout
+      window.location.href = url
+    } catch (error) {
+      console.error('Error creating checkout session:', error)
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
+
+  const plans = [
+    {
+      name: 'Free',
+      price: '$0',
+      period: 'forever',
+      description: 'Perfect for getting started',
+      features: [
+        '5 prompt gallery',
+        '1 team',
+        '2 prompt flow',
+        'Basic version control',
+        'Public sharing'
+      ],
+      buttonText: 'Current Plan',
+      buttonAction: () => {},
+      buttonDisabled: true,
+      highlighted: false,
+      icon: <Zap className="text-zinc-400" size={24} />
+    },
+    {
+      name: 'Basic',
+      price: '$10',
+      period: 'per month',
+      description: 'For individual creators',
+      features: [
+        'Unlimited prompt gallery',
+        '3 teams',
+        '10 prompt flows',
+        'Full version control',
+        'Private sharing',
+        'API access',
+        'Playground access'
+      ],
+      buttonText: user ? 'Subscribe Now' : 'Sign In to Subscribe',
+      buttonAction: user ? handleSubscribe : () => {},
+      buttonDisabled: checkoutLoading || !user,
+      highlighted: true,
+      icon: <Shield className="text-blue-400" size={24} />
+    }
+  ]
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-white relative">
+      {/* Layout Container */}
+      <div className="flex min-h-screen lg:pl-64">
+        {/* Side Navbar */}
+        <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+        
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-h-screen">
+          {/* Mobile Header */}
+          <header className="lg:hidden relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
+            <div className="px-4 py-4">
+              <div className="flex items-center justify-between">
+                <button
+                  data-menu-button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="text-zinc-400 hover:text-white transition-colors p-1"
+                >
+                  <Menu size={20} />
+                </button>
+                
+                <h1 className="text-lg font-semibold text-white">
+                  Pricing
+                </h1>
+                
+                <div className="w-6" />
+              </div>
+            </div>
+          </header>
+
+          {/* Content */}
+          <div className="relative z-10 flex-1">
+            <div className="w-full max-w-7xl px-6 mx-auto py-12">
+              {/* Page Header */}
+              <div className="text-center max-w-3xl mx-auto mb-16">
+                <h1 className="text-4xl font-bold text-white mb-4">
+                  Simple, Transparent Pricing
+                </h1>
+                <p className="text-xl text-zinc-400">
+                  Choose the plan that's right for you
+                </p>
+              </div>
+
+              {/* Pricing Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                {plans.map((plan, index) => (
+                  <div 
+                    key={index}
+                    className={`relative bg-zinc-900/50 border rounded-2xl overflow-hidden transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl ${
+                      plan.highlighted 
+                        ? 'border-indigo-500/50 shadow-lg shadow-indigo-500/10' 
+                        : 'border-zinc-800/50'
+                    }`}
+                  >
+                    {plan.highlighted && (
+                      <div className="absolute top-0 left-0 right-0 bg-indigo-600 text-white text-xs font-bold py-1 text-center">
+                        RECOMMENDED
+                      </div>
+                    )}
+                    
+                    <div className="p-8">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className={`p-3 rounded-xl ${plan.highlighted ? 'bg-indigo-600/20' : 'bg-zinc-800/50'}`}>
+                          {plan.icon}
+                        </div>
+                        <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
+                      </div>
+                      
+                      <div className="mb-6">
+                        <div className="flex items-baseline">
+                          <span className="text-4xl font-bold text-white">{plan.price}</span>
+                          <span className="text-zinc-400 ml-2">{plan.period}</span>
+                        </div>
+                        <p className="text-zinc-400 mt-2">{plan.description}</p>
+                      </div>
+                      
+                      <div className="space-y-4 mb-8">
+                        {plan.features.map((feature, i) => (
+                          <div key={i} className="flex items-start gap-3">
+                            <CheckCircle size={18} className={`flex-shrink-0 mt-0.5 ${plan.highlighted ? 'text-indigo-400' : 'text-emerald-400'}`} />
+                            <span className="text-zinc-300">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <button
+                        onClick={plan.buttonAction}
+                        disabled={plan.buttonDisabled}
+                        className={`w-full py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
+                          plan.highlighted
+                            ? 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-indigo-600/50'
+                            : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 disabled:bg-zinc-800/50'
+                        } disabled:cursor-not-allowed`}
+                      >
+                        {checkoutLoading && plan.highlighted ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <span>Processing...</span>
+                          </div>
+                        ) : (
+                          plan.buttonText
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Feature Comparison */}
+              <div className="mt-20 max-w-5xl mx-auto">
+                <h2 className="text-2xl font-bold text-white mb-8 text-center">Compare Features</h2>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b border-zinc-800">
+                        <th className="py-4 px-6 text-left text-zinc-400 font-medium">Feature</th>
+                        <th className="py-4 px-6 text-center text-zinc-400 font-medium">Free</th>
+                        <th className="py-4 px-6 text-center text-zinc-400 font-medium">Basic</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-zinc-800/50">
+                        <td className="py-4 px-6 text-white flex items-center gap-2">
+                          <FolderOpen size={16} className="text-indigo-400" />
+                          <span>Prompt Gallery</span>
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">5 prompts</td>
+                        <td className="py-4 px-6 text-center text-zinc-300">Unlimited</td>
+                      </tr>
+                      <tr className="border-b border-zinc-800/50">
+                        <td className="py-4 px-6 text-white flex items-center gap-2">
+                          <Users size={16} className="text-indigo-400" />
+                          <span>Teams</span>
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">1</td>
+                        <td className="py-4 px-6 text-center text-zinc-300">3</td>
+                      </tr>
+                      <tr className="border-b border-zinc-800/50">
+                        <td className="py-4 px-6 text-white flex items-center gap-2">
+                          <Play size={16} className="text-indigo-400" />
+                          <span>Prompt Flows</span>
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">2</td>
+                        <td className="py-4 px-6 text-center text-zinc-300">10</td>
+                      </tr>
+                      <tr className="border-b border-zinc-800/50">
+                        <td className="py-4 px-6 text-white flex items-center gap-2">
+                          <Play size={16} className="text-indigo-400" />
+                          <span>Playground Access</span>
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <X size={16} className="inline text-red-400" />
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <CheckCircle size={16} className="inline text-emerald-400" />
+                        </td>
+                      </tr>
+                      <tr className="border-b border-zinc-800/50">
+                        <td className="py-4 px-6 text-white flex items-center gap-2">
+                          <Code size={16} className="text-indigo-400" />
+                          <span>API Access</span>
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <X size={16} className="inline text-red-400" />
+                        </td>
+                        <td className="py-4 px-6 text-center text-zinc-300">
+                          <CheckCircle size={16} className="inline text-emerald-400" />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* FAQ Section */}
+              <div className="mt-20 max-w-3xl mx-auto">
+                <h2 className="text-2xl font-bold text-white mb-8 text-center">Frequently Asked Questions</h2>
+                
+                <div className="space-y-6">
+                  <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+                    <h3 className="text-lg font-medium text-white mb-2">Can I upgrade or downgrade at any time?</h3>
+                    <p className="text-zinc-400">Yes, you can upgrade to the Basic plan at any time. If you downgrade, your Basic plan benefits will continue until the end of your billing period.</p>
+                  </div>
+                  
+                  <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+                    <h3 className="text-lg font-medium text-white mb-2">How does billing work?</h3>
+                    <p className="text-zinc-400">We bill monthly. You'll be charged on the same date each month. You can cancel anytime from your account settings.</p>
+                  </div>
+                  
+                  <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+                    <h3 className="text-lg font-medium text-white mb-2">Do you offer refunds?</h3>
+                    <p className="text-zinc-400">We don't offer refunds, but you can cancel your subscription at any time to prevent future charges.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <BoltBadge />
+    </div>
+  )
+}

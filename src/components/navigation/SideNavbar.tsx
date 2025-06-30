@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   Home,
   DollarSign,
+  DollarSign,
   User, 
   LogOut, 
   X,
@@ -285,6 +286,24 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                   <div className="flex-1">
                     <p className="font-medium text-sm">{item.label}</p>
                     <p className="text-xs opacity-70">{item.description}</p>
+              
+              {/* Pricing */}
+              <div className="p-2 border-b border-zinc-800/30">
+                <Link
+                  to="/pricing"
+                  onClick={onToggle}
+                  className={`
+                    group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 w-full
+                    ${location.pathname === '/pricing'
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' 
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                    }
+                  `}
+                >
+                  <DollarSign size={18} className={location.pathname === '/pricing' ? 'text-white' : ''} />
+                  <span className="font-medium text-sm">Pricing</span>
+                </Link>
+              </div>
                   </div>
                 </Link>
               )
