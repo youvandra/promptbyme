@@ -5,8 +5,15 @@ import { supabase } from '../../lib/supabase'
 import { PRODUCTS } from '../../stripe-config'
 import { useNavigate } from 'react-router-dom'
 
+interface SubscriptionData {
+  id: string;
+  plan: 'free' | 'basic' | 'pro' | 'enterprise';
+  status: string;
+  current_period_end?: string;
+}
+
 const SubscriptionManager: React.FC = () => {
-  const [subscription, setSubscription] = useState<any>(null)
+  const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const { user } = useAuthStore()
@@ -114,33 +121,33 @@ const SubscriptionManager: React.FC = () => {
 
   const handleSubscribePro = async () => {
     if (!user) return
-    
+
     try {
-       setCheckoutLoading(true)
-       
-       // Call the Stripe checkout edge function
-       const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
-         body: {
-           price_id: PRODUCTS.PRO_SUBSCRIPTION.priceId,
-           success_url: `${window.location.origin}/profile?checkout=success`,
-           cancel_url: `${window.location.origin}/profile?checkout=canceled`,
-           mode: 'subscription'
-         }
-       })
-             
-       if (error) {
-         throw error
-       }
-       
-       // Redirect to Stripe Checkout
-       window.location.href = url
-     } catch (error) {
-       console.error('Error creating checkout session:', error)
-     } finally {
-       setCheckoutLoading(false)
-     }
-   }
-       
+      setCheckoutLoading(true)
+      
+      // Call the Stripe checkout edge function
+      const { data: { sessionId, url }, error } = await supabase.functions.invoke('stripe-checkout', {
+        body: {
+          price_id: PRODUCTS.PRO_SUBSCRIPTION.priceId,
+          success_url: `${window.location.origin}/profile?checkout=success`,
+          cancel_url: `${window.location.origin}/profile?checkout=canceled`,
+          mode: 'subscription'
+        }
+      })
+      
+      if (error) {
+        throw error
+      }
+      
+      // Redirect to Stripe Checkout
+      window.location.href = url
+    } catch (error) {
+      console.error('Error creating checkout session:', error)
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -163,14 +170,14 @@ const SubscriptionManager: React.FC = () => {
         return {
           name: 'Basic Plan',
           color: 'bg-indigo-600',
-          icon: <Shield className="text-indigo-400" />,
+          icon: <Shield className="text-indigo-400" size={24} />,
           features: ['Unlimited prompts', 'Full version control', 'Private sharing', 'API access']
         }
       case 'pro':
         return {
           name: 'Pro Plan',
           color: 'bg-purple-600',
-          icon: <Shield className="text-purple-400" />,
+          icon: <Shield className="text-purple-400" size={24} />,
           features: ['Everything in Basic', 'Team collaboration', 'Advanced analytics', 'Priority support', 'Unlimited prompt flows']
         }
       case 'enterprise':
@@ -333,7 +340,7 @@ const SubscriptionManager: React.FC = () => {
                 <h4 className="font-medium text-white">Pro Plan</h4>
               </div>
               <p className="text-sm text-zinc-400 mb-3">For teams and power users</p>
-              <div className="text-lg font-bold text-white mb-4">$25.00<span className="text-sm font-normal text-zinc-400">/month</span></div>
+              <div className="text-lg font-bold text-white mb-4">$30.00<span className="text-sm font-normal text-zinc-400">/month</span></div>
               <ul className="space-y-2 mb-4">
                 {getPlanDetails('pro').features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
@@ -374,7 +381,7 @@ const SubscriptionManager: React.FC = () => {
               <h4 className="font-medium text-white">Pro Plan</h4>
             </div>
             <p className="text-sm text-zinc-400 mb-3">Unlock advanced features and team collaboration</p>
-            <div className="text-lg font-bold text-white mb-4">$25.00<span className="text-sm font-normal text-zinc-400">/month</span></div>
+            <div className="text-lg font-bold text-white mb-4">$30.00<span className="text-sm font-normal text-zinc-400">/month</span></div>
             <ul className="space-y-2 mb-4">
               {getPlanDetails('pro').features.filter(f => !getPlanDetails('basic').features.includes(f)).map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
