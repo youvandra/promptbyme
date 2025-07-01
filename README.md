@@ -9,30 +9,37 @@
 
 ## ✨ Features
 
-### 🎯 **Prompt Management**
-- Create, edit, and organize AI prompts with markdown support
-- Public/private visibility controls
-- Rich text formatting with code blocks and syntax highlighting
-- Tagging and categorization system
+### 🎯 Prompt Management
+- Create, edit, and organize AI prompts with markdown support.
+- Public/private visibility controls.
+- Rich text formatting with code blocks and syntax highlighting (via `marked`). [8], [26], [35], [46]
+- Tagging and categorization system for AI applications.
+- Version control for prompts, allowing tracking of changes and reverts.
+- Attach notes, output samples, and media files (images, PDFs) to prompts.
 
-### 🔄 **Collaboration & Sharing**
-- Fork prompts to create your own variations
-- Like and bookmark community prompts
-- Share prompts via direct links
-- Team collaboration features
+### 🔄 Collaboration & Sharing
+- Fork prompts to create your own variations.
+- Share prompts via direct links.
+- Project spaces for visual mapping of prompt flows (nodes and connections).
+- Team collaboration features within project spaces (roles, invitations, audit logs).
 
-### 📊 **Analytics & Insights**
-- View counts and engagement metrics
-- Fork tracking for prompt evolution
-- Personal gallery with filtering and search
-- Usage statistics and trends
+### 📊 Analytics & Insights
+- View counts for public prompts.
+- Fork tracking for prompt evolution.
+- API call logging for monitoring usage and debugging.
 
-### 🎨 **Modern UI/UX**
-- Cinematic scroll-based landing page
-- Liquid glass morphism design
-- Fully responsive across all devices (mobile to ultrawide)
-- Dark theme with subtle neon accents
-- Smooth animations and micro-interactions
+### 🚀 Prompt Flows & API
+- Create sequential prompt chains (flows) for multi-step AI tasks.
+- Execute individual steps or entire flows.
+- Dedicated API endpoints to run prompts and flows programmatically.
+- API key management and usage logs.
+
+### 🎨 Modern UI/UX
+- Cinematic scroll-based landing page.
+- Liquid glass morphism design.
+- Fully responsive across all devices (mobile to ultrawide).
+- Dark theme with subtle neon accents.
+- Smooth animations and micro-interactions (`framer-motion`). [1], [16], [34], [44], [48]
 
 ## 🚀 Quick Start
 

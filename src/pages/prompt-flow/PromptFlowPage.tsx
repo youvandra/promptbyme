@@ -10,8 +10,6 @@ import {
   Play, 
   Save, 
   Trash2, 
-  ArrowLeft, 
-  ArrowRight,
   ChevronDown,
   ChevronUp,
   Copy,
@@ -26,6 +24,7 @@ import { FlowApiSettingsModal } from '../../components/prompt-flow/FlowApiSettin
 import { FlowManagementModal } from '../../components/prompt-flow/FlowManagementModal';
 import { FlowStepItem } from '../../components/prompt-flow/FlowStepItem';
 import { ConfirmationModal } from '../../components/ui/ConfirmationModal';
+import { CustomSelect, SelectOption } from '../../components/ui/CustomSelect';
 import { useAuthStore } from '../../store/authStore';
 import { useFlowStore, FlowStep } from '../../store/flowStore';
 
@@ -366,36 +365,41 @@ export const PromptFlowPage: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center gap-3 flex-wrap">
-                  {/* Flow Selection */}
-                  {flows.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={selectedFlowId || ''}
-                        onChange={(e) => handleFlowChange(e.target.value)}
-                        className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
-                      >
-                        {flows.filter(flow => flow.user_id === user?.id).map((flow) => (
-                          <option key={flow.id} value={flow.id}>
-                            {flow.name}
-                          </option>
-                        ))}
-                      </select>
-                      
-                      {selectedFlow && (
-                        <button
-                          onClick={() => setShowFlowManagementModal(true)}
-                          className="flex items-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200"
-                          title="Edit flow settings"
-                        >
-                          <Edit size={16} />
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  {/* Enhanced Flow Selection */}
+                  <div className="flex items-center gap-2">
+                    {flows.length > 0 ? (
+                      <>
+                        <CustomSelect
+                          options={flows
+                            .filter(flow => flow.user_id === user?.id)
+                            .map(flow => ({
+                              value: flow.id,
+                              label: flow.name
+                            }))}
+                          value={selectedFlowId || ''}
+                          onChange={handleFlowChange}
+                          placeholder="Select a flow"
+                          className="w-56"
+                        />
+                        
+                        {selectedFlow && (
+                          <button
+                            onClick={() => setShowFlowManagementModal(true)}
+                            className="flex items-center justify-center p-3 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-xl transition-all duration-200 transform hover:scale-105"
+                            title="Edit flow settings"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-zinc-500 text-sm italic">No flows available</div>
+                    )}
+                  </div>
                   
                   <button
                     onClick={() => setShowSettingsModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105"
                   >
                     <Settings size={16} />
                     <span>API Settings</span>
@@ -403,7 +407,7 @@ export const PromptFlowPage: React.FC = () => {
                   
                   <button
                     onClick={() => setShowCreateFlow(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg hover:shadow-indigo-500/20"
                   >
                     <Plus size={16} />
                     <span>New Flow</span>
@@ -437,7 +441,7 @@ export const PromptFlowPage: React.FC = () => {
                       <button
                         onClick={handleExecuteFlow}
                         disabled={executing || selectedFlow.steps.length === 0}
-                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed transform hover:scale-105 shadow-md hover:shadow-lg hover:shadow-emerald-500/20"
                       >
                         {executing ? (
                           <>
@@ -455,7 +459,7 @@ export const PromptFlowPage: React.FC = () => {
                       <button
                         onClick={clearOutputs}
                         disabled={executing}
-                        className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:bg-zinc-800/50 disabled:text-zinc-500 text-zinc-300 rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 disabled:bg-zinc-800/30 disabled:text-zinc-500 text-zinc-300 rounded-xl transition-all duration-200 disabled:cursor-not-allowed transform hover:scale-105"
                       >
                         <Trash2 size={16} />
                         <span>Clear Outputs</span>
@@ -474,11 +478,11 @@ export const PromptFlowPage: React.FC = () => {
                     {selectedFlow.steps.length === 0 ? (
                       <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-8 text-center">
                         <p className="text-zinc-400 mb-4">
-                          No steps added to this flow yet
+                          No steps have been added to this flow yet
                         </p>
                         <button
                           onClick={() => setShowPromptModal(true)}
-                          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-all duration-200 mx-auto"
+                          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 mx-auto transform hover:scale-105 shadow-md hover:shadow-lg hover:shadow-indigo-500/20"
                         >
                           <Plus size={16} />
                           <span>Add First Step</span>
@@ -614,15 +618,15 @@ export const PromptFlowPage: React.FC = () => {
                 <div className="text-center py-12">
                   <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-8">
                     <Zap className="mx-auto text-zinc-500 mb-4" size={48} />
-                    <h3 className="text-xl font-semibold text-white mb-2">
+                    <h3 className="text-2xl font-semibold text-white mb-3">
                       No Flows Yet
                     </h3>
-                    <p className="text-zinc-400 mb-6">
+                    <p className="text-zinc-400 mb-8 max-w-md mx-auto">
                       Create your first prompt flow to get started
                     </p>
                     <button
                       onClick={() => setShowCreateFlow(true)}
-                      className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 mx-auto"
+                      className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 mx-auto shadow-md hover:shadow-lg hover:shadow-indigo-500/20"
                     >
                       <Plus size={16} />
                       <span>Create First Flow</span>

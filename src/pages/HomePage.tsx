@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Zap, Shield, Layers, Users, Globe, ChevronDown } from 'lucide-react';
+import { ArrowRight, Plus, Zap, Shield, Layers, Users, Globe, ChevronDown } from 'lucide-react';
 import { Section } from '../components/ui/Section';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
@@ -284,8 +284,8 @@ export const HomePage: React.FC = () => {
                     />
                     <div>
                       <p className="text-white font-medium">{testimonial.author}</p>
-                      <p className="text-zinc-400 text-sm">{testimonial.role}</p>
-                    </div>
+                 <Button size="lg" variant="outline" to="/features">
+                   View Features
                   </div>
                 </div>
               </GlassPanel>

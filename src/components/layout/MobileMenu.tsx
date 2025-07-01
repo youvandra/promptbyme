@@ -27,10 +27,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
       ]
     },
     { 
-      name: 'Pricing', 
-      path: '/pricing' 
-    },
-    { 
       name: 'About', 
       path: '/about',
       dropdown: [

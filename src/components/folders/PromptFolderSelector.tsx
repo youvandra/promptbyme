@@ -154,7 +154,7 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
           ) : (
             <>
               <Folder size={16} className="text-zinc-400" />
-              <span className="text-sm text-zinc-400">Select Folder</span>
+              <span className="text-sm text-zinc-400">Select</span>
             </>
           )}
         </div>

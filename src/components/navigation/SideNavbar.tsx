@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   Home,
+  DollarSign,
   User, 
   LogOut, 
   X,
@@ -289,7 +290,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
             })}
           </div>
         </nav>
-
+        
         {/* Bottom Section - Sign Out, User Profile - Fixed at bottom */}
         {user && (
           <div className="mt-auto border-t border-zinc-800/50 flex-shrink-0">
@@ -310,7 +311,25 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                 <span className="font-medium text-sm">Playground</span>
               </Link>
             </div>
-
+              
+            {/* Pricing */}
+            <div className="p-2 border-b border-zinc-800/30">
+              <Link
+                to="/pricing"
+                onClick={onToggle}
+                className={`
+                  group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 w-full
+                  ${location.pathname === '/pricing'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' 
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                  }
+                `}
+              >
+                <DollarSign size={18} className={location.pathname === '/pricing' ? 'text-white' : ''} />
+                <span className="font-medium text-sm">Pricing</span>
+              </Link>
+            </div>
+              
             {/* Sign Out Button */}
             <div className="p-2 border-b border-zinc-800/30">
               <button

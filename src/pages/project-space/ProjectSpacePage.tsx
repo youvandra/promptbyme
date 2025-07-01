@@ -21,7 +21,7 @@ import 'reactflow/dist/style.css'
 import { 
   Menu, 
   Plus, 
-  Trash2, 
+  Trash2,
   Settings, 
   Share2, 
   Users, 
@@ -35,6 +35,7 @@ import {
   Mail,
   Check,
   Link,
+  Info,
   Layers,
   Edit
 } from 'lucide-react'
@@ -46,6 +47,7 @@ import CustomFlowNode from '../../components/project-space/CustomFlowNode'
 import { NodeDetailsToolbar } from '../../components/project-space/NodeDetailsToolbar'
 import { TeamMembersDisplay } from '../../components/project-space/TeamMembersDisplay'
 import { ProjectMembersModal } from '../../components/project-space/ProjectMembersModal'
+import { ProjectLogsModal } from '../../components/project-space/ProjectLogsModal'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
@@ -62,6 +64,7 @@ export const ProjectSpacePage: React.FC = () => {
   const [showNodeDetails, setShowNodeDetails] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [showMembersModal, setShowMembersModal] = useState(false)
+  const [showLogsModal, setShowLogsModal] = useState(false)
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null)
   const [selectedNodeForToolbar, setSelectedNodeForToolbar] = useState<FlowNode | null>(null)
   const [isConnectingNodes, setIsConnectingNodes] = useState(false)
@@ -86,6 +89,7 @@ export const ProjectSpacePage: React.FC = () => {
   const { 
     projects,
     selectedProject,
+    projectMembers,
     currentUserRole,
     loading,
     fetchProjects,
@@ -152,6 +156,7 @@ export const ProjectSpacePage: React.FC = () => {
  // Convert flow nodes to ReactFlow nodes
  useEffect(() => {
    if (selectedProject?.nodes) {
+    const { user } = useAuthStore.getState();
      const flowNodes = selectedProject.nodes.map(node => {       
        // Define node color based on type
        let nodeColor;
@@ -182,6 +187,8 @@ export const ProjectSpacePage: React.FC = () => {
          nodeData: node,
          type: node.type,
           activeNodeId: activeNodeId,
+        projectMembers: projectMembers,
+        currentUserId: user?.id,
          onEdit: (nodeId: string) => {
            const node = selectedProject?.nodes?.find(n => n.id === nodeId)
            if (node) {
@@ -573,22 +580,34 @@ useEffect(() => {
                     <div className="flex items-center gap-2">
                       {/* Team Members Display - only show if project exists */}
                       {selectedProject && (
-                        <TeamMembersDisplay 
-                          onClick={() => setShowMembersModal(true)}
-                          projectId={selectedProject.id}
-                          currentUserRole={currentUserRole}
-                        />
+                        <>
+                          <TeamMembersDisplay 
+                            onClick={() => setShowMembersModal(true)}
+                            projectId={selectedProject.id}
+                            currentUserRole={currentUserRole}
+                          />
+                          {/* Invite Member Button - only show for admins */}
+                          {selectedProject && (currentUserRole === 'admin' || selectedProject.user_id === user.id) && (
+                            <button
+                              onClick={() => setShowInviteModal(true)}
+                              className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
+                            >
+                              <UserPlus size={14} className="text-indigo-400" />
+                              <span>Invite</span>
+                            </button>
+                          )}
+                        </>
                       )}
-                      {/* Invite Member Button - only show for admins */}
-                      {selectedProject && (currentUserRole === 'admin' || selectedProject.user_id === user.id) && (
-                        <button
-                          onClick={() => setShowInviteModal(true)}
-                          className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
-                        >
-                          <UserPlus size={14} className="text-indigo-400" />
-                          <span>Invite</span>
-                        </button>
-                      )}
+                      {/* Logs Button - only show for admins */}
+                          {selectedProject && (currentUserRole === 'admin' || selectedProject.user_id === user.id) && (
+                            <button
+                              onClick={() => setShowLogsModal(true)}
+                              className="flex items-center gap-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 rounded-lg transition-all duration-200 text-sm"
+                            >
+                              <Info size={14} className="text-indigo-400" />
+                              <span>Logs</span>
+                            </button>
+                          )}
                     </div>
                   </div>
                 </div>
@@ -722,6 +741,12 @@ useEffect(() => {
         currentUserRole={currentUserRole}
       />
       
+      <ProjectLogsModal
+        isOpen={showLogsModal}
+        onClose={() => setShowLogsModal(false)}
+        projectId={selectedProject?.id || ''}
+      />
+      
       <AnimatePresence>
         {(selectedNodeForToolbar || selectedNode) && (currentUserRole === 'admin' || currentUserRole === 'editor') && (
           <NodeDetailsToolbar
@@ -760,6 +785,8 @@ useEffect(() => {
           setSelectedNode(null)
         }}
         node={selectedNode}
+        currentUserRole={currentUserRole}
+        projectMembers={projectMembers}
         onSave={handleNodeSave}
       />
 
@@ -771,6 +798,7 @@ useEffect(() => {
           setSelectedNode(null)
         }}
         node={selectedNode}
+        projectMembers={projectMembers}
         onEdit={(nodeId) => {
           const node = selectedProject?.nodes?.find(n => n.id === nodeId)
           if (node) {

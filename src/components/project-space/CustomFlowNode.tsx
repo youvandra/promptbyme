@@ -1,26 +1,23 @@
 import React, { useState } from 'react'
 import { Handle, Position, NodeProps } from 'reactflow'
-import { Edit3, GitBranch, Target, Upload, Trash2, Maximize2, Zap } from 'lucide-react'
+import { Edit3, GitBranch, Target, Upload, Trash2, Maximize2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FlowNode } from '../../store/projectSpaceStore'
+import { FlowNode, ProjectMember } from '../../store/projectSpaceStore'
+
+interface NodeData {
+  label: string;
+  content: string;
+  nodeData: FlowNode;
+  type: string;
+  activeNodeId: string | null;
+  projectMembers?: ProjectMember[];
+  currentUserId?: string;
+  onEdit: (nodeId: string) => void;
+  onDelete: (nodeId: string) => void;
+  onViewDetails: (nodeId: string) => void;
+}
 
 const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
-  
-  // Get the appropriate icon based on node type
-  const getNodeIcon = () => {
-    switch (data.type) {
-      case 'input':
-        return <Zap size={16} className="text-purple-400" />
-      case 'prompt':
-        return <Edit3 size={16} className="text-blue-400" />
-      case 'condition':
-        return <GitBranch size={16} className="text-yellow-400" />
-      case 'output':
-        return <Target size={16} className="text-green-400" />
-      default:
-        return <Edit3 size={16} className="text-blue-400" />
-    }
-  }
 
   // Get the appropriate background color based on node type
   const getNodeColor = () => {
@@ -49,69 +46,68 @@ const CustomFlowNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       
       {/* Node Content */}
       <motion.div 
-        className={`w-[250px] h-[150px] ${getNodeColor()} backdrop-blur-sm border rounded-xl p-4 shadow-lg ${
+        className={`w-[250px] h-[150px] ${getNodeColor()} backdrop-blur-sm border rounded-xl p-4 shadow-lg flex flex-col items-start ${
           selected ? 'ring-2 ring-white/50' : ''
+        } ${
+          data.nodeData.metadata?.assignTo === data.currentUserId ? 
+          'ring-2 ring-indigo-400/70 animate-pulse shadow-lg shadow-indigo-500/30' : ''
         }`}
+        onDoubleClick={() => data.onViewDetails(id)}
         animate={{
           boxShadow: selected ? '0 0 15px rgba(255, 255, 255, 0.2)' : '0 0 5px rgba(0, 0, 0, 0.2)'
         }} 
         transition={{ duration: 0.2 }}
       >
         <div className="flex items-center gap-2 mb-2">
-          {getNodeIcon()}
-          <div className="text-white font-medium text-sm truncate flex-1">
-            {data.label || data.title}
+          <div className="text-white font-medium text-sm truncate flex-1 text-left">
+            <span>{data.label || data.title}</span>
+            
+            {/* Show assignee if present */}
+            {data.nodeData.metadata?.assignTo && data.projectMembers && (
+              <div className="mt-1 text-xs flex items-center gap-1.5 bg-indigo-500/10 px-2 py-1 rounded-md inline-block">
+                <span>Assigned to:</span>
+                {(() => {
+                  const assignedUserId = data.nodeData.metadata.assignTo;
+                  const assignedMember = data.projectMembers.find(m => m.user_id === assignedUserId);
+                  
+                  if (!assignedMember) return <span>Unknown</span>;
+                  
+                  return (
+                    <div className="flex items-center gap-1.5">
+                      {assignedMember.avatar_url ? (
+                        <img 
+                          src={assignedMember.avatar_url} 
+                          alt={assignedMember.display_name || assignedMember.email}
+                          className="w-4 h-4 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-4 h-4 bg-indigo-600/30 rounded-full flex items-center justify-center">
+                          <span className="text-[8px] text-indigo-300">
+                            {(assignedMember.display_name || assignedMember.email).charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-indigo-300">
+                        {assignedMember.user_id === data.currentUserId ? " (You)" : assignedMember.display_name}
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
         </div>
         
-        <div className="text-zinc-300 text-xs line-clamp-3 break-words overflow-y-auto flex-1">
-          {data.content}
+        {/* Node Content */}
+        <div className="text-xs text-zinc-300 mt-2 whitespace-pre-wrap w-full max-h-[80px] overflow-hidden text-left">
+          {data.content ? (data.content.length > 150 ? `${data.content.substring(0, 150)}...` : data.content) : ''}
         </div>
-        
-        {/* Toolbar */}
-        <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-zinc-900/90 backdrop-blur-sm border border-zinc-700/50 rounded-lg shadow-xl z-50 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (data.onViewDetails) data.onViewDetails(data.nodeData.id);
-            }}
-            className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-            title="View details"
-          >
-            <Maximize2 size={16} />
-          </button>
-          
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (data.onEdit) data.onEdit(data.nodeData.id);
-            }}
-            className="p-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-            title="Edit node"
-          >
-            <Edit3 size={16} />
-          </button>
-          
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm(`(customflow) Are you sure you want to delete this ${data.nodeData.type} node?`)) {
-                if (data.onDelete) data.onDelete(data.nodeData.id);
-              }
-            }}
-            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-            title="Delete node"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-
       </motion.div>
       
       {/* Output Handle (bottom) */}
       <Handle
         type="source"
-        position={Position.Bottom} 
+        position={Position.Bottom}
         className="w-3 h-3 bg-zinc-700 border-2 border-white cursor-pointer !opacity-100"
       />
     </div>

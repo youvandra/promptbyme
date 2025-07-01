@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { User, Mail, Calendar, Settings, Shield, Trash2, Save, Menu, Camera, Upload, X, Link as LinkIcon, Copy, CheckCircle, Globe, FileText, CreditCard } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
+import { ImportExportPromptsModal } from '../../components/prompts/ImportExportPromptsModal'
+import SubscriptionManager from '../../components/subscription/SubscriptionManager'
 import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
 import { useClipboard } from '../../hooks/useClipboard'
@@ -27,12 +29,15 @@ export const ProfilePage: React.FC = () => {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [showImportExportModal, setShowImportExportModal] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
+  const [checkoutStatus, setCheckoutStatus] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const { copied, copyToClipboard } = useClipboard()
   
+  const location = useLocation()
   const [formData, setFormData] = useState({
     email: '',
     displayName: '',
@@ -46,6 +51,26 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     initialize()
   }, [initialize])
+
+  // Check for checkout status in URL query params
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const checkout = params.get('checkout')
+    if (checkout) {
+      setCheckoutStatus(checkout)
+      
+      // Show toast message based on checkout status
+      if (checkout === 'success') {
+        setToast({ message: 'Subscription activated successfully!', type: 'success' })
+      } else if (checkout === 'canceled') {
+        setToast({ message: 'Checkout was canceled', type: 'error' })
+      }
+      
+      // Clear the query parameter from the URL
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, document.title, newUrl)
+    }
+  }, [location])
 
   useEffect(() => {
     if (user) {
@@ -283,12 +308,14 @@ export const ProfilePage: React.FC = () => {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="text-zinc-400">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-zinc-600 border-t-indigo-500 rounded-full animate-spin" />
-            <span>Loading profile...</span>
-          </div>
+      <div className="p-6">
+        <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <CreditCard size={20} className="text-indigo-400" />
+            Subscription
+          </h3>
+    
+          <SubscriptionManager />
         </div>
       </div>
     )
@@ -356,23 +383,35 @@ export const ProfilePage: React.FC = () => {
               {/* Page Header */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-white">
-                    Profile Settings
+                  <h1 className="text-3xl font-bold text-white mb-2">
+                    Profile
                   </h1>
                   <p className="text-zinc-400">
                     Manage your account and preferences
                   </p>
                 </div>
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  disabled={saving}
-                  className={`inline-flex items-center gap-2 px-4 py-2 ${
-                    isEditing ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'
-                  } disabled:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 self-start lg:self-auto btn-hover disabled:transform-none`}
-                >
-                  {isEditing ? <X size={16} /> : <Settings size={16} />}
-                  <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
-                </button>
+                <div className="flex items-center gap-3 self-start lg:self-auto">
+                  <button
+                    onClick={() => setShowImportExportModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover shadow-md hover:shadow-lg hover:shadow-zinc-500/10"
+                  >
+                    <FileText size={16} className="text-indigo-400" />
+                    <span>Import/Export</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    disabled={saving}
+                    className={`inline-flex items-center gap-2 px-4 py-2.5 ${
+                      isEditing ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'
+                    } disabled:bg-zinc-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover disabled:transform-none shadow-md hover:shadow-lg ${
+                      isEditing ? 'hover:shadow-red-500/20' : 'hover:shadow-indigo-500/20'
+                    }`}
+                  >
+                    {isEditing ? <X size={16} /> : <Settings size={16} />}
+                    <span>{isEditing ? 'Cancel' : 'Edit Profile'}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-8">
@@ -591,7 +630,7 @@ export const ProfilePage: React.FC = () => {
                 </div>
 
                 {/* Account Settings */}
-                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6">
+                <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
                   <h3 className="text-lg font-semibold text-white mb-4">
                     Privacy & Notifications
                   </h3>
@@ -642,6 +681,16 @@ export const ProfilePage: React.FC = () => {
 
       {/* Bolt Badge */}
       <BoltBadge />
+      
+      {/* Import/Export Modal */}
+      {showImportExportModal && (
+        <ImportExportPromptsModal
+          isOpen={showImportExportModal}
+          onClose={() => setShowImportExportModal(false)}
+          onSuccess={(message) => setToast({ message, type: 'success' })}
+          onError={(message) => setToast({ message, type: 'error' })}
+        />
+      )}
     </div>
   )
 }

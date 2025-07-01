@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { X, Save, Type, GitBranch, Target, Upload } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { FlowNode } from '../../store/projectSpaceStore'
+import { CustomSelect, SelectOption } from '../ui/CustomSelect'
 
 interface NodeEditorModalProps {
   isOpen: boolean
   onClose: () => void
   node: FlowNode | null
+  currentUserRole?: string | null
+  projectMembers?: ProjectMember[]
   onSave: (nodeId: string, updates: Partial<FlowNode>) => Promise<void>
 }
 
@@ -41,16 +44,20 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
   isOpen,
   onClose,
   node,
+  currentUserRole,
+  projectMembers = [],
   onSave
 }) => {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [assignTo, setAssignTo] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (node && isOpen) {
       setTitle(node.title)
       setContent(node.content)
+      setAssignTo(node.metadata?.assignTo || '')
     }
   }, [node, isOpen])
 
@@ -61,7 +68,11 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
     try {
       await onSave(node.id, {
         title: title.trim(),
-        content: content.trim()
+        content: content.trim(),
+        metadata: {
+          ...node.metadata,
+          assignTo: assignTo.trim() || undefined
+        }
       })
       onClose()
     } catch (error) {
@@ -127,6 +138,27 @@ export const NodeEditorModal: React.FC<NodeEditorModalProps> = ({
               autoFocus
             />
           </div>
+          
+          {/* Assign To - Only visible for admins */}
+          {currentUserRole === 'admin' && projectMembers && projectMembers.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
+                Assign To <span className="text-zinc-500">(optional)</span>
+              </label>
+              <CustomSelect
+                value={assignTo}
+                onChange={setAssignTo}
+                options={projectMembers
+                  .filter(member => member.status === 'accepted')
+                  .map(member => ({
+                    value: member.user_id,
+                    label: member.display_name || member.email,
+                    avatarUrl: member.avatar_url
+                  }))}
+                placeholder="Select team member"
+              />
+            </div>
+          )}
 
           {/* Content */}
           <div>

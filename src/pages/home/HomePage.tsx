@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Menu, Zap } from 'lucide-react'
+import { Menu, Zap, Plus } from 'lucide-react'
 import { PromptEditor } from '../../components/prompts/PromptEditor'
 import { AuthModal } from '../../components/auth/AuthModal'
 import { Toast } from '../../components/ui/Toast'
