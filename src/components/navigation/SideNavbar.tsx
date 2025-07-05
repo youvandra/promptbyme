@@ -6,9 +6,6 @@ import {
   Play, 
   Layers, 
   User, 
-  LogOut, 
-  ChevronLeft, 
-  ChevronRight,
   Zap,
   Code
 } from 'lucide-react'
@@ -104,30 +101,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
               </ul>
             </nav>
 
-            {/* User section */}
-            {user && (
-              <div className="p-4 border-t border-zinc-800/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                      {user.email?.charAt(0).toUpperCase() || 'U'}
-                    </div>
-                    <div className="overflow-hidden">
-                      <p className="text-sm text-white font-medium truncate">
-                        {user.email}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => signOut()}
-                    className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors"
-                    title="Sign out"
-                  >
-                    <LogOut size={16} />
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Mobile close button */}
             {isMobileView && (
@@ -135,7 +108,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                 onClick={onToggle}
                 className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors lg:hidden"
               >
-                <ChevronLeft size={20} />
+                Close
               </button>
             )}
           </motion.aside>
@@ -148,7 +121,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
           onClick={onToggle}
           className={`fixed bottom-6 ${isOpen ? 'left-64' : 'left-6'} z-50 p-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-full shadow-lg transition-all duration-200 hidden lg:block`}
         >
-          {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+          {isOpen ? 'Close' : 'Open'}
         </button>
       )}
     </>
