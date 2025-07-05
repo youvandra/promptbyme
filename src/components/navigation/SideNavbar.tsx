@@ -114,16 +114,6 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
           </motion.aside>
         )}
       </AnimatePresence>
-
-      {/* Toggle button for desktop */}
-      {!isMobileView && (
-        <button
-          onClick={onToggle}
-          className={`fixed bottom-6 ${isOpen ? 'left-64' : 'left-6'} z-50 p-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-full shadow-lg transition-all duration-200 hidden lg:block`}
-        >
-          {isOpen ? 'Close' : 'Open'}
-        </button>
-      )}
     </>
   )
 }
