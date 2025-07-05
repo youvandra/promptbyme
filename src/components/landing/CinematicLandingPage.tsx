@@ -139,8 +139,8 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
           className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950"
           animate={{
             background: activeStep >= 3 ? 
-              "radial-gradient(ellipse at 30% 70%, rgba(139,92,246,0.15), transparent 70%)" :
-              "radial-gradient(ellipse at 70% 30%, rgba(99,102,241,0.15), transparent 70%)"
+              "radial-gradient(ellipse at 30% 70%, rgba(118,162,247,0.15), transparent 70%)" :
+              "radial-gradient(ellipse at 70% 30%, rgba(255,106,61,0.15), transparent 70%)"
           }}
           transition={{ duration: 2, ease: "easeInOut" }}
         >
@@ -149,8 +149,8 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
             className="absolute inset-0"
             animate={{
               background: `
-                radial-gradient(circle at ${50 + Math.sin(activeStep) * 20}% ${50 + Math.cos(activeStep) * 20}%, rgba(139,92,246,0.1), transparent 70%),
-                linear-gradient(135deg, rgba(99,102,241,0.05) 0%, transparent 50%, rgba(139,92,246,0.05) 100%)
+                radial-gradient(circle at ${50 + Math.sin(activeStep) * 20}% ${50 + Math.cos(activeStep) * 20}%, rgba(118,162,247,0.1), transparent 70%),
+                linear-gradient(135deg, rgba(118,162,247,0.05) 0%, transparent 50%, rgba(255,106,61,0.05) 100%)
               `
             }}
             transition={{ duration: 1.5, ease: "easeInOut" }}
@@ -163,7 +163,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                 key={i}
                 className="absolute w-48 h-48 md:w-96 md:h-96 rounded-full opacity-5"
                 style={{
-                  background: `radial-gradient(circle, ${i % 2 === 0 ? 'rgba(99,102,241,0.3)' : 'rgba(139,92,246,0.3)'}, transparent 70%)`,
+                  background: `radial-gradient(circle, ${i % 2 === 0 ? 'rgba(118,162,247,0.3)' : 'rgba(255,106,61,0.3)'}, transparent 70%)`,
                   left: `${-10 + i * 25}%`,
                   top: `${10 + i * 15}%`,
                 }}
@@ -212,7 +212,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
             {/* Sign In Button - with proper padding from edge */}
             <motion.button
               onClick={onSignInClick}
-              className="glass-button bg-white/5 backdrop-blur-xl border border-white/10 hover:border-white/20 text-white font-medium px-4 py-1.5 md:px-6 md:py-2 rounded-xl md:rounded-2xl transition-all duration-300 hover:bg-white/10 text-sm md:text-base"
+              className="glass-button bg-gray-800/20 backdrop-blur-xl border border-gray-700/30 hover:border-primary/30 text-white font-medium px-4 py-1.5 md:px-6 md:py-2 rounded-xl md:rounded-2xl transition-all duration-300 hover:bg-primary/10 text-sm md:text-base"
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
@@ -245,7 +245,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                 {activeStep === 0 ? (
                   <>
                     Design before
-                    <span className="block bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    <span className="block bg-gradient-to-r from-primary via-secondary to-highlight bg-clip-text text-transparent">
                       you prompt
                     </span>
                   </>
@@ -280,17 +280,17 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     className="text-center w-full"
                   >
                     <div className="glass-panel bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-12 shadow-2xl max-w-2xl mx-auto">
-                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl md:rounded-3xl" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl md:rounded-3xl" />
                       <div className="absolute inset-0 rounded-2xl md:rounded-3xl ring-1 ring-inset ring-white/20" />
                       
                       <div className="relative z-10 space-y-6 md:space-y-8">
                         <motion.button 
                           onClick={scrollToNext}
-                          className="group relative px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl md:rounded-2xl text-white font-semibold text-base md:text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/25 w-full sm:w-auto"
+                          className="group relative px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-primary to-secondary rounded-xl md:rounded-2xl text-white font-semibold text-base md:text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/25 w-full sm:w-auto"
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
                           <span className="relative flex items-center justify-center gap-2">
                             Enter Playground
                             <Play size={16} className="md:w-5 md:h-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -338,7 +338,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     className="w-full max-w-5xl"
                   >
                     <motion.div 
-                      className="glass-panel bg-zinc-900/40 backdrop-blur-2xl border border-zinc-700/50 rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 shadow-2xl"
+                      className="glass-panel bg-gray-900/30 backdrop-blur-2xl border border-gray-800/30 rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 shadow-2xl"
                       animate={{ 
                         y: Math.sin(Date.now() * 0.001) * 2,
                         rotateX: scrollProgress * 2
@@ -348,7 +348,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         ease: "easeInOut"
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-xl md:rounded-2xl" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl md:rounded-2xl" />
                       
                       <div className="relative z-10">
                         <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
@@ -374,14 +374,14 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 md:mt-6 gap-3">
                           <div className="flex flex-wrap items-center gap-2 md:gap-3">
                             <motion.button 
-                              className="glass-button px-3 py-1.5 md:px-4 md:py-2 bg-indigo-600/20 border border-indigo-500/30 rounded-md md:rounded-lg text-indigo-300 hover:bg-indigo-600/30 transition-all duration-200 text-xs md:text-sm"
+                              className="glass-button px-3 py-1.5 md:px-4 md:py-2 bg-primary/20 border border-primary/30 rounded-md md:rounded-lg text-primary hover:bg-primary/30 transition-all duration-200 text-xs md:text-sm"
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
                               Save Prompt
                             </motion.button>
                             <motion.button 
-                              className="glass-button px-3 py-1.5 md:px-4 md:py-2 bg-emerald-600/20 border border-emerald-500/30 rounded-md md:rounded-lg text-emerald-300 hover:bg-emerald-600/30 transition-all duration-200 text-xs md:text-sm"
+                              className="glass-button px-3 py-1.5 md:px-4 md:py-2 bg-secondary/20 border border-secondary/30 rounded-md md:rounded-lg text-secondary hover:bg-secondary/30 transition-all duration-200 text-xs md:text-sm"
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
@@ -416,7 +416,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     <div className="space-y-4 md:space-y-8">
                       {/* Visibility toggle */}
                       <motion.div 
-                        className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-xl md:rounded-2xl p-4 md:p-6"
+                        className="glass-panel bg-gray-900/30 backdrop-blur-xl border border-gray-800/30 rounded-xl md:rounded-2xl p-4 md:p-6"
                         initial={{ y: 15, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -435,7 +435,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                                 transition={{ duration: 0.3, delay: index * 0.1 }}
                                 className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg transition-all duration-200 text-xs md:text-sm ${
                                   option.active 
-                                    ? 'bg-indigo-600/30 border border-indigo-500/50 text-indigo-300' 
+                                    ? 'bg-primary/30 border border-primary/50 text-primary' 
                                     : 'bg-zinc-800/50 border border-zinc-700/50 text-zinc-400 hover:text-white'
                                 }`}
                                 whileHover={{ scale: 1.05 }}
@@ -451,19 +451,19 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
 
                       {/* Public preview */}
                       <motion.div 
-                        className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-indigo-500/50 transition-all duration-300 group cursor-pointer"
+                        className="glass-panel bg-gray-900/30 backdrop-blur-xl border border-gray-800/30 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-primary/50 transition-all duration-300 group cursor-pointer"
                         initial={{ y: 15, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
                         whileHover={{ scale: 1.02, y: -5 }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         
                         <div className="relative z-10">
                           <div className="flex items-center justify-between mb-3 md:mb-4">
                             <div className="flex items-center gap-2 md:gap-3">
                               <motion.div 
-                                className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base"
+                                className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base"
                                 whileHover={{ rotate: 360 }}
                                 transition={{ duration: 0.6 }}
                               >
@@ -477,7 +477,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                             <motion.div
                               whileHover={{ rotate: 15, scale: 1.1 }}
                             >
-                              <Share2 size={16} className="md:w-5 md:h-5 text-zinc-400 group-hover:text-indigo-400 transition-colors duration-300" />
+                              <Share2 size={16} className="md:w-5 md:h-5 text-zinc-400 group-hover:text-primary transition-colors duration-300" />
                             </motion.div>
                           </div>
                           
@@ -532,8 +532,8 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                       <svg className="absolute inset-0 w-full h-full pointer-events-none hidden md:block" style={{ zIndex: 1 }}>
                         <defs>
                           <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="rgb(99, 102, 241)" stopOpacity="0.6" />
-                            <stop offset="100%" stopColor="rgb(139, 92, 246)" stopOpacity="0.6" />
+                            <stop offset="0%" stopColor="#76a2f7" stopOpacity="0.6" />
+                            <stop offset="100%" stopColor="#ff6a3d" stopOpacity="0.6" />
                           </linearGradient>
                         </defs>
                         <motion.path
@@ -550,9 +550,9 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                       {/* Flow nodes */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 relative z-10">
                         {[
-                          { title: "Landing Page", desc: "Hero, features, pricing", icon: <Zap size={20} className="md:w-6 md:h-6" />, color: "indigo" },
-                          { title: "Authentication", desc: "Login, signup, verification", icon: <Users size={20} className="md:w-6 md:h-6" />, color: "purple" },
-                          { title: "Database Schema", desc: "Tables, relations, indexes", icon: <GitBranch size={20} className="md:w-6 md:h-6" />, color: "pink" }
+                          { title: "Landing Page", desc: "Hero, features, pricing", icon: <Zap size={20} className="md:w-6 md:h-6" />, color: "#76a2f7" },
+                          { title: "Authentication", desc: "Login, signup, verification", icon: <Users size={20} className="md:w-6 md:h-6" />, color: "#ff6a3d" },
+                          { title: "Database Schema", desc: "Tables, relations, indexes", icon: <GitBranch size={20} className="md:w-6 md:h-6" />, color: "#f5f7a1" }
                         ].map((node, index) => (
                           <motion.div
                             key={index}
@@ -563,19 +563,25 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                               rotateX: scrollProgress * 5
                             }}
                             transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
-                            className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-indigo-500/50 transition-all duration-500 group cursor-pointer preserve-3d"
+                            className="glass-panel bg-gray-900/30 backdrop-blur-xl border border-gray-800/30 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-primary/50 transition-all duration-500 group cursor-pointer preserve-3d"
                             whileHover={{ 
                               scale: 1.05,
                               rotateY: 5,
                               z: 50
                             }}
                           >
-                            <div className={`absolute inset-0 bg-gradient-to-br from-${node.color}-500/5 to-${node.color}-500/5 rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                            <div className="absolute inset-0 bg-gradient-to-br rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ 
+                              background: `linear-gradient(to bottom right, ${node.color}10, ${node.color}10)` 
+                            }} />
                             
                             <div className="relative z-10">
                               <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
-                                <motion.div 
-                                  className={`p-2 bg-${node.color}-500/20 rounded-lg text-${node.color}-400`}
+                                <motion.div
+                                  className="p-2 rounded-lg"
+                                  style={{ 
+                                    backgroundColor: `${node.color}20`,
+                                    color: node.color
+                                  }}
                                   whileHover={{ rotate: 360 }}
                                   transition={{ duration: 0.6 }}
                                 >
@@ -588,7 +594,8 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                               <div className="flex items-center justify-between">
                                 <span className="text-xs text-zinc-500">3 prompts</span>
                                 <motion.div 
-                                  className="w-2 h-2 bg-emerald-400 rounded-full"
+                                  className="w-2 h-2 rounded-full"
+                                  style={{ backgroundColor: node.color }}
                                   animate={{ scale: [1, 1.5, 1] }}
                                   transition={{ duration: 2, repeat: Infinity }}
                                 />
@@ -670,16 +677,16 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: columnIndex * 0.1 + itemIndex * 0.1 }}
-                                className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-lg md:rounded-xl p-3 md:p-4 hover:border-indigo-500/50 transition-all duration-300 cursor-pointer group"
+                                className="glass-panel bg-gray-900/30 backdrop-blur-xl border border-gray-800/30 rounded-lg md:rounded-xl p-3 md:p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer group"
                                 whileHover={{ scale: 1.02, y: -2 }}
                               >
                                 <div className="flex items-center justify-between">
                                 <span className="text-white text-xs md:text-sm font-medium">{item.name}</span>
                                 <motion.div 
                                   className={`w-2 h-2 rounded-full ${
-                                    item.color === 'emerald' ? 'bg-emerald-400' :
-                                    item.color === 'indigo' ? 'bg-indigo-400' :
-                                    'bg-zinc-400'
+                                    item.color === 'emerald' ? 'bg-primary' :
+                                    item.color === 'indigo' ? 'bg-secondary' :
+                                    'bg-highlight'
                                   }`}
                                   animate={{ scale: [1, 1.2, 1] }}
                                   transition={{ duration: 2, repeat: Infinity, delay: itemIndex * 0.5 }}
@@ -705,14 +712,14 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
                     className="w-full max-w-5xl"
                   >
-                    <div className="glass-panel bg-zinc-900/40 backdrop-blur-xl border border-zinc-700/50 rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8">
-                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-xl md:rounded-2xl" />
+                    <div className="glass-panel bg-gray-900/30 backdrop-blur-xl border border-gray-800/30 rounded-2xl p-4 md:p-6 lg:p-8">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl md:rounded-2xl" />
                       
                       <div className="relative z-10">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 gap-3">
                           <h3 className="text-xl md:text-2xl font-bold text-white">Team Members</h3>
                           <motion.button 
-                            className="glass-button px-3 py-2 md:px-4 md:py-2 bg-indigo-600/20 border border-indigo-500/30 rounded-md md:rounded-lg text-indigo-300 hover:bg-indigo-600/30 transition-all duration-200 flex items-center gap-2 text-sm md:text-base self-start sm:self-auto"
+                            className="glass-button px-3 py-2 md:px-4 md:py-2 bg-primary/20 border border-primary/30 rounded-md md:rounded-lg text-primary hover:bg-primary/30 transition-all duration-200 flex items-center gap-2 text-sm md:text-base self-start sm:self-auto"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
@@ -738,14 +745,14 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                               <div className="flex items-center gap-2 md:gap-3">
                                 <div className="relative">
                                   <motion.div 
-                                    className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base"
+                                    className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base"
                                     whileHover={{ rotate: 360 }}
                                     transition={{ duration: 0.6 }}
                                   >
                                     {member.avatar}
                                   </motion.div>
-                                  <div className={`absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 border-zinc-800 ${
-                                    member.status === 'online' ? 'bg-emerald-400' : 'bg-yellow-400'
+                                  <div className={`absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 border-gray-800 ${
+                                    member.status === 'online' ? 'bg-primary' : 'bg-highlight'
                                   }`} />
                                 </div>
                                 <div className="min-w-0 flex-1">
@@ -772,7 +779,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     className="text-center w-full max-w-4xl"
                   >
                     <div className="glass-panel bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-12 shadow-2xl">
-                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl md:rounded-3xl" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl md:rounded-3xl" />
                       <div className="absolute inset-0 rounded-2xl md:rounded-3xl ring-1 ring-inset ring-white/20" />
                       
                       <div className="relative z-10 space-y-6 md:space-y-8">
@@ -780,7 +787,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ duration: 0.6, delay: 0.2 }}
-                          className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6"
+                          className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-primary to-secondary rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6"
                         >
                           <CheckCircle size={32} className="md:w-10 md:h-10 text-white" />
                         </motion.div>
@@ -811,11 +818,11 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         >
                           <motion.button 
                             onClick={onSignInClick}
-                            className="group relative px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl md:rounded-2xl text-white font-semibold text-base md:text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/25"
+                            className="group relative px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-primary to-secondary rounded-xl md:rounded-2xl text-white font-semibold text-base md:text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/25"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
                             <span className="relative flex items-center justify-center gap-2">
                               Start Building
                               <ArrowRight size={16} className="md:w-5 md:h-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -850,7 +857,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
               <motion.div
                 key={index}
                 className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all duration-300 ${
-                  index === activeStep ? 'bg-indigo-400 w-4 md:w-8' : 'bg-zinc-600'
+                  index === activeStep ? 'bg-primary w-4 md:w-8' : 'bg-zinc-600'
                 }`}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
