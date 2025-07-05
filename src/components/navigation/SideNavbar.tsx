@@ -6,6 +6,7 @@ import {
   User, 
   LogOut, 
   X,
+  Zap,
   Menu,
   Play,
   Layers,
