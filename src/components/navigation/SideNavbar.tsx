@@ -102,6 +102,30 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
             </nav>
 
 
+            {/* Profile Bar */}
+            {user && (
+              <div className="mt-auto p-4 border-t border-zinc-800/50 bg-zinc-900/80">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-medium text-sm">
+                        {user.email?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => signOut()}
+                    className="w-full mt-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-sm transition-colors text-center"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Mobile close button */}
             {isMobileView && (
               <button
