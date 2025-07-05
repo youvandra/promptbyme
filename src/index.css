@@ -323,32 +323,37 @@ html {
   height: 20px;
   width: 20px;
   border-radius: 50%;
-  background: #6366f1;
+  background: #76a2f7;
   cursor: pointer;
   border: 2px solid #ffffff;
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 0 1px rgba(118, 162, 247, 0.3);
 }
 
 .slider::-moz-range-thumb {
   height: 20px;
   width: 20px;
   border-radius: 50%;
-  background: #6366f1;
+  background: #76a2f7;
   cursor: pointer;
   border: 2px solid #ffffff;
-  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 0 1px rgba(118, 162, 247, 0.3);
 }
 
-/* Enhanced glass morphism */
-.glass-morphism {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+/* Neo Brutalism styles */
+.neo-brutalism {
+  border: 2px solid #000;
+  box-shadow: 6px 6px 0px 0px #000;
+  transition: all 0.2s ease;
+}
+
+.neo-brutalism:hover {
+  transform: translate(3px, 3px);
+  box-shadow: 3px 3px 0px 0px #000;
+}
+
+.neo-brutalism:active {
+  transform: translate(6px, 6px);
+  box-shadow: none;
 }
 
 /* Cinematic depth layers */
@@ -385,55 +390,21 @@ html {
   border: 2px solid rgba(255, 255, 255, 1);
   width: 10px;
   height: 10px;
-  box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 5px rgba(118, 162, 247, 0.5);
 }
 
 .react-flow__handle:hover {
   background: white;
-  box-shadow: 0 0 8px rgba(99, 102, 241, 0.8);
+  box-shadow: 0 0 8px rgba(118, 162, 247, 0.8);
 }
 
 /* Make edges more visible */
 .react-flow__edge {
-  filter: drop-shadow(0 0 3px rgba(99, 102, 241, 0.5));
+  filter: drop-shadow(0 0 3px rgba(118, 162, 247, 0.5));
 }
 
 .react-flow__edge.selected {
-  filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.8));
-}
-
-.react-flow__edge-path {
-  stroke-linecap: round;
-}
-/* React Flow Node Customization */
-.react-flow__node {
-  background: transparent !important;
-  padding: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* Ensure node handles are visible */
-.react-flow__handle {
-  background: rgba(255, 255, 255, 0.8);
-  border: 2px solid rgba(255, 255, 255, 1);
-  width: 10px;
-  height: 10px;
-  box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
-}
-
-.react-flow__handle:hover {
-  background: white;
-  box-shadow: 0 0 8px rgba(99, 102, 241, 0.8);
-}
-
-/* Make edges more visible */
-.react-flow__edge {
-  filter: drop-shadow(0 0 3px rgba(99, 102, 241, 0.5));
-}
-
-.react-flow__edge.selected {
-  filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.8));
+  filter: drop-shadow(0 0 5px rgba(118, 162, 247, 0.8));
 }
 
 .react-flow__edge-path {

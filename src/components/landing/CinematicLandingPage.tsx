@@ -18,7 +18,11 @@ import {
   Layers,
   Target,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  MessageSquare,
+  Braces,
+  Workflow,
+  Lightbulb
 } from 'lucide-react'
 
 interface CinematicLandingPageProps {
@@ -130,55 +134,50 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
 
   const currentConfig = stepConfigs[activeStep] || stepConfigs[0]
 
+  // Neo Brutalism features
+  const features = [
+    {
+      icon: <MessageSquare size={24} />,
+      title: "Prompt Templates",
+      description: "Start with proven templates for different AI models and use cases"
+    },
+    {
+      icon: <Braces size={24} />,
+      title: "Variable System",
+      description: "Create dynamic prompts with reusable variables and parameters"
+    },
+    {
+      icon: <Workflow size={24} />,
+      title: "Flow Builder",
+      description: "Chain prompts together into powerful multi-step workflows"
+    },
+    {
+      icon: <Lightbulb size={24} />,
+      title: "Version Control",
+      description: "Track changes and improvements to your prompts over time"
+    }
+  ]
+
   return (
     <div ref={containerRef} className="relative" style={{ height: '700vh' }}>
       {/* Pinned container */}
       <div className="sticky top-0 h-screen overflow-hidden">
         {/* Enhanced animated background for ultrawide support */}
         <motion.div 
-          className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950"
+          className="absolute inset-0 bg-zinc-950"
           animate={{
             background: activeStep >= 3 ? 
-              "radial-gradient(ellipse at 30% 70%, rgba(118,162,247,0.15), transparent 70%)" :
-              "radial-gradient(ellipse at 70% 30%, rgba(255,106,61,0.15), transparent 70%)"
+              "radial-gradient(ellipse at 30% 70%, rgba(118,162,247,0.05), transparent 70%)" :
+              "radial-gradient(ellipse at 70% 30%, rgba(255,106,61,0.05), transparent 70%)"
           }}
           transition={{ duration: 2, ease: "easeInOut" }}
         >
-          {/* Ultrawide background elements */}
-          <motion.div 
-            className="absolute inset-0"
-            animate={{
-              background: `
-                radial-gradient(circle at ${50 + Math.sin(activeStep) * 20}% ${50 + Math.cos(activeStep) * 20}%, rgba(118,162,247,0.1), transparent 70%),
-                linear-gradient(135deg, rgba(118,162,247,0.05) 0%, transparent 50%, rgba(255,106,61,0.05) 100%)
-              `
-            }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
-          />
-          
-          {/* Abstract shapes for ultrawide screens */}
-          <div className="absolute inset-0 overflow-hidden">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-48 h-48 md:w-96 md:h-96 rounded-full opacity-5"
-                style={{
-                  background: `radial-gradient(circle, ${i % 2 === 0 ? 'rgba(118,162,247,0.3)' : 'rgba(255,106,61,0.3)'}, transparent 70%)`,
-                  left: `${-10 + i * 25}%`,
-                  top: `${10 + i * 15}%`,
-                }}
-                animate={{
-                  x: [0, 50, 0],
-                  y: [0, -30, 0],
-                  scale: [1, 1.1, 1],
-                }}
-                transition={{
-                  duration: 8 + i * 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-            ))}
+          {/* Grid pattern overlay */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="w-full h-full" style={{ 
+              backgroundImage: 'linear-gradient(to right, #76a2f7 1px, transparent 1px), linear-gradient(to bottom, #76a2f7 1px, transparent 1px)',
+              backgroundSize: '20px 20px' 
+            }}></div>
           </div>
         </motion.div>
 
@@ -193,18 +192,18 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             {/* Logo */}
             <motion.div 
-              className="flex items-center gap-2 md:gap-3 glass-panel bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl px-3 py-1.5 md:px-4 md:py-2"
+              className="flex items-center gap-2 md:gap-3 bg-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl shadow-[6px_6px_0px_0px_rgba(118,162,247,1)]"
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-              whileHover={{ opacity: 1, scale: 1.05 }}
+              whileHover={{ scale: 1.05 }}
             >
               <img 
                 src="/Logo Promptby.me(1).png" 
                 alt="promptby.me logo" 
                 className="w-6 h-6 md:w-8 md:h-8 object-contain"
               />
-              <h1 className="text-sm md:text-lg font-semibold text-white">
+              <h1 className="text-sm md:text-lg font-bold text-black font-heading">
                 promptby.me
               </h1>
             </motion.div>
@@ -212,12 +211,10 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
             {/* Sign In Button - with proper padding from edge */}
             <motion.button
               onClick={onSignInClick}
-              className="glass-button bg-gray-800/20 backdrop-blur-xl border border-gray-700/30 hover:border-primary/30 text-white font-medium px-4 py-1.5 md:px-6 md:py-2 rounded-xl md:rounded-2xl transition-all duration-300 hover:bg-primary/10 text-sm md:text-base"
+              className="bg-highlight text-black font-bold px-4 py-1.5 md:px-6 md:py-2 rounded-xl md:rounded-2xl shadow-[4px_4px_0px_0px_rgba(118,162,247,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(118,162,247,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-200 text-sm md:text-base"
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
-              whileHover={{ opacity: 1, scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
             >
               Sign in
             </motion.button>
@@ -236,7 +233,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
               transition={{ duration: 0.8 }}
             >
               <motion.h1 
-                className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-4 md:mb-6 leading-tight px-2"
+                className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-4 md:mb-6 leading-tight px-2 font-heading"
                 key={currentConfig.title}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -245,7 +242,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                 {activeStep === 0 ? (
                   <>
                     Design before
-                    <span className="block bg-gradient-to-r from-primary via-secondary to-highlight bg-clip-text text-transparent">
+                    <span className="block text-primary">
                       you prompt
                     </span>
                   </>
@@ -279,18 +276,24 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="text-center w-full"
                   >
-                    <div className="glass-panel bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-12 shadow-2xl max-w-2xl mx-auto">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl md:rounded-3xl" />
-                      <div className="absolute inset-0 rounded-2xl md:rounded-3xl ring-1 ring-inset ring-white/20" />
-                      
-                      <div className="relative z-10 space-y-6 md:space-y-8">
+                    <div className="bg-white p-6 md:p-8 lg:p-12 rounded-2xl md:rounded-3xl shadow-[8px_8px_0px_0px_rgba(118,162,247,1)] max-w-2xl mx-auto">
+                      <div className="space-y-6 md:space-y-8">
+                        <div className="grid grid-cols-2 gap-4">
+                          {features.map((feature, index) => (
+                            <div key={index} className="bg-gray-100 p-4 rounded-xl border-2 border-black">
+                              <div className="bg-primary text-white p-2 rounded-lg w-fit mb-2">
+                                {feature.icon}
+                              </div>
+                              <h3 className="text-black font-bold text-lg mb-1 font-heading">{feature.title}</h3>
+                              <p className="text-gray-700 text-sm">{feature.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                        
                         <motion.button 
                           onClick={scrollToNext}
-                          className="group relative px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-primary to-secondary rounded-xl md:rounded-2xl text-white font-semibold text-base md:text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/25 w-full sm:w-auto"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          className="group relative px-6 py-3 md:px-8 md:py-4 bg-secondary text-white font-bold text-base md:text-lg rounded-xl md:rounded-2xl shadow-[6px_6px_0px_0px_rgba(118,162,247,1)] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(118,162,247,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-200 w-full sm:w-auto"
                         >
-                          <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
                           <span className="relative flex items-center justify-center gap-2">
                             Enter Playground
                             <Play size={16} className="md:w-5 md:h-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -314,7 +317,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                               animate={{ y: [0, 5, 0] }}
                               transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                             >
-                              <ChevronDown size={14} className="md:w-4 md:h-4 group-hover:text-indigo-400 transition-colors duration-300" />
+                              <ChevronDown size={14} className="md:w-4 md:h-4 group-hover:text-primary transition-colors duration-300" />
                             </motion.div>
                           </motion.button>
                         </motion.div>
@@ -338,7 +341,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     className="w-full max-w-5xl"
                   >
                     <motion.div 
-                      className="glass-panel bg-gray-900/30 backdrop-blur-2xl border border-gray-800/30 rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 shadow-2xl"
+                      className="bg-white p-4 md:p-6 lg:p-8 rounded-xl md:rounded-2xl shadow-[8px_8px_0px_0px_rgba(118,162,247,1)]"
                       animate={{ 
                         y: Math.sin(Date.now() * 0.001) * 2,
                         rotateX: scrollProgress * 2
@@ -348,23 +351,21 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         ease: "easeInOut"
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl md:rounded-2xl" />
-                      
                       <div className="relative z-10">
                         <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
                           <div className="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full" />
                           <div className="w-2 h-2 md:w-3 md:h-3 bg-yellow-500 rounded-full" />
                           <div className="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full" />
-                          <span className="text-zinc-500 text-xs md:text-sm ml-2 md:ml-4">New Prompt</span>
+                          <span className="text-gray-500 text-xs md:text-sm ml-2 md:ml-4 font-bold">New Prompt</span>
                         </div>
                         
-                        <div className="bg-zinc-800/50 rounded-lg md:rounded-xl p-3 md:p-4 lg:p-6 min-h-[150px] md:min-h-[200px] relative">
-                          <div className="text-zinc-300 text-sm md:text-base lg:text-lg leading-relaxed">
+                        <div className="bg-gray-100 rounded-lg md:rounded-xl p-3 md:p-4 lg:p-6 min-h-[150px] md:min-h-[200px] relative border-2 border-black">
+                          <div className="text-gray-800 text-sm md:text-base lg:text-lg leading-relaxed">
                             {typedText}
                             <motion.span
                               animate={{ opacity: [1, 0, 1] }}
                               transition={{ duration: 1, repeat: Infinity }}
-                              className="text-indigo-400"
+                              className="text-primary"
                             >
                               |
                             </motion.span>
@@ -374,21 +375,21 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 md:mt-6 gap-3">
                           <div className="flex flex-wrap items-center gap-2 md:gap-3">
                             <motion.button 
-                              className="glass-button px-3 py-1.5 md:px-4 md:py-2 bg-primary/20 border border-primary/30 rounded-md md:rounded-lg text-primary hover:bg-primary/30 transition-all duration-200 text-xs md:text-sm"
+                              className="bg-primary text-white font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-200 text-xs md:text-sm"
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
                               Save Prompt
                             </motion.button>
                             <motion.button 
-                              className="glass-button px-3 py-1.5 md:px-4 md:py-2 bg-secondary/20 border border-secondary/30 rounded-md md:rounded-lg text-secondary hover:bg-secondary/30 transition-all duration-200 text-xs md:text-sm"
+                              className="bg-secondary text-white font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-200 text-xs md:text-sm"
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
                               Make Public
                             </motion.button>
                           </div>
-                          <div className="flex items-center gap-1 md:gap-2 text-zinc-500">
+                          <div className="flex items-center gap-1 md:gap-2 text-gray-500 font-bold">
                             <EyeOff size={12} className="md:w-4 md:h-4" />
                             <span className="text-xs md:text-sm">Private</span>
                           </div>
@@ -416,13 +417,13 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     <div className="space-y-4 md:space-y-8">
                       {/* Visibility toggle */}
                       <motion.div 
-                        className="glass-panel bg-gray-900/30 backdrop-blur-xl border border-gray-800/30 rounded-xl md:rounded-2xl p-4 md:p-6"
+                        className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl shadow-[6px_6px_0px_0px_rgba(118,162,247,1)]"
                         initial={{ y: 15, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5, ease: "easeOut" }}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 md:mb-4 gap-3">
-                          <h3 className="text-base md:text-lg font-semibold text-white">Visibility Settings</h3>
+                          <h3 className="text-base md:text-lg font-bold text-black font-heading">Visibility Settings</h3>
                           <div className="flex items-center gap-2 md:gap-4">
                             {[
                               { label: "Private", icon: <EyeOff size={14} />, active: false },
@@ -433,10 +434,10 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                                className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg transition-all duration-200 text-xs md:text-sm ${
+                                className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg transition-all duration-200 text-xs md:text-sm font-bold border-2 border-black ${
                                   option.active 
-                                    ? 'bg-primary/30 border border-primary/50 text-primary' 
-                                    : 'bg-zinc-800/50 border border-zinc-700/50 text-zinc-400 hover:text-white'
+                                    ? 'bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]' 
+                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                 }`}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -451,55 +452,58 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
 
                       {/* Public preview */}
                       <motion.div 
-                        className="glass-panel bg-gray-900/30 backdrop-blur-xl border border-gray-800/30 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-primary/50 transition-all duration-300 group cursor-pointer"
+                        className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl shadow-[6px_6px_0px_0px_rgba(255,106,61,1)] border-2 border-black transition-all duration-300 group cursor-pointer"
                         initial={{ y: 15, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-                        whileHover={{ scale: 1.02, y: -5 }}
+                        whileHover={{ 
+                          y: -5, 
+                          shadow: "[3px_3px_0px_0px_rgba(255,106,61,1)]",
+                          translateX: 3,
+                          translateY: 8
+                        }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        
                         <div className="relative z-10">
                           <div className="flex items-center justify-between mb-3 md:mb-4">
                             <div className="flex items-center gap-2 md:gap-3">
                               <motion.div 
-                                className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base"
+                                className="w-8 h-8 md:w-10 md:h-10 bg-secondary rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base"
                                 whileHover={{ rotate: 360 }}
                                 transition={{ duration: 0.6 }}
                               >
                                 A
                               </motion.div>
                               <div>
-                                <h4 className="text-white font-medium text-sm md:text-base">Alex Chen</h4>
-                                <p className="text-zinc-500 text-xs md:text-sm">2 hours ago</p>
+                                <h4 className="text-black font-bold text-sm md:text-base font-heading">Alex Chen</h4>
+                                <p className="text-gray-500 text-xs md:text-sm">2 hours ago</p>
                               </div>
                             </div>
                             <motion.div
                               whileHover={{ rotate: 15, scale: 1.1 }}
                             >
-                              <Share2 size={16} className="md:w-5 md:h-5 text-zinc-400 group-hover:text-primary transition-colors duration-300" />
+                              <Share2 size={16} className="md:w-5 md:h-5 text-gray-500 group-hover:text-secondary transition-colors duration-300" />
                             </motion.div>
                           </div>
                           
-                          <h3 className="text-base md:text-lg font-semibold text-white mb-2">Complete SaaS Landing Page Flow</h3>
-                          <p className="text-zinc-400 text-xs md:text-sm mb-3 md:mb-4">A comprehensive prompt flow for building modern SaaS landing pages with conversion optimization...</p>
+                          <h3 className="text-base md:text-lg font-bold text-black mb-2 font-heading">Complete SaaS Landing Page Flow</h3>
+                          <p className="text-gray-700 text-xs md:text-sm mb-3 md:mb-4">A comprehensive prompt flow for building modern SaaS landing pages with conversion optimization...</p>
                           
-                          <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-zinc-500">
+                          <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-gray-500">
                             <motion.div 
-                              className="flex items-center gap-1"
+                              className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg border border-black"
                               whileHover={{ scale: 1.1 }}
                             >
                               <Eye size={10} className="md:w-3 md:h-3" />
                               <span>1.2k views</span>
                             </motion.div>
                             <motion.div 
-                              className="flex items-center gap-1"
+                              className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg border border-black"
                               whileHover={{ scale: 1.1 }}
                             >
                               <span>❤️ 89 likes</span>
                             </motion.div>
                             <motion.div 
-                              className="flex items-center gap-1"
+                              className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg border border-black"
                               whileHover={{ scale: 1.1 }}
                             >
                               <GitBranch size={10} className="md:w-3 md:h-3" />
@@ -539,7 +543,8 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         <motion.path
                           d="M 200 100 Q 300 50 400 100 Q 500 150 600 100"
                           stroke="url(#flowGradient)"
-                          strokeWidth="2"
+                          strokeWidth="4"
+                          strokeDasharray="8 4"
                           fill="none"
                           initial={{ pathLength: 0 }}
                           animate={{ pathLength: 1 }}
@@ -563,39 +568,30 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                               rotateX: scrollProgress * 5
                             }}
                             transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
-                            className="glass-panel bg-gray-900/30 backdrop-blur-xl border border-gray-800/30 rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-primary/50 transition-all duration-500 group cursor-pointer preserve-3d"
+                            className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 group cursor-pointer"
+                            style={{ backgroundColor: index === 0 ? '#76a2f7' : index === 1 ? '#ff6a3d' : '#f5f7a1' }}
                             whileHover={{ 
                               scale: 1.05,
-                              rotateY: 5,
                               z: 50
                             }}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-br rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ 
-                              background: `linear-gradient(to bottom right, ${node.color}10, ${node.color}10)` 
-                            }} />
-                            
                             <div className="relative z-10">
                               <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
                                 <motion.div
-                                  className="p-2 rounded-lg"
-                                  style={{ 
-                                    backgroundColor: `${node.color}20`,
-                                    color: node.color
-                                  }}
+                                  className="p-2 rounded-lg bg-white"
                                   whileHover={{ rotate: 360 }}
                                   transition={{ duration: 0.6 }}
                                 >
                                   {node.icon}
                                 </motion.div>
-                                <h3 className="text-base md:text-lg font-semibold text-white">{node.title}</h3>
+                                <h3 className="text-base md:text-lg font-bold text-black font-heading">{node.title}</h3>
                               </div>
-                              <p className="text-zinc-400 text-xs md:text-sm mb-3 md:mb-4">{node.desc}</p>
+                              <p className="text-black font-medium text-xs md:text-sm mb-3 md:mb-4">{node.desc}</p>
                               
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-zinc-500">3 prompts</span>
+                                <span className="text-xs font-bold bg-white px-2 py-1 rounded-lg border border-black">3 prompts</span>
                                 <motion.div 
-                                  className="w-2 h-2 rounded-full"
-                                  style={{ backgroundColor: node.color }}
+                                  className="w-3 h-3 rounded-full bg-black"
                                   animate={{ scale: [1, 1.5, 1] }}
                                   transition={{ duration: 2, repeat: Infinity }}
                                 />
@@ -627,22 +623,22 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         {
                           title: "Content Production",
                           items: [
-                            { name: "Content ideas", color: "emerald" },
-                            { name: "Content script", color: "emerald" },
-                            { name: "Generate Caption", color: "indigo" },
+                            { name: "Content ideas", color: "primary" },
+                            { name: "Content script", color: "primary" },
+                            { name: "Generate Caption", color: "secondary" },
                           ],
                         },
                         {
                           title: "Audience Engagement",
                           items: [
-                            { name: "CTA for audience reply", color: "zinc" },
+                            { name: "CTA for audience reply", color: "highlight" },
                           ],
                         },
                         {
                           title: "Sponsored Endorsement Draft",
                           items: [
-                            { name: "Brand brief", color: "indigo" },
-                            { name: "Soft-selling story", color: "zinc" },
+                            { name: "Brand brief", color: "secondary" },
+                            { name: "Soft-selling story", color: "highlight" },
                           ],
                         },
                       ]
@@ -659,9 +655,9 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                           transition={{ duration: 0.5, delay: columnIndex * 0.1, ease: "easeOut" }}
                         >
                           <div className="flex items-center gap-2 mb-3 md:mb-4">
-                            <h3 className="text-base md:text-lg font-semibold text-white">{column.title}</h3>
+                            <h3 className="text-base md:text-lg font-bold text-white font-heading">{column.title}</h3>
                             <motion.span 
-                              className="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded-full"
+                              className="text-xs font-bold bg-white text-black px-2 py-1 rounded-full border-2 border-black"
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
                               transition={{ duration: 0.3, delay: columnIndex * 0.2 + 0.3 }}
@@ -677,21 +673,20 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: columnIndex * 0.1 + itemIndex * 0.1 }}
-                                className="glass-panel bg-gray-900/30 backdrop-blur-xl border border-gray-800/30 rounded-lg md:rounded-xl p-3 md:p-4 hover:border-primary/50 transition-all duration-300 cursor-pointer group"
-                                whileHover={{ scale: 1.02, y: -2 }}
+                                className={`p-3 md:p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 cursor-pointer group ${
+                                  item.color === 'primary' ? 'bg-primary text-white' :
+                                  item.color === 'secondary' ? 'bg-secondary text-white' :
+                                  'bg-highlight text-black'
+                                }`}
+                                whileHover={{ scale: 1.02 }}
                               >
                                 <div className="flex items-center justify-between">
-                                <span className="text-white text-xs md:text-sm font-medium">{item.name}</span>
-                                <motion.div 
-                                  className={`w-2 h-2 rounded-full ${
-                                    item.color === 'emerald' ? 'bg-primary' :
-                                    item.color === 'indigo' ? 'bg-secondary' :
-                                    'bg-highlight'
-                                  }`}
-                                  animate={{ scale: [1, 1.2, 1] }}
-                                  transition={{ duration: 2, repeat: Infinity, delay: itemIndex * 0.5 }}
-                                />
-
+                                  <span className="text-xs md:text-sm font-bold">{item.name}</span>
+                                  <motion.div 
+                                    className="w-2 h-2 rounded-full bg-black"
+                                    animate={{ scale: [1, 1.2, 1] }}
+                                    transition={{ duration: 2, repeat: Infinity, delay: itemIndex * 0.5 }}
+                                  />
                                 </div>
                               </motion.div>
                             ))}
@@ -712,14 +707,12 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
                     className="w-full max-w-5xl"
                   >
-                    <div className="glass-panel bg-gray-900/30 backdrop-blur-xl border border-gray-800/30 rounded-2xl p-4 md:p-6 lg:p-8">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl md:rounded-2xl" />
-                      
+                    <div className="bg-white p-4 md:p-6 lg:p-8 rounded-2xl border-2 border-black shadow-[8px_8px_0px_0px_rgba(118,162,247,1)]">
                       <div className="relative z-10">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 gap-3">
-                          <h3 className="text-xl md:text-2xl font-bold text-white">Team Members</h3>
+                          <h3 className="text-xl md:text-2xl font-bold text-black font-heading">Team Members</h3>
                           <motion.button 
-                            className="glass-button px-3 py-2 md:px-4 md:py-2 bg-primary/20 border border-primary/30 rounded-md md:rounded-lg text-primary hover:bg-primary/30 transition-all duration-200 flex items-center gap-2 text-sm md:text-base self-start sm:self-auto"
+                            className="bg-primary text-white font-bold px-3 py-2 md:px-4 md:py-2 rounded-md md:rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-200 flex items-center gap-2 text-sm md:text-base self-start sm:self-auto"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
@@ -730,34 +723,38 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                           {[
-                            { name: "Alex Chen", role: "Product Designer", avatar: "A", status: "online" },
-                            { name: "Sarah Kim", role: "Frontend Dev", avatar: "S", status: "online" },
-                            { name: "Mike Johnson", role: "Backend Dev", avatar: "M", status: "away" }
+                            { name: "Alex Chen", role: "Product Designer", avatar: "A", status: "online", color: "primary" },
+                            { name: "Sarah Kim", role: "Frontend Dev", avatar: "S", status: "online", color: "secondary" },
+                            { name: "Mike Johnson", role: "Backend Dev", avatar: "M", status: "away", color: "highlight" }
                           ].map((member, index) => (
                             <motion.div
                               key={index}
                               initial={{ opacity: 0, y: 20 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ duration: 0.4, delay: index * 0.1 }}
-                              className="glass-panel bg-zinc-800/30 backdrop-blur-xl border border-zinc-700/30 rounded-lg md:rounded-xl p-3 md:p-4 hover:border-indigo-500/50 transition-all duration-300 group"
+                              className={`p-3 md:p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 group ${
+                                member.color === 'primary' ? 'bg-primary' : 
+                                member.color === 'secondary' ? 'bg-secondary' : 
+                                'bg-highlight'
+                              }`}
                               whileHover={{ scale: 1.02 }}
                             >
                               <div className="flex items-center gap-2 md:gap-3">
                                 <div className="relative">
                                   <motion.div 
-                                    className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white font-semibold text-sm md:text-base"
+                                    className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center text-black font-bold text-sm md:text-base border-2 border-black"
                                     whileHover={{ rotate: 360 }}
                                     transition={{ duration: 0.6 }}
                                   >
                                     {member.avatar}
                                   </motion.div>
-                                  <div className={`absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 border-gray-800 ${
-                                    member.status === 'online' ? 'bg-primary' : 'bg-highlight'
+                                  <div className={`absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 border-black ${
+                                    member.status === 'online' ? 'bg-green-500' : 'bg-yellow-500'
                                   }`} />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <h4 className="text-white font-medium text-sm md:text-base truncate">{member.name}</h4>
-                                  <p className="text-zinc-400 text-xs md:text-sm truncate">{member.role}</p>
+                                  <h4 className={`font-bold text-sm md:text-base truncate ${member.color === 'highlight' ? 'text-black' : 'text-white'}`}>{member.name}</h4>
+                                  <p className={`text-xs md:text-sm truncate ${member.color === 'highlight' ? 'text-gray-700' : 'text-white/80'}`}>{member.role}</p>
                                 </div>
                               </div>
                             </motion.div>
@@ -778,22 +775,19 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="text-center w-full max-w-4xl"
                   >
-                    <div className="glass-panel bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl p-6 md:p-8 lg:p-12 shadow-2xl">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl md:rounded-3xl" />
-                      <div className="absolute inset-0 rounded-2xl md:rounded-3xl ring-1 ring-inset ring-white/20" />
-                      
+                    <div className="bg-white p-6 md:p-8 lg:p-12 rounded-2xl border-2 border-black shadow-[8px_8px_0px_0px_rgba(118,162,247,1)]">
                       <div className="relative z-10 space-y-6 md:space-y-8">
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ duration: 0.6, delay: 0.2 }}
-                          className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-primary to-secondary rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6"
+                          className="w-16 h-16 md:w-20 md:h-20 bg-highlight rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                         >
-                          <CheckCircle size={32} className="md:w-10 md:h-10 text-white" />
+                          <CheckCircle size={32} className="md:w-10 md:h-10 text-black" />
                         </motion.div>
                         
                         <motion.h2 
-                          className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-3 md:mb-4"
+                          className="text-2xl md:text-3xl lg:text-4xl font-bold text-black mb-3 md:mb-4 font-heading"
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.6, delay: 0.4 }}
@@ -802,7 +796,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         </motion.h2>
                         
                         <motion.p 
-                          className="text-base md:text-lg lg:text-xl text-zinc-300 mb-6 md:mb-8 px-2"
+                          className="text-base md:text-lg lg:text-xl text-gray-700 mb-6 md:mb-8 px-2"
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.6, delay: 0.6 }}
@@ -818,11 +812,10 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         >
                           <motion.button 
                             onClick={onSignInClick}
-                            className="group relative px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-primary to-secondary rounded-xl md:rounded-2xl text-white font-semibold text-base md:text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/25"
+                            className="bg-secondary text-white font-bold px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-200"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-xl md:rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
                             <span className="relative flex items-center justify-center gap-2">
                               Start Building
                               <ArrowRight size={16} className="md:w-5 md:h-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -830,7 +823,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                           </motion.button>
                           
                           <motion.button 
-                            className="group relative px-6 py-3 md:px-8 md:py-4 bg-white/5 backdrop-blur-xl border border-white/20 rounded-xl md:rounded-2xl text-white font-semibold text-base md:text-lg transition-all duration-300 hover:bg-white/10"
+                            className="bg-highlight text-black font-bold px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-200"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
@@ -857,7 +850,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
               <motion.div
                 key={index}
                 className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all duration-300 ${
-                  index === activeStep ? 'bg-primary w-4 md:w-8' : 'bg-zinc-600'
+                  index === activeStep ? 'bg-highlight w-4 md:w-8' : 'bg-zinc-600'
                 }`}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
