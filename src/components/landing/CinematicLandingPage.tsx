@@ -166,11 +166,16 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
         <motion.div 
           className="absolute inset-0 bg-zinc-950"
           animate={{
+            backgroundColor: activeStep >= 3 ? 
+              "rgba(118,162,247,0.02)" :
+              "rgba(255,106,61,0.02)"
+          }}
+          transition={{ duration: 2, ease: "easeInOut" }}
+          style={{
             background: activeStep >= 3 ? 
               "radial-gradient(ellipse at 30% 70%, rgba(118,162,247,0.05), rgba(0,0,0,0) 70%)" :
               "radial-gradient(ellipse at 70% 30%, rgba(255,106,61,0.05), rgba(0,0,0,0) 70%)"
           }}
-          transition={{ duration: 2, ease: "easeInOut" }}
         >
           {/* Grid pattern overlay */}
           <div className="absolute inset-0 opacity-5">
