@@ -4,10 +4,14 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['DM Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        heading: ['IBM Plex Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         mono: ['SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'Courier New', 'monospace'],
       },
       colors: {
+        primary: '#76a2f7',
+        secondary: '#ff6a3d',
+        highlight: '#f5f7a1',
         zinc: {
           50: '#fafafa',
           100: '#f4f4f5',
@@ -32,6 +36,8 @@ export default {
       boxShadow: {
         'glow': '0 0 20px rgba(99, 102, 241, 0.3)',
         'glow-lg': '0 0 40px rgba(99, 102, 241, 0.4)',
+        'primary-glow': '0 0 20px rgba(118, 162, 247, 0.3)',
+        'primary-glow-lg': '0 0 40px rgba(118, 162, 247, 0.4)',
       },
     },
   },
