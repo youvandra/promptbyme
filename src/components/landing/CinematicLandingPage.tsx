@@ -203,11 +203,9 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
               transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
               whileHover={{ scale: 1.05 }}
             >
-              <img 
-                src="/Logo Promptby.me(1).png" 
-                alt="promptby.me logo" 
-                className="w-6 h-6 md:w-8 md:h-8 object-contain"
-              />
+              <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <Zap className="w-4 h-4 md:w-5 md:h-5 text-white" />
+              </div>
               <h1 className="text-sm md:text-lg font-bold text-black font-heading">
                 promptby.me
               </h1>

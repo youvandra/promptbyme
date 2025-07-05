@@ -172,11 +172,9 @@ export const PublicProfilePage: React.FC = () => {
             </Link>
             
             <div className="flex items-center gap-3">
-              <img 
-                src="/Logo Promptby.me(1).png" 
-                alt="promptby.me logo" 
-                className="w-6 h-6 object-contain"
-              />
+              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <Zap className="w-5 h-5 text-white animate-pulse" />
+              </div>
               <h1 className="text-lg font-semibold">
                 promptby.me
               </h1>
