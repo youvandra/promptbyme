@@ -77,11 +77,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             to="/" 
             className="flex items-center gap-2"
           >
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <Zap className="w-5 h-5 md:w-6 md:h-6 text-white animate-pulse" />
             </div>
             <span className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-indigo-200">
-              Glassmorphic
+              promptby.me
             </span>
           </Link>
 

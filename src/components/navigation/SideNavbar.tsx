@@ -357,11 +357,9 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                       {getInitials(getUserDisplayName())}
                     </div>
                   )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {getUserDisplayName()}
-                  </p>
+                  <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-white" />
+                  </div>
                   <p className="text-xs opacity-70 truncate">
                     {getUserRole()}
                   </p>
