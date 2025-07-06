@@ -289,18 +289,18 @@ export const GalleryPage: React.FC = () => {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-h-screen">
           {/* Mobile Header */}
-          <header className="lg:hidden relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
+          <header className="lg:hidden relative z-10 border-b-2 border-black backdrop-blur-xl">
             <div className="px-4 py-4">
               <div className="flex items-center justify-between">
                 <button
                   data-menu-button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="text-zinc-400 hover:text-white transition-colors p-1"
+                  className="text-black hover:text-black transition-colors p-1"
                 >
                   <Menu size={20} />
                 </button>
                 
-                <h1 className="text-lg font-semibold text-white">
+                <h1 className="text-lg font-semibold text-black">
                   Gallery
                 </h1>
                 
@@ -315,10 +315,10 @@ export const GalleryPage: React.FC = () => {
               {/* Page Header */}
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-white">
+                  <h1 className="text-3xl font-bold text-black">
                     {currentFolderName}
                   </h1>
-                  <p className="text-zinc-400">
+                  <p className="text-black">
                     Manage your AI prompt collection with version control
                   </p>
                 </div>
@@ -332,7 +332,7 @@ export const GalleryPage: React.FC = () => {
                   
                   <Link
                     to="/"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-highlight hover:bg-highlight/80 text-black font-bold rounded-xl border-2 border-black shadow-neo-brutalism transition-all duration-200 neo-brutalism"
                   >
                     <Plus size={16} />
                     <span>New Prompt</span>
@@ -341,36 +341,36 @@ export const GalleryPage: React.FC = () => {
               </div>
 
               {/* Stats */}
-              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-6 mb-8">
+              <div className="bg-white border-2 border-black rounded-[28px] p-6 mb-8 shadow-neo-brutalism">
                 <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8">
                   <div className="flex items-center gap-2">
-                    <FolderOpen className="text-indigo-400" size={18} />
-                    <span className="text-2xl font-bold text-white">{stats.total}</span>
-                    <span className="text-sm text-zinc-400">Total</span>
+                    <FolderOpen className="text-black" size={18} />
+                    <span className="text-2xl font-bold text-black">{stats.total}</span>
+                    <span className="text-sm text-gray-600">Total</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Eye className="text-emerald-400" size={18} />
-                    <span className="text-2xl font-bold text-white">{stats.public}</span>
-                    <span className="text-sm text-zinc-400">Public</span>
+                    <Eye className="text-black" size={18} />
+                    <span className="text-2xl font-bold text-black">{stats.public}</span>
+                    <span className="text-sm text-gray-600">Public</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Lock className="text-amber-400" size={18} />
-                    <span className="text-2xl font-bold text-white">{stats.private}</span>
-                    <span className="text-sm text-zinc-400">Private</span>
+                    <Lock className="text-black" size={18} />
+                    <span className="text-2xl font-bold text-black">{stats.private}</span>
+                    <span className="text-sm text-gray-600">Private</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Users className="text-purple-400" size={18} />
-                    <span className="text-2xl font-bold text-white">{formatNumber(stats.totalViews)}</span>
-                    <span className="text-sm text-zinc-400">Views</span>
+                    <Users className="text-black" size={18} />
+                    <span className="text-2xl font-bold text-black">{formatNumber(stats.totalViews)}</span>
+                    <span className="text-sm text-gray-600">Views</span>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <GitFork className="text-orange-400" size={18} />
-                    <span className="text-2xl font-bold text-white">{formatNumber(stats.totalForks)}</span>
-                    <span className="text-sm text-zinc-400">Forks</span>
+                    <GitFork className="text-black" size={18} />
+                    <span className="text-2xl font-bold text-black">{formatNumber(stats.totalForks)}</span>
+                    <span className="text-sm text-gray-600">Forks</span>
                   </div>
                 </div>
               </div>
@@ -378,13 +378,13 @@ export const GalleryPage: React.FC = () => {
               {/* Filters and Search */}
               <div className="flex flex-col lg:flex-row gap-4 mb-8">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500" size={18} />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600" size={18} />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search prompts..."
-                    className="w-full bg-zinc-900/50 border border-zinc-800/50 rounded-xl pl-10 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+                    className="w-full bg-white border-2 border-black rounded-[28px] pl-10 pr-4 py-3 text-black placeholder-gray-500 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/20 transition-all duration-200 shadow-neo-brutalism-sm"
                   />
                 </div>
 
@@ -407,13 +407,13 @@ export const GalleryPage: React.FC = () => {
                   />
                 </div>
 
-                <div className="flex items-center gap-2 bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-1">
+                <div className="flex items-center gap-2 bg-white border-2 border-black rounded-xl p-1 shadow-neo-brutalism-sm">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`p-2 rounded-lg transition-all duration-200 ${
                       viewMode === 'grid' 
-                        ? 'bg-indigo-600 text-white' 
-                        : 'text-zinc-400 hover:text-white'
+                        ? 'bg-highlight text-black border-2 border-black' 
+                        : 'text-gray-600 hover:text-black'
                     }`}
                   >
                     <Grid size={18} />
@@ -422,8 +422,8 @@ export const GalleryPage: React.FC = () => {
                     onClick={() => setViewMode('list')}
                     className={`p-2 rounded-lg transition-all duration-200 ${
                       viewMode === 'list' 
-                        ? 'bg-indigo-600 text-white' 
-                        : 'text-zinc-400 hover:text-white'
+                        ? 'bg-highlight text-black border-2 border-black' 
+                        : 'text-gray-600 hover:text-black'
                     }`}
                   >
                     <List size={18} />
@@ -469,11 +469,11 @@ export const GalleryPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <FolderOpen className="mx-auto text-zinc-500 mb-4" size={64} />
-                  <h3 className="text-xl font-semibold text-white mb-2">
+                  <FolderOpen className="mx-auto text-gray-600 mb-4" size={64} />
+                  <h3 className="text-xl font-semibold text-black mb-2">
                     {searchQuery || filterAccess !== 'all' || selectedFolderId ? 'No matching prompts' : 'No prompts yet'}
                   </h3>
-                  <p className="text-zinc-400 mb-6">
+                  <p className="text-gray-600 mb-6">
                     {searchQuery || filterAccess !== 'all' || selectedFolderId
                       ? 'Try adjusting your search, filter, or folder selection'
                       : 'Create your first prompt to get started'
@@ -481,7 +481,7 @@ export const GalleryPage: React.FC = () => {
                   </p>
                   <Link
                     to="/"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105 btn-hover"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-highlight hover:bg-highlight/80 text-black font-bold rounded-xl border-2 border-black shadow-neo-brutalism transition-all duration-200 neo-brutalism"
                   >
                     <Plus size={16} />
                     <span>Create First Prompt</span>

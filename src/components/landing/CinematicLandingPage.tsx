@@ -279,12 +279,12 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="text-center w-full"
                   >
-                    <div className="bg-white p-6 md:p-8 lg:p-12 rounded-2xl md:rounded-3xl shadow-[8px_8px_0px_0px_rgba(118,162,247,1)] max-w-2xl mx-auto">
+                    <div className="bg-white p-6 md:p-8 lg:p-12 rounded-2xl md:rounded-3xl border-2 border-black shadow-neo-brutalism max-w-2xl mx-auto">
                       <div className="space-y-6 md:space-y-8">
                         <div className="grid grid-cols-2 gap-4">
                           {features.map((feature, index) => (
                             <div key={index} className="bg-gray-100 p-4 rounded-xl border-2 border-black">
-                              <div className="bg-primary text-white p-2 rounded-lg w-fit mb-2">
+                              <div className="bg-primary text-black p-2 rounded-lg w-fit mb-2 border-2 border-black">
                                 {feature.icon}
                               </div>
                               <h3 className="text-black font-bold text-lg mb-1 font-heading">{feature.title}</h3>
@@ -295,7 +295,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         
                         <motion.button 
                           onClick={scrollToNext}
-                          className="group relative px-6 py-3 md:px-8 md:py-4 bg-secondary text-white font-bold text-base md:text-lg rounded-xl md:rounded-2xl shadow-[6px_6px_0px_0px_rgba(118,162,247,1)] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(118,162,247,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-200 w-full sm:w-auto"
+                          className="group relative px-6 py-3 md:px-8 md:py-4 bg-highlight text-black font-bold text-base md:text-lg rounded-xl md:rounded-2xl shadow-neo-brutalism hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-neo-brutalism-sm active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-200 w-full sm:w-auto border-2 border-black"
                         >
                           <span className="relative flex items-center justify-center gap-2">
                             Enter Playground
@@ -346,8 +346,8 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     <motion.div 
                       className="bg-white p-4 md:p-6 lg:p-8 rounded-xl md:rounded-2xl shadow-[8px_8px_0px_0px_rgba(118,162,247,1)]"
                       animate={{ 
-                        y: Math.sin(Date.now() * 0.001) * 2,
-                        rotateX: scrollProgress * 2
+                        y: Math.sin(Date.now() * 0.001) * 5,
+                        rotateX: scrollProgress * 5
                       }}
                       transition={{ 
                         y: { duration: 3, repeat: Infinity },
@@ -362,7 +362,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                           <span className="text-gray-500 text-xs md:text-sm ml-2 md:ml-4 font-bold">New Prompt</span>
                         </div>
                         
-                        <div className="bg-gray-100 rounded-lg md:rounded-xl p-3 md:p-4 lg:p-6 min-h-[150px] md:min-h-[200px] relative border-2 border-black">
+                        <div className="bg-gray-100 rounded-lg md:rounded-xl p-3 md:p-4 lg:p-6 min-h-[150px] md:min-h-[200px] relative border-2 border-black shadow-neo-brutalism-sm">
                           <div className="text-gray-800 text-sm md:text-base lg:text-lg leading-relaxed">
                             {typedText}
                             <motion.span
@@ -378,14 +378,14 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 md:mt-6 gap-3">
                           <div className="flex flex-wrap items-center gap-2 md:gap-3">
                             <motion.button 
-                              className="bg-primary text-white font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-200 text-xs md:text-sm"
+                              className="bg-highlight text-black font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg shadow-neo-brutalism-sm border-2 border-black hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-200 text-xs md:text-sm"
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
                               Save Prompt
                             </motion.button>
                             <motion.button 
-                              className="bg-secondary text-white font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-200 text-xs md:text-sm"
+                              className="bg-white text-black font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg shadow-neo-brutalism-sm border-2 border-black hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-200 text-xs md:text-sm"
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                             >
@@ -420,7 +420,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     <div className="space-y-4 md:space-y-8">
                       {/* Visibility toggle */}
                       <motion.div 
-                        className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl shadow-[6px_6px_0px_0px_rgba(118,162,247,1)]"
+                        className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl shadow-neo-brutalism border-2 border-black"
                         initial={{ y: 15, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5, ease: "easeOut" }}
@@ -437,9 +437,9 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                                className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg transition-all duration-200 text-xs md:text-sm font-bold border-2 border-black ${
+                                className={`flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-md md:rounded-lg transition-all duration-200 text-xs md:text-sm font-bold border-2 border-black shadow-neo-brutalism-sm ${
                                   option.active 
-                                    ? 'bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]' 
+                                    ? 'bg-highlight text-black' 
                                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                 }`}
                                 whileHover={{ scale: 1.05 }}
@@ -455,13 +455,13 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
 
                       {/* Public preview */}
                       <motion.div 
-                        className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl shadow-[6px_6px_0px_0px_rgba(255,106,61,1)] border-2 border-black transition-all duration-300 group cursor-pointer"
+                        className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl shadow-neo-brutalism border-2 border-black transition-all duration-300 group cursor-pointer"
                         initial={{ y: 15, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
                         whileHover={{ 
                           y: -5, 
-                          shadow: "[3px_3px_0px_0px_rgba(255,106,61,1)]",
+                          shadow: "3px_3px_0px_0px_rgba(0,0,0,1)",
                           translateX: 3,
                           translateY: 8
                         }}
@@ -470,7 +470,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                           <div className="flex items-center justify-between mb-3 md:mb-4">
                             <div className="flex items-center gap-2 md:gap-3">
                               <motion.div 
-                                className="w-8 h-8 md:w-10 md:h-10 bg-secondary rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base"
+                                className="w-8 h-8 md:w-10 md:h-10 bg-secondary rounded-full flex items-center justify-center text-black font-bold text-sm md:text-base border-2 border-black"
                                 whileHover={{ rotate: 360 }}
                                 transition={{ duration: 0.6 }}
                               >
@@ -484,7 +484,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                             <motion.div
                               whileHover={{ rotate: 15, scale: 1.1 }}
                             >
-                              <Share2 size={16} className="md:w-5 md:h-5 text-gray-500 group-hover:text-secondary transition-colors duration-300" />
+                              <Share2 size={16} className="md:w-5 md:h-5 text-gray-500 group-hover:text-black transition-colors duration-300" />
                             </motion.div>
                           </div>
                           
@@ -493,20 +493,20 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                           
                           <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs text-gray-500">
                             <motion.div 
-                              className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg border border-black"
+                              className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg border-2 border-black"
                               whileHover={{ scale: 1.1 }}
                             >
                               <Eye size={10} className="md:w-3 md:h-3" />
                               <span>1.2k views</span>
                             </motion.div>
                             <motion.div 
-                              className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg border border-black"
+                              className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg border-2 border-black"
                               whileHover={{ scale: 1.1 }}
                             >
                               <span>❤️ 89 likes</span>
                             </motion.div>
                             <motion.div 
-                              className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg border border-black"
+                              className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-lg border-2 border-black"
                               whileHover={{ scale: 1.1 }}
                             >
                               <GitBranch size={10} className="md:w-3 md:h-3" />
@@ -539,8 +539,8 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                       <svg className="absolute inset-0 w-full h-full pointer-events-none hidden md:block" style={{ zIndex: 1 }}>
                         <defs>
                           <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#76a2f7" stopOpacity="0.6" />
-                            <stop offset="100%" stopColor="#ff6a3d" stopOpacity="0.6" />
+                            <stop offset="0%" stopColor="#000000" stopOpacity="0.6" />
+                            <stop offset="100%" stopColor="#000000" stopOpacity="0.6" />
                           </linearGradient>
                         </defs>
                         <motion.path
@@ -571,7 +571,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                               rotateX: scrollProgress * 5
                             }}
                             transition={{ duration: 0.5, delay: index * 0.1, ease: "easeOut" }}
-                            className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 group cursor-pointer"
+                            className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border-2 border-black shadow-neo-brutalism hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-neo-brutalism-sm transition-all duration-300 group cursor-pointer"
                             style={{ backgroundColor: index === 0 ? '#76a2f7' : index === 1 ? '#ff6a3d' : '#f5f7a1' }}
                             whileHover={{ 
                               scale: 1.05,
@@ -592,7 +592,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                               <p className="text-black font-medium text-xs md:text-sm mb-3 md:mb-4">{node.desc}</p>
                               
                               <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold bg-white px-2 py-1 rounded-lg border border-black">3 prompts</span>
+                                <span className="text-xs font-bold bg-white px-2 py-1 rounded-lg border-2 border-black">3 prompts</span>
                                 <motion.div 
                                   className="w-3 h-3 rounded-full bg-black"
                                   animate={{ scale: [1, 1.5, 1] }}
@@ -658,9 +658,9 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                           transition={{ duration: 0.5, delay: columnIndex * 0.1, ease: "easeOut" }}
                         >
                           <div className="flex items-center gap-2 mb-3 md:mb-4">
-                            <h3 className="text-base md:text-lg font-bold text-white font-heading">{column.title}</h3>
+                            <h3 className="text-base md:text-lg font-bold text-black font-heading">{column.title}</h3>
                             <motion.span 
-                              className="text-xs font-bold bg-white text-black px-2 py-1 rounded-full border-2 border-black"
+                              className="text-xs font-bold bg-white text-black px-2 py-1 rounded-full border-2 border-black shadow-neo-brutalism-sm"
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
                               transition={{ duration: 0.3, delay: columnIndex * 0.2 + 0.3 }}
@@ -676,9 +676,9 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: columnIndex * 0.1 + itemIndex * 0.1 }}
-                                className={`p-3 md:p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 cursor-pointer group ${
-                                  item.color === 'primary' ? 'bg-primary text-white' :
-                                  item.color === 'secondary' ? 'bg-secondary text-white' :
+                                className={`p-3 md:p-4 rounded-lg border-2 border-black shadow-neo-brutalism-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 cursor-pointer group ${
+                                  item.color === 'primary' ? 'bg-primary text-black' :
+                                  item.color === 'secondary' ? 'bg-secondary text-black' :
                                   'bg-highlight text-black'
                                 }`}
                                 whileHover={{ scale: 1.02 }}
@@ -710,12 +710,12 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
                     className="w-full max-w-5xl"
                   >
-                    <div className="bg-white p-4 md:p-6 lg:p-8 rounded-2xl border-2 border-black shadow-[8px_8px_0px_0px_rgba(118,162,247,1)]">
+                    <div className="bg-white p-4 md:p-6 lg:p-8 rounded-2xl border-2 border-black shadow-neo-brutalism">
                       <div className="relative z-10">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 gap-3">
                           <h3 className="text-xl md:text-2xl font-bold text-black font-heading">Team Members</h3>
                           <motion.button 
-                            className="bg-primary text-white font-bold px-3 py-2 md:px-4 md:py-2 rounded-md md:rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-200 flex items-center gap-2 text-sm md:text-base self-start sm:self-auto"
+                            className="bg-highlight text-black font-bold px-3 py-2 md:px-4 md:py-2 rounded-md md:rounded-lg shadow-neo-brutalism-sm border-2 border-black hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-200 flex items-center gap-2 text-sm md:text-base self-start sm:self-auto"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
@@ -735,7 +735,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                               initial={{ opacity: 0, y: 20 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ duration: 0.4, delay: index * 0.1 }}
-                              className={`p-3 md:p-4 rounded-lg border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 group ${
+                              className={`p-3 md:p-4 rounded-lg border-2 border-black shadow-neo-brutalism-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 group ${
                                 member.color === 'primary' ? 'bg-primary' : 
                                 member.color === 'secondary' ? 'bg-secondary' : 
                                 'bg-highlight'
@@ -778,13 +778,13 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="text-center w-full max-w-4xl"
                   >
-                    <div className="bg-white p-6 md:p-8 lg:p-12 rounded-2xl border-2 border-black shadow-[8px_8px_0px_0px_rgba(118,162,247,1)]">
+                    <div className="bg-white p-6 md:p-8 lg:p-12 rounded-2xl border-2 border-black shadow-neo-brutalism">
                       <div className="relative z-10 space-y-6 md:space-y-8">
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ duration: 0.6, delay: 0.2 }}
-                          className="w-16 h-16 md:w-20 md:h-20 bg-highlight rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                          className="w-16 h-16 md:w-20 md:h-20 bg-highlight rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6 border-2 border-black shadow-neo-brutalism-sm"
                         >
                           <CheckCircle size={32} className="md:w-10 md:h-10 text-black" />
                         </motion.div>
@@ -815,7 +815,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                         >
                           <motion.button 
                             onClick={onSignInClick}
-                            className="bg-secondary text-white font-bold px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-200"
+                            className="bg-highlight text-black font-bold px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl shadow-neo-brutalism border-2 border-black hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-neo-brutalism-sm active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-200"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
@@ -826,7 +826,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                           </motion.button>
                           
                           <motion.button 
-                            className="bg-highlight text-black font-bold px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-200"
+                            className="bg-white text-black font-bold px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl shadow-neo-brutalism border-2 border-black hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-neo-brutalism-sm active:translate-x-[6px] active:translate-y-[6px] active:shadow-none transition-all duration-200"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
@@ -853,7 +853,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
               <motion.div
                 key={index}
                 className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all duration-300 ${
-                  index === activeStep ? 'bg-highlight w-4 md:w-8' : 'bg-zinc-600'
+                  index === activeStep ? 'bg-black w-4 md:w-8' : 'bg-zinc-600'
                 }`}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}

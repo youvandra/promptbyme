@@ -144,7 +144,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: -10 }}
         transition={{ duration: 0.15, ease: "easeOut" }}
-        className="fixed z-[9999] bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/50 rounded-lg shadow-xl py-2 min-w-[180px]"
+        className="fixed z-[9999] bg-white border-2 border-black rounded-lg shadow-neo-brutalism py-2 min-w-[180px]"
         style={{
           left: position.x,
           top: position.y,

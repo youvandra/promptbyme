@@ -50,21 +50,21 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white hover:border-zinc-600/50 transition-all duration-200"
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-white border-2 border-black rounded-[28px] text-black hover:bg-gray-100 transition-all duration-200 shadow-neo-brutalism-sm"
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {selectedOption ? (
             <>
               {selectedOption.icon && <span className="flex-shrink-0">{selectedOption.icon}</span>}
-              <span className="text-sm truncate">{selectedOption.label}</span>
+              <span className="text-sm truncate text-black">{selectedOption.label}</span>
             </>
           ) : (
-            <span className="text-sm text-zinc-400">{placeholder}</span>
+            <span className="text-sm text-gray-600">{placeholder}</span>
           )}
         </div>
         <ChevronDown 
           size={16} 
-          className={`text-zinc-400 transition-transform duration-200 ${
+          className={`text-gray-600 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`} 
         />
@@ -76,7 +76,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-full max-h-64 overflow-y-auto"
+            className="absolute top-full left-0 mt-2 bg-white border-2 border-black rounded-xl shadow-neo-brutalism z-50 w-full max-h-64 overflow-y-auto"
           >
             <div className="p-2">
               {options.map((option) => (
@@ -86,14 +86,14 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   onClick={() => handleSelect(option.value)}
                   className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left transition-colors ${
                     value === option.value 
-                      ? 'bg-indigo-600/20 text-indigo-300' 
-                      : 'text-zinc-300 hover:bg-zinc-800/50 hover:text-white'
+                      ? 'bg-highlight text-black border-2 border-black shadow-neo-brutalism-sm' 
+                      : 'text-black hover:bg-gray-200'
                   }`}
                 >
                   {option.icon && <span className="flex-shrink-0">{option.icon}</span>}
                   <span className="text-sm">{option.label}</span>
                   {value === option.value && (
-                    <Check size={14} className="ml-auto text-indigo-400" />
+                    <Check size={14} className="ml-auto text-black" />
                   )}
                 </button>
               ))}

@@ -418,7 +418,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
   return (
     <>
       <CardWrapper 
-        className="group relative bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-4 sm:p-6 hover:border-zinc-700/50 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20 flex flex-col h-full cursor-pointer select-none"
+        className="group relative bg-f3f3f3 border-2 border-black rounded-[28px] p-4 sm:p-6 transition-all duration-300 transform hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-neo-brutalism-sm flex flex-col h-full cursor-pointer select-none shadow-neo-brutalism"
         onClick={handleCardClick}
         onContextMenu={handleContextMenu}
         {...cardProps}
@@ -428,18 +428,18 @@ export const PromptCard: React.FC<PromptCardProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
             <div className="flex-1 min-w-0">
               {title && (
-                <h3 className="text-base sm:text-lg font-semibold text-white mb-2 line-clamp-2 break-words">
+                <h3 className="text-base sm:text-lg font-semibold text-black mb-2 line-clamp-2 break-words">
                   {title}
                 </h3>
               )}
-              <div className="text-xs sm:text-sm text-zinc-500">
+              <div className="text-xs sm:text-sm text-gray-600">
                 {formattedDate}
               </div>
             </div>
             
             {/* Quick Actions (visible on hover) */}
             {showActions && !enableContextMenu && (
-              <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex-shrink-0 self-start sm:self-auto">
+              <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex-shrink-0 self-start sm:self-auto bg-white p-1 rounded-lg border-2 border-black shadow-neo-brutalism-sm">
                 {/* Version History Button */}
                 {hasMultipleVersions && onViewHistory && (
                   <button
@@ -447,7 +447,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                       e.stopPropagation()
                       onViewHistory(id)
                     }}
-                    className="p-1.5 sm:p-2 text-zinc-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-all duration-200 touch-manipulation"
+                    className="p-1.5 sm:p-2 text-gray-600 hover:text-black hover:bg-gray-200 rounded-lg transition-all duration-200 touch-manipulation"
                     title="View version history"
                   >
                     <History size={14} className="sm:w-4 sm:h-4" />
@@ -459,14 +459,14 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                     e.stopPropagation()
                     if (onView) onView(id)
                   }}
-                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 touch-manipulation"
+                  className="p-1.5 sm:p-2 text-gray-600 hover:text-black hover:bg-gray-200 rounded-lg transition-all duration-200 touch-manipulation"
                   title="View full prompt"
                 >
                   <Maximize2 size={14} className="sm:w-4 sm:h-4" />
                 </button>
                 <button
                   onClick={handleCopyClick}
-                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 touch-manipulation"
+                  className="p-1.5 sm:p-2 text-gray-600 hover:text-black hover:bg-gray-200 rounded-lg transition-all duration-200 touch-manipulation"
                   title="Copy content"
                 >
                   <Copy size={14} className="sm:w-4 sm:h-4" />
@@ -476,7 +476,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                     e.stopPropagation()
                     copyLink()
                   }}
-                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 touch-manipulation"
+                  className="p-1.5 sm:p-2 text-gray-600 hover:text-black hover:bg-gray-200 rounded-lg transition-all duration-200 touch-manipulation"
                   title="Copy link"
                 >
                   <ExternalLink size={14} className="sm:w-4 sm:h-4" />
@@ -487,7 +487,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                       e.stopPropagation()
                       onDelete(id)
                     }}
-                    className="p-1.5 sm:p-2 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200 touch-manipulation"
+                    className="p-1.5 sm:p-2 text-gray-600 hover:text-red-600 hover:bg-red-100 rounded-lg transition-all duration-200 touch-manipulation"
                     title="Delete prompt"
                   >
                     <Trash2 size={14} className="sm:w-4 sm:h-4" />
@@ -498,13 +498,13 @@ export const PromptCard: React.FC<PromptCardProps> = ({
 
             {/* Context Menu Actions (visible on hover for context menu enabled cards) */}
             {showActions && enableContextMenu && (
-              <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex-shrink-0 self-start sm:self-auto">
+              <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 flex-shrink-0 self-start sm:self-auto bg-white p-1 rounded-lg border-2 border-black shadow-neo-brutalism-sm">
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     if (onView) onView(id)
                   }}
-                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                  className="p-1.5 sm:p-2 text-gray-600 hover:text-black hover:bg-gray-200 rounded-lg transition-all duration-200"
                   title="View full prompt"
                 >
                   <Maximize2 size={14} className="sm:w-4 sm:h-4" />
@@ -514,7 +514,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                     e.stopPropagation()
                     handleCopyContent()
                   }}
-                  className="p-1.5 sm:p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                  className="p-1.5 sm:p-2 text-gray-600 hover:text-black hover:bg-gray-200 rounded-lg transition-all duration-200"
                   title="Copy content"
                 >
                   <Copy size={14} className="sm:w-4 sm:h-4" />
@@ -536,19 +536,19 @@ export const PromptCard: React.FC<PromptCardProps> = ({
                   return (
                     <div
                       key={tagId}
-                      className="flex items-center gap-1 px-2 py-1 bg-zinc-800/30 border border-zinc-700/30 rounded text-xs"
+                      className="flex items-center gap-1 px-2 py-1 bg-white border-2 border-black rounded text-xs shadow-neo-brutalism-sm"
                       title={tag.name}
                     >
                       <Icon 
                         size={10} 
                         style={{ color: tag.color }}
                       />
-                      <span className="text-zinc-300 font-medium">{tag.name}</span>
+                      <span className="text-black font-medium">{tag.name}</span>
                     </div>
                   )
                 })}
                 {tags.length > 3 && (
-                  <div className="px-2 py-1 bg-zinc-800/30 border border-zinc-700/30 rounded text-xs text-zinc-400">
+                  <div className="px-2 py-1 bg-white border-2 border-black rounded text-xs text-gray-600 shadow-neo-brutalism-sm">
                     +{tags.length - 3} more
                   </div>
                 )}
@@ -557,7 +557,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
             
             {/* Media Indicator */}
             {hasMedia && (
-              <div className="flex items-center gap-1.5 mb-3 text-xs text-zinc-400">
+              <div className="flex items-center gap-1.5 mb-3 text-xs text-gray-600">
                 <Image size={12} />
                 <span>{mediaUrls!.length} media file{mediaUrls!.length !== 1 ? 's' : ''}</span>
               </div>
@@ -567,13 +567,13 @@ export const PromptCard: React.FC<PromptCardProps> = ({
             {(hasNotes || hasOutputSample) && (
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 {hasNotes && (
-                  <div className="flex items-center gap-1 px-2 py-1 bg-zinc-800/30 border border-zinc-700/30 rounded text-xs text-zinc-400">
+                  <div className="flex items-center gap-1 px-2 py-1 bg-white border-2 border-black rounded text-xs text-gray-600 shadow-neo-brutalism-sm">
                     <FileText size={10} />
                     <span>Notes</span>
                   </div>
                 )}
                 {hasOutputSample && (
-                  <div className="flex items-center gap-1 px-2 py-1 bg-zinc-800/30 border border-zinc-700/30 rounded text-xs text-zinc-400">
+                  <div className="flex items-center gap-1 px-2 py-1 bg-white border-2 border-black rounded text-xs text-gray-600 shadow-neo-brutalism-sm">
                     <Eye size={10} />
                     <span>Output Sample</span>
                   </div>
@@ -582,7 +582,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
             )}
             
             <div 
-              className="text-zinc-300 text-sm sm:text-base leading-relaxed prose prose-invert prose-sm sm:prose-base max-w-none flex-1"
+              className="text-black text-sm sm:text-base leading-relaxed prose prose-sm sm:prose-base max-w-none flex-1"
               dangerouslySetInnerHTML={renderedContent}
               style={{
                 wordBreak: 'break-word',
@@ -591,7 +591,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               }}
             />
             {shouldTruncate && (
-              <div className="mt-2 text-xs text-zinc-500">
+              <div className="mt-2 text-xs text-gray-600">
                 Click to view full content...
               </div>
             )}
@@ -602,11 +602,11 @@ export const PromptCard: React.FC<PromptCardProps> = ({
             {/* Version info */}
             {hasMultipleVersions && (
               <div className="flex items-center gap-2 mb-3 text-xs">
-                <div className="flex items-center gap-1 px-2 py-1 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 rounded">
+                <div className="flex items-center gap-1 px-2 py-1 bg-white border-2 border-black text-black rounded shadow-neo-brutalism-sm">
                   <History size={10} />
                   <span>v{currentVersion}</span>
                 </div>
-                <span className="text-zinc-500">
+                <span className="text-gray-600">
                   {totalVersions} version{totalVersions !== 1 ? 's' : ''}
                 </span>
               </div>
@@ -617,11 +617,11 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               {/* Access indicator */}
               <div className="flex items-center gap-1">
                 {access === 'private' ? (
-                  <Lock size={10} className="sm:w-3 sm:h-3 text-amber-400" />
+                  <Lock size={10} className="sm:w-3 sm:h-3 text-black" />
                 ) : (
-                  <Eye size={10} className="sm:w-3 sm:h-3 text-emerald-400" />
+                  <Eye size={10} className="sm:w-3 sm:h-3 text-black" />
                 )}
-                <span className={`text-xs ${access === 'private' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                <span className={`text-xs font-bold text-black`}>
                   {access}
                 </span>
               </div>
@@ -629,10 +629,10 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               {/* Fork indicator */}
               {isForkedPrompt && (
                 <>
-                  <span className="text-zinc-600 hidden sm:inline">•</span>
+                  <span className="text-gray-600 hidden sm:inline">•</span>
                   <div className="flex items-center gap-1">
-                    <GitFork size={10} className="sm:w-3 sm:h-3 text-orange-400" />
-                    <span className="text-orange-400 text-xs">forked</span>
+                    <GitFork size={10} className="sm:w-3 sm:h-3 text-black" />
+                    <span className="text-black font-bold text-xs">forked</span>
                   </div>
                 </>
               )}
@@ -640,19 +640,19 @@ export const PromptCard: React.FC<PromptCardProps> = ({
               {/* Public prompt stats */}
               {access === 'public' && (
                 <>
-                  <span className="text-zinc-600 hidden sm:inline">•</span>
+                  <span className="text-gray-600 hidden sm:inline">•</span>
                   <div className="flex items-center gap-1">
-                    <Eye size={10} className="sm:w-3 sm:h-3 text-zinc-400" />
-                    <span className="text-zinc-400 text-xs">{formattedViews}</span>
+                    <Eye size={10} className="sm:w-3 sm:h-3 text-black" />
+                    <span className="text-black text-xs">{formattedViews}</span>
                   </div>
                   
                   {/* Fork count - only show for original prompts */}
                   {!isForkedPrompt && forkCount > 0 && (
                     <>
-                      <span className="text-zinc-600 hidden sm:inline">•</span>
+                      <span className="text-gray-600 hidden sm:inline">•</span>
                       <div className="flex items-center gap-1">
-                        <GitFork size={10} className="sm:w-3 sm:h-3 text-zinc-400" />
-                        <span className="text-zinc-400 text-xs">{formattedForks}</span>
+                        <GitFork size={10} className="sm:w-3 sm:h-3 text-black" />
+                        <span className="text-black text-xs">{formattedForks}</span>
                       </div>
                     </>
                   )}
@@ -668,7 +668,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute top-2 right-2 bg-emerald-500 text-white px-2 py-1 rounded text-xs z-50 pointer-events-none"
+            className="absolute top-2 right-2 bg-highlight text-black px-2 py-1 rounded text-xs z-50 pointer-events-none border-2 border-black shadow-neo-brutalism-sm"
           >
             Copied!
           </motion.div>
@@ -676,7 +676,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({
 
         {/* Right-click indicator */}
         {enableContextMenu && (
-          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-50 transition-opacity duration-300 text-xs text-zinc-500 pointer-events-none">
+          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-50 transition-opacity duration-300 text-xs text-gray-600 pointer-events-none">
             Right-click for options
           </div>
         )}

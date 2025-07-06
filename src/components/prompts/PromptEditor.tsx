@@ -247,11 +247,11 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
   return (
     <div className="w-full max-w-4xl mx-auto">
       {/* Main Editor Card */}
-      <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl p-6 sm:p-8 space-y-6">
+      <div className="bg-f3f3f3 border-2 border-black rounded-[28px] p-6 sm:p-8 space-y-6 shadow-neo-brutalism">
         {/* Title and App Tag Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
-            <label className="block text-sm font-medium text-zinc-300 mb-3">
+            <label className="block text-sm font-medium text-black mb-3">
               Title <span className="text-zinc-500">(optional)</span>
             </label>
             <input
@@ -259,12 +259,12 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Give your prompt a descriptive title..."
-              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+              className="w-full bg-white border-2 border-black rounded-[28px] px-4 py-3 text-black placeholder-gray-500 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/20 transition-all duration-200 shadow-neo-brutalism-sm"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-3">
+            <label className="block text-sm font-medium text-black mb-3">
               App Tag <span className="text-zinc-500">(optional)</span>
             </label>
             <TagSelector
@@ -276,14 +276,14 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-zinc-800/50 -mx-8 px-8 pb-2">
+        <div className="border-b-2 border-black -mx-8 px-8 pb-2">
           <div className="flex space-x-4">
             <button
               onClick={() => setActiveTab('content')}
               className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeTab === 'content'
-                  ? 'bg-indigo-600/20 text-indigo-400'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                  ? 'bg-highlight text-black border-2 border-black'
+                  : 'text-gray-600 hover:text-black hover:bg-gray-200'
               }`}
             >
               Content
@@ -292,34 +292,34 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
               onClick={() => setActiveTab('notes')}
               className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
                 activeTab === 'notes'
-                  ? 'bg-indigo-600/20 text-indigo-400'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                  ? 'bg-highlight text-black border-2 border-black'
+                  : 'text-gray-600 hover:text-black hover:bg-gray-200'
               }`}
             >
               Notes
-              {notes && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>}
+              {notes && <div className="w-1.5 h-1.5 rounded-full bg-black"></div>}
             </button>
             <button
               onClick={() => setActiveTab('output')}
               className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
                 activeTab === 'output'
-                  ? 'bg-indigo-600/20 text-indigo-400'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                  ? 'bg-highlight text-black border-2 border-black'
+                  : 'text-gray-600 hover:text-black hover:bg-gray-200'
               }`}
             >
               Output Sample
-              {outputSample && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>}
+              {outputSample && <div className="w-1.5 h-1.5 rounded-full bg-black"></div>}
             </button>
             <button
               onClick={() => setActiveTab('media')}
               className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1 ${
                 activeTab === 'media'
-                  ? 'bg-indigo-600/20 text-indigo-400'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                  ? 'bg-highlight text-black border-2 border-black'
+                  : 'text-gray-600 hover:text-black hover:bg-gray-200'
               }`}
             >
               Media
-              {mediaUrls.length > 0 && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>}
+              {mediaUrls.length > 0 && <div className="w-1.5 h-1.5 rounded-full bg-black"></div>}
             </button>
           </div>
         </div>
@@ -328,7 +328,7 @@ export const PromptEditor: React.FC<PromptEditorProps> = ({
         <div>
           {activeTab === 'content' && (
             <div>
-              <label className="block text-sm font-medium text-zinc-100 mb-3">
+              <label className="block text-sm font-medium text-black mb-3">
                 Prompt Content
               </label>
               <div className="relative">
@@ -342,24 +342,24 @@ Examples:
 • Include {{variables}} for dynamic content
 
 Write clear, specific instructions for the best AI results."
-                  className="w-full min-h-[250px] max-h-[400px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-4 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y font-mono text-sm leading-relaxed"
+                  className="w-full min-h-[250px] max-h-[400px] bg-white border-2 border-black rounded-[28px] px-4 py-4 text-black placeholder-gray-500 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/20 transition-all duration-200 resize-y font-mono text-sm leading-relaxed shadow-neo-brutalism-sm"
                 />
                 
                 {/* Character count */}
-                <div className="absolute bottom-3 right-3 text-xs text-zinc-500 bg-zinc-800/80 backdrop-blur-sm px-2 py-1 rounded">
+                <div className="absolute bottom-3 right-3 text-xs text-black bg-white px-2 py-1 rounded border-2 border-black">
                   {content.length} characters
                 </div>
               </div>
 
               {/* Live preview of variables */}
               {content && content.includes('{{') && (
-                <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 mt-4">
-                  <h4 className="text-sm font-medium text-indigo-300 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-2 bg-indigo-400 rounded-full"></span>
+                <div className="bg-white border-2 border-black rounded-[28px] p-4 mt-4 shadow-neo-brutalism-sm">
+                  <h4 className="text-sm font-medium text-black mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 bg-black rounded-full"></span>
                     Variables detected
                   </h4>
                   <div 
-                    className="text-zinc-200 text-sm leading-relaxed whitespace-pre-wrap"
+                    className="text-black text-sm leading-relaxed whitespace-pre-wrap"
                     dangerouslySetInnerHTML={{ __html: highlightVariables(content.substring(0, 200) + (content.length > 200 ? '...' : '')) }}
                   />
                 </div>
@@ -369,17 +369,17 @@ Write clear, specific instructions for the best AI results."
 
           {activeTab === 'notes' && (
             <div>
-              <label className="block text-sm font-medium text-zinc-100 mb-3 flex items-center gap-2">
-                <FileText size={16} className="text-indigo-400" />
+              <label className="block text-sm font-medium text-black mb-3 flex items-center gap-2">
+                <FileText size={16} className="text-black" />
                 Notes <span className="text-zinc-500">(optional)</span>
               </label>
               <textarea
                 value={notes || ''}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add any additional notes, context, or instructions about this prompt..."
-                className="w-full min-h-[250px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y"
+                className="w-full min-h-[250px] bg-white border-2 border-black rounded-[28px] px-4 py-3 text-black placeholder-gray-500 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/20 transition-all duration-200 resize-y shadow-neo-brutalism-sm"
               />
-              <p className="text-xs text-zinc-500 mt-2">
+              <p className="text-xs text-gray-600 mt-2">
                 Notes are helpful for documenting your thought process, use cases, or any other context that might be useful later.
               </p>
             </div>
@@ -387,17 +387,17 @@ Write clear, specific instructions for the best AI results."
 
           {activeTab === 'output' && (
             <div>
-              <label className="block text-sm font-medium text-zinc-100 mb-3 flex items-center gap-2">
-                <Eye size={16} className="text-indigo-400" />
+              <label className="block text-sm font-medium text-black mb-3 flex items-center gap-2">
+                <Eye size={16} className="text-black" />
                 Output Sample <span className="text-zinc-500">(optional)</span>
               </label>
               <textarea
                 value={outputSample || ''}
                 onChange={(e) => setOutputSample(e.target.value)}
                 placeholder="Provide an example of the expected output from this prompt..."
-                className="w-full min-h-[250px] bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-y"
+                className="w-full min-h-[250px] bg-white border-2 border-black rounded-[28px] px-4 py-3 text-black placeholder-gray-500 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/20 transition-all duration-200 resize-y shadow-neo-brutalism-sm"
               />
-              <p className="text-xs text-zinc-500 mt-2">
+              <p className="text-xs text-gray-600 mt-2">
                 Adding an output sample helps others understand what to expect when using this prompt.
               </p>
             </div>
@@ -405,12 +405,12 @@ Write clear, specific instructions for the best AI results."
 
           {activeTab === 'media' && (
             <div>
-              <label className="block text-sm font-medium text-zinc-100 mb-3 flex items-center gap-2">
-                <Image size={16} className="text-indigo-400" />
+              <label className="block text-sm font-medium text-black mb-3 flex items-center gap-2">
+                <Image size={16} className="text-black" />
                 Media Files <span className="text-zinc-500">(optional)</span>
               </label>
               
-              <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-xl p-4">
+              <div className="bg-white border-2 border-black rounded-[28px] p-4 shadow-neo-brutalism-sm">
                 {/* Upload Button - Centered when no media, small + button when media exists */}
                 {mediaUrls.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8">
@@ -425,11 +425,11 @@ Write clear, specific instructions for the best AI results."
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploadingMedia}
-                      className="flex flex-col items-center gap-3 px-6 py-4 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl transition-all duration-200 mb-3"
+                      className="flex flex-col items-center gap-3 px-6 py-4 bg-highlight text-black border-2 border-black rounded-xl transition-all duration-200 mb-3 shadow-neo-brutalism-sm"
                     >
                       {uploadingMedia ? (
                         <>
-                          <div className="w-6 h-6 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                          <div className="w-6 h-6 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                           <span>Uploading... {uploadProgress}%</span>
                         </>
                       ) : (
@@ -439,13 +439,13 @@ Write clear, specific instructions for the best AI results."
                         </>
                       )}
                     </button>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-gray-600">
                       Supported formats: JPG, PNG, GIF, PDF. Max size: 5MB per file.
                     </p>
                   </div>
                 ) : (
                   <div className="mb-4 flex justify-between items-center">
-                    <p className="text-sm text-zinc-400">
+                    <p className="text-sm text-gray-600">
                       {mediaUrls.length} file{mediaUrls.length !== 1 ? 's' : ''} attached
                     </p>
                     <input
@@ -459,11 +459,11 @@ Write clear, specific instructions for the best AI results."
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploadingMedia}
-                      className="flex items-center gap-2 p-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg transition-all duration-200"
+                      className="flex items-center gap-2 p-2 bg-highlight text-black border-2 border-black rounded-lg transition-all duration-200 shadow-neo-brutalism-sm"
                       title="Add more files"
                     >
                       {uploadingMedia ? (
-                        <div className="w-4 h-4 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                       ) : (
                         <Plus size={16} />
                       )}
@@ -478,7 +478,7 @@ Write clear, specific instructions for the best AI results."
                       <div key={index} className="relative group">
                         {isImageUrl(url) ? (
                           <div 
-                            className="aspect-square bg-zinc-800 rounded-lg overflow-hidden cursor-pointer"
+                            className="aspect-square bg-white border-2 border-black rounded-lg overflow-hidden cursor-pointer shadow-neo-brutalism-sm"
                             onClick={() => handlePreviewMedia(url)}
                           >
                             <img 
@@ -489,11 +489,11 @@ Write clear, specific instructions for the best AI results."
                           </div>
                         ) : (
                           <div 
-                            className="aspect-square bg-zinc-800 rounded-lg flex flex-col items-center justify-center cursor-pointer p-2"
+                            className="aspect-square bg-white border-2 border-black rounded-lg flex flex-col items-center justify-center cursor-pointer p-2 shadow-neo-brutalism-sm"
                             onClick={() => window.open(url, '_blank')}
                           >
-                            <FileText size={24} className="text-zinc-400 mb-2" />
-                            <span className="text-xs text-zinc-400 text-center truncate w-full">
+                            <FileText size={24} className="text-gray-600 mb-2" />
+                            <span className="text-xs text-gray-600 text-center truncate w-full">
                               {getFileNameFromUrl(url)}
                             </span>
                           </div>
@@ -507,7 +507,7 @@ Write clear, specific instructions for the best AI results."
                               e.stopPropagation();
                               downloadMedia(url);
                             }}
-                            className="p-1.5 bg-zinc-800/80 text-zinc-300 rounded-lg hover:bg-zinc-700/80"
+                            className="p-1.5 bg-white text-black rounded-lg hover:bg-gray-200 border-2 border-black"
                             title="Download"
                           >
                             <Download size={12} />
@@ -519,7 +519,7 @@ Write clear, specific instructions for the best AI results."
                               e.stopPropagation();
                               handleRemoveMedia(url);
                             }}
-                            className="p-1.5 bg-red-500/80 text-white rounded-lg hover:bg-red-600/80"
+                            className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 border-2 border-black"
                             title="Remove"
                           >
                             <Trash2 size={12} />
@@ -536,33 +536,33 @@ Write clear, specific instructions for the best AI results."
 
         {/* Change indicator for existing prompts */}
         {hasChanges && promptId && (
-          <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-orange-400 text-sm font-medium mb-1">
+          <div className="bg-white border-2 border-black rounded-[28px] p-4 shadow-neo-brutalism-sm">
+            <div className="flex items-center gap-2 text-black text-sm font-medium mb-1">
               <GitBranch size={14} />
               <span>Changes detected</span>
             </div>
-            <p className="text-xs text-orange-300/80">
+            <p className="text-xs text-gray-600">
               Saving will create a new version of this prompt
             </p>
           </div>
         )}
 
         {/* Bottom Controls Row - Folder, Visibility and Save Button */}
-        <div className="pt-4 border-t border-zinc-800/50">
+        <div className="pt-4 border-t-2 border-black">
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
             {/* Left side - Visibility, Folder and Version History */}
             <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full">
               {/* Visibility Setting */}
               <div className="w-full sm:w-36">
-                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                <label className="block text-sm font-medium text-black mb-2">
                   Visibility
                 </label>
                 <button
                   onClick={() => setAccess(access === 'private' ? 'public' : 'private')}
                   className={`w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-200 text-sm font-medium ${
                     access === 'private'
-                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
-                      : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                      ? 'bg-white border-2 border-black text-black hover:bg-gray-200 shadow-neo-brutalism-sm'
+                      : 'bg-highlight border-2 border-black text-black hover:bg-highlight/80 shadow-neo-brutalism-sm'
                   }`}
                 >
                   {access === 'private' ? (
@@ -577,21 +577,21 @@ Write clear, specific instructions for the best AI results."
                     </>
                   )}
                 </button>
-                <p className="text-xs text-zinc-500 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   {access === 'private' ? 'Only you can see this' : 'Anyone can view & fork'}
                 </p>
               </div>
 
               {/* Folder Selection */}
               <div className="w-full sm:w-36">
-                <label className="block text-sm font-medium text-zinc-300 mb-2">
+                <label className="block text-sm font-medium text-black mb-2">
                   Folder
                 </label>
                 <PromptFolderSelector
                   selectedFolderId={folderId}
                   onFolderSelect={setFolderId}
                 />
-                <p className="text-xs text-zinc-500 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   Organize your prompts
                 </p>
               </div>
@@ -600,17 +600,17 @@ Write clear, specific instructions for the best AI results."
               {/* Version History (if editing existing prompt) */}
               {promptId && isOwner && (
                 <div className="w-full sm:w-36">
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  <label className="block text-sm font-medium text-black mb-2">
                     Versions
                   </label>
                   <button
                     onClick={() => setShowVersionHistory(true)}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 rounded-xl transition-all duration-200 text-sm font-medium"
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-white hover:bg-gray-200 text-black border-2 border-black rounded-xl transition-all duration-200 text-sm font-medium shadow-neo-brutalism-sm"
                   >
                     <History size={16} />
                     <span>History</span>
                   </button>
-                  <p className="text-xs text-zinc-500 mt-1">
+                  <p className="text-xs text-gray-600 mt-1">
                     Track & revert changes
                   </p>
                 </div>
@@ -624,13 +624,13 @@ Write clear, specific instructions for the best AI results."
                 disabled={saving || !content.trim()}
                 className={`w-full flex items-center justify-center gap-3 px-6 py-3 font-semibold rounded-xl transition-all duration-200 text-base ${
                   hasChanges && promptId
-                    ? 'bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-600/25'
-                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25'
-                } disabled:bg-zinc-700 disabled:text-zinc-400 disabled:shadow-none transform hover:scale-[1.02] active:scale-[0.98] disabled:transform-none`}
+                    ? 'bg-highlight hover:bg-highlight/80 text-black border-2 border-black shadow-neo-brutalism'
+                    : 'bg-highlight hover:bg-highlight/80 text-black border-2 border-black shadow-neo-brutalism'
+                } disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-500 disabled:shadow-none transform hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-neo-brutalism-sm active:translate-x-[6px] active:translate-y-[6px] active:shadow-none disabled:transform-none`}
               >
                 {saving ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                     <span>Saving...</span>
                   </>
                 ) : (
@@ -644,7 +644,7 @@ Write clear, specific instructions for the best AI results."
               </button>
               
               {!promptId && (
-                <p className="text-center text-xs text-zinc-500 mt-2">
+                <p className="text-center text-xs text-gray-600 mt-2">
                   Saved to your gallery
                 </p>
               )}
@@ -677,14 +677,14 @@ Write clear, specific instructions for the best AI results."
             >
               <button
                 onClick={() => setShowMediaPreview(false)}
-                className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full z-10"
+                className="absolute top-2 right-2 p-2 bg-white text-black rounded-full z-10 border-2 border-black"
               >
                 <X size={20} />
               </button>
               <img 
                 src={previewUrl} 
                 alt="Media preview" 
-                className="max-w-full max-h-[90vh] object-contain rounded-lg"
+                className="max-w-full max-h-[90vh] object-contain rounded-lg border-2 border-black shadow-neo-brutalism"
               />
             </motion.div>
           </div>

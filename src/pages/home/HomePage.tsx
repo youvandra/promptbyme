@@ -146,16 +146,16 @@ export const HomePage: React.FC = () => {
           {/* Main Content */}
           <main className="relative z-10 flex-1">
             {user ? (
-              <div className="w-full max-w-6xl px-6 mx-auto py-12">
+              <div className="w-full max-w-6xl px-6 mx-auto py-12 bg-primary">
                 {/* Hero Section */}
                 <div className="text-center mb-12">
                   <h2 
-                    className="text-5xl md:text-6xl font-bold mb-6 gradient-text" 
+                    className="text-5xl md:text-6xl font-bold mb-6 text-black" 
                     style={{ lineHeight: 1.5 }}
                   >
                     Design before you prompt
                   </h2>
-                  <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed mb-8">
+                  <p className="text-xl text-black max-w-2xl mx-auto leading-relaxed mb-8">
                     Create, version, and manage your AI prompts with Git-like version control and dynamic variables.
                   </p>
                 </div>

@@ -9,9 +9,9 @@ export default {
         mono: ['SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'Courier New', 'monospace'],
       },
       colors: {
-        primary: '#76a2f7',
-        secondary: '#ff6a3d',
-        highlight: '#f5f7a1',
+        primary: '#76a2f7', // Background page
+        secondary: '#ff6a3d', // Variable color
+        highlight: '#f5f7a1', // Main button color
         zinc: {
           50: '#fafafa',
           100: '#f4f4f5',
@@ -39,6 +39,12 @@ export default {
         'neo-brutalism': '6px 6px 0px 0px rgba(0,0,0,1)',
         'neo-brutalism-sm': '4px 4px 0px 0px rgba(0,0,0,1)',
         'neo-brutalism-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
+        'neo-brutalism': '6px 6px 0px 0px rgba(0,0,0,1)',
+        'neo-brutalism-sm': '4px 4px 0px 0px rgba(0,0,0,1)',
+        'neo-brutalism-lg': '8px 8px 0px 0px rgba(0,0,0,1)',
+      },
+      borderRadius: {
+        'neo': '28px',
       },
     },
   },

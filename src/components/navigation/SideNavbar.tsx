@@ -67,15 +67,15 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
             animate={{ x: 0 }}
             exit={isMobileView ? { x: -280 } : undefined}
             transition={{ duration: 0.2 }}
-            className={`fixed top-0 left-0 bottom-0 w-64 bg-zinc-900/95 backdrop-blur-xl border-r border-zinc-800/50 z-50 flex flex-col`}
+            className={`fixed top-0 left-0 bottom-0 w-64 bg-black border-r-2 border-black z-50 flex flex-col`}
           >
             {/* Logo */}
-            <div className="p-6 border-b border-zinc-800/50">
+            <div className="p-6 border-b-2 border-black">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-white" />
+                <div className="w-8 h-8 bg-highlight rounded-lg flex items-center justify-center border-2 border-black shadow-neo-brutalism-sm">
+                  <Zap className="w-5 h-5 text-black" />
                 </div>
-                <h1 className="text-lg font-semibold text-white">
+                <h1 className="text-lg font-semibold text-white font-heading">
                   promptby.me
                 </h1>
               </div>
@@ -90,8 +90,8 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
                       to={item.path}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                         isActive(item.path)
-                          ? 'bg-indigo-600/20 text-indigo-300'
-                          : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                          ? 'bg-highlight text-black border-2 border-black shadow-neo-brutalism-sm'
+                          : 'text-white hover:text-white hover:bg-gray-900'
                       }`}
                     >
                       {item.icon}
@@ -103,31 +103,31 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
             </nav>
 
             {/* Profile Section - moved to bottom */}
-            <div className="mt-auto px-3 py-4 border-t border-zinc-800/50">
+            <div className="mt-auto px-3 py-4 border-t-2 border-black">
               {user && (
                 <div className="flex flex-col gap-2">
                   <Link
                     to="/profile"
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                       isActive('/profile')
-                        ? 'bg-indigo-600/20 text-indigo-300'
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                        ? 'bg-highlight text-black border-2 border-black shadow-neo-brutalism-sm'
+                        : 'text-white hover:text-white hover:bg-gray-900'
                     }`}
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                      <User className="w-5 h-5 text-white" />
+                    <div className="w-8 h-8 bg-highlight rounded-lg flex items-center justify-center border-2 border-black shadow-neo-brutalism-sm">
+                      <User className="w-5 h-5 text-black" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
+                      <p className="text-sm font-medium truncate text-white">
                         {user.email?.split('@')[0]}
                       </p>
-                      <p className="text-xs text-zinc-400 truncate">{user.email}</p>
+                      <p className="text-xs text-gray-400 truncate">{user.email}</p>
                     </div>
                   </Link>
 
                   <button
                     onClick={() => signOut()}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all duration-200 w-full text-left"
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-white hover:text-white hover:bg-gray-900 transition-all duration-200 w-full text-left"
                   >
                     <LogOut size={20} />
                     <span>Sign Out</span>

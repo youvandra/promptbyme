@@ -8,18 +8,41 @@
   }
 }
 
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  background: #0a0a0a;
-  color: #ffffff;
+  background: #76a2f7;
+  color: #000000;
   overflow-x: hidden;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Neo Brutalism styles */
+.neo-brutalism {
+  border: 2px solid #000;
+  box-shadow: 6px 6px 0px 0px #000;
+  transition: all 0.2s ease;
+}
+
+.neo-brutalism:hover {
+  transform: translate(3px, 3px);
+  box-shadow: 3px 3px 0px 0px #000;
+}
+
+.neo-brutalism:active {
+  transform: translate(6px, 6px);
+  box-shadow: none;
 }
 
 /* Custom scrollbar */
@@ -28,26 +51,26 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f3f3f3;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.5);
 }
 
 /* Prose styles for markdown content */
 .prose {
-  color: #e4e4e7;
+  color: #000000;
   max-width: none;
 }
 
 .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
-  color: #ffffff;
+  color: #000000;
   font-weight: 600;
   margin-top: 1.5em;
   margin-bottom: 0.5em;
@@ -58,51 +81,52 @@ body {
 .prose h3 { font-size: 1.25rem; }
 
 .prose strong {
-  color: #ffffff;
+  color: #000000;
   font-weight: 600;
 }
 
 .prose em {
-  color: #a1a1aa;
+  color: #4b5563;
   font-style: italic;
 }
 
 .prose code {
-  background: rgba(255, 255, 255, 0.05);
-  color: #e4e4e7;
+  background: rgba(0, 0, 0, 0.05);
+  color: #000000;
   padding: 0.125rem 0.375rem;
   border-radius: 0.375rem;
   font-size: 0.875em;
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .prose pre {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f3f3f3;
+  border: 2px solid #000000;
   border-radius: 0.75rem;
   padding: 1rem;
   overflow-x: auto;
   margin: 1rem 0;
+  box-shadow: 4px 4px 0px 0px #000000;
 }
 
 .prose pre code {
   background: transparent;
   padding: 0;
-  color: #e4e4e7;
+  color: #000000;
   border: none;
 }
 
 .prose blockquote {
-  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  border-left: 3px solid rgba(0, 0, 0, 0.5);
   padding-left: 1rem;
   margin-left: 0;
   font-style: italic;
-  color: #a1a1aa;
+  color: #4b5563;
 }
 
 .prose ul, .prose ol {
-  color: #e4e4e7;
+  color: #000000;
   padding-left: 1.5rem;
 }
 
@@ -112,13 +136,13 @@ body {
 
 .prose p {
   margin: 1rem 0;
-  color: #e4e4e7;
+  color: #000000;
 }
 
 /* Selection styles */
 ::selection {
-  background: rgba(118, 162, 247, 0.3);
-  color: #ffffff;
+  background: rgba(118, 162, 247, 0.5);
+  color: #000000;
 }
 
 /* Focus styles */
@@ -143,95 +167,37 @@ input:focus, textarea:focus, button:focus {
 
 /* Button hover effects */
 .btn-hover {
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-hover:hover {
-  transform: translateY(-1px);
+  transform: translate(3px, 3px);
+  box-shadow: 3px 3px 0px 0px #000;
+}
+
+.btn-hover:active {
+  transform: translate(6px, 6px);
+  box-shadow: none;
 }
 
 /* Card hover effects */
 .card-hover {
+  border: 2px solid #000;
+  box-shadow: 6px 6px 0px 0px #000;
   transition: all 0.2s ease;
 }
 
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
-}
-
-/* Glass effect */
-.glass {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  transform: translate(3px, 3px);
+  box-shadow: 3px 3px 0px 0px #000;
 }
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #76a2f7 0%, #ff6a3d 100%);
+  background: linear-gradient(135deg, #000000 0%, #000000 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-/* Liquid Glass Effects */
-.glass-panel {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  position: relative;
-  overflow: hidden;
-}
-
-.glass-panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.05),
-    transparent
-  );
-  transition: left 0.5s ease;
-}
-
-.glass-panel:hover::before {
-  left: 100%;
-}
-
-.glass-button {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  position: relative;
-  overflow: hidden;
-}
-
-.glass-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  transition: left 0.3s ease;
-}
-
-.glass-button:hover::before {
-  left: 100%;
 }
 
 /* Cinematic scroll animations */
@@ -386,25 +352,25 @@ html {
 
 /* Ensure node handles are visible */
 .react-flow__handle {
-  background: rgba(255, 255, 255, 0.8);
-  border: 2px solid rgba(255, 255, 255, 1);
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(0, 0, 0, 1);
   width: 10px;
   height: 10px;
-  box-shadow: 0 0 5px rgba(118, 162, 247, 0.5);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 .react-flow__handle:hover {
-  background: white;
-  box-shadow: 0 0 8px rgba(118, 162, 247, 0.8);
+  background: black;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
 }
 
 /* Make edges more visible */
 .react-flow__edge {
-  filter: drop-shadow(0 0 3px rgba(118, 162, 247, 0.5));
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.5));
 }
 
 .react-flow__edge.selected {
-  filter: drop-shadow(0 0 5px rgba(118, 162, 247, 0.8));
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.8));
 }
 
 .react-flow__edge-path {

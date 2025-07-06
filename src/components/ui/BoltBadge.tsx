@@ -13,7 +13,7 @@ export const BoltBadge: React.FC = () => {
         alt="Powered by Bolt.new"
         className="w-16 h-16 md:w-20 md:h-20 drop-shadow-lg hover:drop-shadow-xl transition-all duration-300"
         style={{
-          filter: 'drop-shadow(0 0 10px rgba(0, 255, 255, 0.3))',
+          filter: 'drop-shadow(0 0 10px rgba(0, 0, 0, 0.5))',
         }}
       />
     </a>

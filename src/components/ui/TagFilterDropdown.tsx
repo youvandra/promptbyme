@@ -61,20 +61,20 @@ export const TagFilterDropdown: React.FC<TagFilterDropdownProps> = ({
       {/* Dropdown trigger */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white hover:border-indigo-500/30 hover:bg-zinc-800 transition-all duration-200"
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-white border-2 border-black rounded-[28px] text-black hover:bg-gray-100 transition-all duration-200 shadow-neo-brutalism-sm"
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Filter size={16} className="text-indigo-400 flex-shrink-0" />
+          <Filter size={16} className="text-black flex-shrink-0" />
           {selectedTagObject ? (
             <div className="flex items-center gap-2">
               <selectedTagObject.icon 
                 size={14} 
                 style={{ color: selectedTagObject.color }}
               />
-              <span className="text-sm truncate">{selectedTagObject.name}</span>
+              <span className="text-sm truncate text-black">{selectedTagObject.name}</span>
             </div>
           ) : (
-            <span className="text-sm text-zinc-400 truncate">{placeholder}</span>
+            <span className="text-sm text-gray-600 truncate">{placeholder}</span>
           )}
         </div>
         
@@ -84,7 +84,7 @@ export const TagFilterDropdown: React.FC<TagFilterDropdownProps> = ({
               e.stopPropagation()
               onTagChange(null)
             }}
-            className="p-1 text-zinc-400 hover:text-white hover:bg-zinc-700/50 rounded-full transition-colors transform hover:scale-110"
+            className="p-1 text-gray-600 hover:text-black hover:bg-gray-200 rounded-full transition-colors transform hover:scale-110"
           >
             <X size={14} />
           </button>
@@ -92,7 +92,7 @@ export const TagFilterDropdown: React.FC<TagFilterDropdownProps> = ({
         
         <ChevronDown 
           size={16} 
-          className={`text-zinc-400 transition-transform duration-200 ${
+          className={`text-gray-600 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`} 
         />
@@ -105,34 +105,34 @@ export const TagFilterDropdown: React.FC<TagFilterDropdownProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 max-h-80 overflow-hidden"
+            className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-black rounded-xl shadow-neo-brutalism z-50 max-h-80 overflow-hidden"
           >
             {/* Search Input */}
-            <div className="p-3 border-b border-zinc-800">
+            <div className="p-3 border-b-2 border-black">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search apps..."
-                className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 text-sm"
+                className="w-full bg-white border-2 border-black rounded-lg px-3 py-2 text-black placeholder-gray-500 focus:outline-none focus:border-black text-sm shadow-neo-brutalism-sm"
                 autoFocus
               />
             </div>
 
             {/* All Apps option */}
-            <div className="p-2 border-b border-zinc-800">
+            <div className="p-2 border-b-2 border-black">
               <button
                 onClick={() => handleTagSelect(null)}
                 className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left transition-colors ${
                   selectedTag === null 
-                    ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30' 
-                    : 'text-zinc-300 hover:bg-zinc-800/50 hover:text-white'
+                    ? 'bg-highlight text-black border-2 border-black shadow-neo-brutalism-sm' 
+                    : 'text-black hover:bg-gray-200'
                 }`}
               >
-                <Filter size={16} className="text-indigo-400" />
+                <Filter size={16} className="text-black" />
                 <span className="text-sm">All Apps</span>
                 {selectedTag === null && (
-                  <Check size={14} className="ml-auto text-indigo-400" />
+                  <Check size={14} className="ml-auto text-black" />
                 )}
               </button>
             </div>
@@ -141,7 +141,7 @@ export const TagFilterDropdown: React.FC<TagFilterDropdownProps> = ({
             <div className="max-h-64 overflow-y-auto">
               {Object.entries(groupedTags).map(([categoryId, category]) => (
                 <div key={categoryId} className="p-2">
-                  <h4 className="text-xs font-medium text-zinc-400 uppercase tracking-wider px-2 py-1 mb-1">
+                  <h4 className="text-xs font-medium text-black uppercase tracking-wider px-2 py-1 mb-1">
                     {category.name}
                   </h4>
                   <div className="space-y-1">
@@ -155,17 +155,17 @@ export const TagFilterDropdown: React.FC<TagFilterDropdownProps> = ({
                           onClick={() => handleTagSelect(tag.id)}
                           className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 ${
                             isSelected
-                              ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
-                              : 'text-zinc-300 hover:bg-zinc-800/50'
+                              ? 'bg-highlight text-black border-2 border-black shadow-neo-brutalism-sm'
+                              : 'text-black hover:bg-gray-200'
                           }`}
                         >
                           <Icon 
                             size={16} 
-                            style={{ color: isSelected ? '#a5b4fc' : tag.color }}
+                            style={{ color: isSelected ? '#000000' : tag.color }}
                           />
                           <span className="text-sm font-medium">{tag.name}</span>
                           {isSelected && (
-                            <Check size={14} className="ml-auto text-indigo-400" />
+                            <Check size={14} className="ml-auto text-black" />
                           )}
                         </button>
                       )
@@ -175,7 +175,7 @@ export const TagFilterDropdown: React.FC<TagFilterDropdownProps> = ({
               ))}
               
               {Object.keys(groupedTags).length === 0 && (
-                <div className="p-4 text-center text-zinc-500 text-sm">
+                <div className="p-4 text-center text-gray-600 text-sm">
                   No apps found matching "{searchQuery}"
                 </div>
               )}

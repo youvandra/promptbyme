@@ -86,29 +86,29 @@ export const FolderModal: React.FC<FolderModalProps> = ({
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       
       <motion.div 
-        className="relative bg-zinc-900/95 backdrop-blur-xl border border-zinc-800/50 rounded-2xl w-full max-w-md"
+        className="relative bg-f3f3f3 border-2 border-black rounded-[28px] w-full max-w-md shadow-neo-brutalism"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.2 }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-zinc-800/50">
+        <div className="flex items-center justify-between p-6 border-b-2 border-black">
           <div className="flex items-center gap-3">
             <div 
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              className="w-8 h-8 rounded-lg flex items-center justify-center border-2 border-black shadow-neo-brutalism-sm"
               style={{ backgroundColor: `${color}20`, color }}
             >
               <Folder size={18} />
             </div>
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-lg font-semibold text-black">
               {folder ? 'Edit Folder' : 'Create Folder'}
             </h2>
           </div>
           
           <button
             onClick={onClose}
-            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+            className="p-2 text-gray-600 hover:text-black hover:bg-gray-200 rounded-lg transition-all duration-200"
           >
             <X size={20} />
           </button>
@@ -118,7 +118,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({
         <div className="p-6 space-y-6">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
+            <label className="block text-sm font-medium text-black mb-2">
               Folder Name *
             </label>
             <input
@@ -126,14 +126,14 @@ export const FolderModal: React.FC<FolderModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter folder name"
-              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200"
+              className="w-full bg-white border-2 border-black rounded-[28px] px-4 py-3 text-black placeholder-gray-500 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/20 transition-all duration-200 shadow-neo-brutalism-sm"
               autoFocus
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
+            <label className="block text-sm font-medium text-black mb-2">
               Description
             </label>
             <textarea
@@ -141,13 +141,13 @@ export const FolderModal: React.FC<FolderModalProps> = ({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Optional description"
               rows={3}
-              className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 resize-none"
+              className="w-full bg-white border-2 border-black rounded-[28px] px-4 py-3 text-black placeholder-gray-500 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/20 transition-all duration-200 resize-none shadow-neo-brutalism-sm"
             />
           </div>
 
           {/* Color */}
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-3">
+            <label className="block text-sm font-medium text-black mb-3">
               <div className="flex items-center gap-2">
                 <Palette size={16} />
                 Color
@@ -160,7 +160,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({
                   onClick={() => setColor(folderColor)}
                   className={`w-10 h-10 rounded-lg transition-all duration-200 ${
                     color === folderColor 
-                      ? 'ring-2 ring-white ring-offset-2 ring-offset-zinc-900 scale-110' 
+                      ? 'ring-2 ring-black ring-offset-2 ring-offset-f3f3f3 scale-110 border-2 border-black' 
                       : 'hover:scale-105'
                   }`}
                   style={{ backgroundColor: folderColor }}
@@ -171,21 +171,21 @@ export const FolderModal: React.FC<FolderModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800/50">
+        <div className="flex items-center justify-end gap-3 p-6 border-t-2 border-black">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
+            className="px-4 py-2 text-gray-600 hover:text-black transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!name.trim() || saving}
-            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-zinc-700 disabled:text-zinc-400 text-white font-medium rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-6 py-2.5 bg-highlight hover:bg-highlight/80 disabled:bg-gray-300 disabled:text-gray-500 text-black font-bold rounded-xl border-2 border-black shadow-neo-brutalism transition-all duration-200 disabled:cursor-not-allowed neo-brutalism"
           >
             {saving ? (
               <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                 <span>Saving...</span>
               </>
             ) : (

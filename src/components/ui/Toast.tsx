@@ -30,14 +30,14 @@ export const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
     >
       <div className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg backdrop-blur-xl text-sm font-medium ${
         type === 'success' 
-          ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 shadow-emerald-500/10'
-          : 'bg-red-500/20 border border-red-500/30 text-red-400 shadow-red-500/10'
+          ? 'bg-white border-2 border-black text-black shadow-neo-brutalism-sm'
+          : 'bg-white border-2 border-black text-black shadow-neo-brutalism-sm'
       }`}>
         {type === 'success' ? <Check size={16} /> : <X size={16} />}
         <span>{message}</span>
         <button 
           onClick={onClose}
-          className="ml-2 p-1 rounded-full hover:bg-white/10 transition-colors"
+          className="ml-2 p-1 rounded-full hover:bg-gray-200 transition-colors"
         >
           <X size={12} />
         </button>
