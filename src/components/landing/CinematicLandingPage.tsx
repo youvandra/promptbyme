@@ -823,7 +823,7 @@ export const CinematicLandingPage: React.FC<CinematicLandingPageProps> = ({ onSi
                           </motion.button>
                           
                           <motion.a 
-                            href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID"
+                            href="https://www.youtube.com/watch?v=Eh86aOA0ELI"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="group relative inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 bg-white/5 backdrop-blur-xl border border-white/20 rounded-xl md:rounded-2xl text-white font-semibold text-base md:text-lg transition-all duration-300 hover:bg-white/10"
