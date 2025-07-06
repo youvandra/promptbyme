@@ -7,7 +7,8 @@ import {
   Layers, 
   User, 
   Zap,
-  Code
+  Code,
+  LogOut
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../store/authStore'
@@ -38,7 +39,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
     { path: '/prompt-flow', label: 'Prompt Flow', icon: <Zap size={20} /> },
     { path: '/project-space', label: 'Project Space', icon: <Layers size={20} /> },
     { path: '/api', label: 'API', icon: <Code size={20} /> },
-    { path: '/profile', label: 'Profile', icon: <User size={20} /> }
+    // 🚫 Removed Profile from navItems
   ]
 
   const isActive = (path: string) => {
@@ -81,7 +82,7 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 py-6 px-3 overflow-y-auto">
+            <nav className="py-6 px-3 overflow-y-auto">
               <ul className="space-y-1">
                 {navItems.map((item) => (
                   <li key={item.path}>
@@ -101,40 +102,39 @@ export const SideNavbar: React.FC<SideNavbarProps> = ({ isOpen, onToggle }) => {
               </ul>
             </nav>
 
-
-            {/* Profile Bar */}
-            {user && (
-              <div className="mt-auto p-4 border-t border-zinc-800/50 bg-zinc-900/80">
+            {/* Profile Section - moved to bottom */}
+            <div className="mt-auto px-3 py-4 border-t border-zinc-800/50">
+              {user && (
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-medium text-sm">
-                        {user.email?.charAt(0).toUpperCase() || 'U'}
-                      </span>
+                  <Link
+                    to="/profile"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
+                      isActive('/profile')
+                        ? 'bg-indigo-600/20 text-indigo-300'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                    }`}
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{user.email}</p>
+                      <p className="text-sm font-medium truncate">
+                        {user.email?.split('@')[0]}
+                      </p>
+                      <p className="text-xs text-zinc-400 truncate">{user.email}</p>
                     </div>
-                  </div>
+                  </Link>
+
                   <button
                     onClick={() => signOut()}
-                    className="w-full mt-2 px-3 py-2 bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-lg text-sm transition-colors text-center"
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/50 transition-all duration-200 w-full text-left"
                   >
-                    Sign out
+                    <LogOut size={20} />
+                    <span>Sign Out</span>
                   </button>
                 </div>
-              </div>
-            )}
-
-            {/* Mobile close button */}
-            {isMobileView && (
-              <button
-                onClick={onToggle}
-                className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-colors lg:hidden"
-              >
-                Close
-              </button>
-            )}
+              )}
+            </div>
           </motion.aside>
         )}
       </AnimatePresence>
