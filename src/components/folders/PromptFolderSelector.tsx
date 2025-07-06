@@ -92,12 +92,12 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
           onClick={() => handleFolderSelect(folder.id)}
         >
           {hasChildren && (
-            <Folder size={16} className="text-gray-600" />
-            <span className="text-sm text-gray-600">Select</span>
+            <button
+              onClick={(e) => {
                 e.stopPropagation()
                 toggleFolder(folder.id)
               }}
-            className={`text-gray-600 transition-transform duration-200 ${
+              className={`text-gray-600 transition-transform duration-200`}
             >
               {isExpanded ? (
                 <ChevronDown size={12} />
@@ -111,7 +111,7 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
             className="w-3 h-3 flex-shrink-0"
             style={{ color: folder.color }}
           >
-            className="absolute top-full left-0 mt-2 bg-white border-2 border-black rounded-xl shadow-neo-brutalism z-50 w-64 max-h-64 overflow-y-auto"
+            <Folder size={16} className="text-gray-600" />
           </div>
           
           <span className="text-sm truncate">{folder.name}</span>
@@ -121,8 +121,8 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
           {isExpanded && hasChildren && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-                <Folder size={16} className="text-gray-600" />
-                <span className="text-sm text-black">No folder</span>
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
@@ -130,7 +130,7 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
-                className="flex items-center gap-2 px-3 py-2 mt-2 border-t-2 border-black rounded-lg cursor-pointer transition-colors hover:bg-gray-200 text-black"
+      </div>
     )
   }
 
@@ -143,7 +143,7 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
         <div className="flex items-center gap-2">
           {selectedFolder ? (
             <>
-            className="flex items-center gap-2 px-4 py-3 bg-white border-2 border-black rounded-[28px] text-sm w-full shadow-neo-brutalism-sm"
+              <div
                 className="w-4 h-4 flex-shrink-0"
                 style={{ color: selectedFolder.color }}
               >
@@ -160,7 +160,7 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
         </div>
         <ChevronDown 
           size={16} 
-          className={`text-zinc-400 transition-transform duration-200 ${
+          className={\`text-zinc-400 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`} 
         />
@@ -175,27 +175,24 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
             className="absolute top-full left-0 mt-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-64 max-h-64 overflow-y-auto"
           >
             <div className="p-2">
-              {/* None option */}
               <div
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:bg-zinc-800/50 ${
+                className={\`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:bg-zinc-800/50 ${
                   selectedFolderId === null ? 'bg-indigo-600/20 text-indigo-300' : 'text-zinc-300'
                 }`}
                 onClick={() => handleFolderSelect(null)}
-            <span className="text-black font-medium truncate">{selectedFolder.name}</span>
+              >
                 <Folder size={16} className="text-zinc-400" />
                 <span className="text-sm">No folder</span>
               </div>
 
-              {/* Folder tree */}
               {folderTree.map(folder => renderFolder(folder))}
               
-              {/* New Folder option */}
               <div
-                className="p-1 hover:bg-gray-200 rounded transition-colors"
+                className="flex items-center gap-2 px-3 py-2 mt-2 border-t border-zinc-700 rounded-lg cursor-pointer transition-colors hover:bg-zinc-800/50 text-zinc-300"
                 onClick={handleNewFolderClick}
               >
                 <FolderPlus size={16} />
-                <X size={14} className="text-gray-600 hover:text-black" />
+                <span className="text-sm">New Folder</span>
               </div>
             </div>
           </motion.div>
@@ -203,4 +200,4 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
       </AnimatePresence>
     </div>
   )
-          className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-white border-2 border-black rounded-[28px] text-black hover:bg-gray-100 transition-all duration-200 shadow-neo-brutalism-sm"
+}
