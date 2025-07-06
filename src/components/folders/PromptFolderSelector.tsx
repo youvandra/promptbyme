@@ -159,11 +159,11 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
           )}
         </div>
         <ChevronDown 
-            size={16} 
-            className={`text-zinc-400 transition-transform duration-200 ${
-              isOpen ? 'rotate-180' : ''
-            }`} 
-          />
+          size={16} 
+          className={`text-zinc-400 transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : ''
+          }`} 
+        />
 
       </button>
 
@@ -177,11 +177,11 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
           >
             <div className="p-2">
               <div
-                className={\`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:bg-zinc-800/50 ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors hover:bg-zinc-800/50 ${
                   selectedFolderId === null ? 'bg-indigo-600/20 text-indigo-300' : 'text-zinc-300'
                 }`}
-                onClick={() => handleFolderSelect(null)}
               >
+
                 <Folder size={16} className="text-zinc-400" />
                 <span className="text-sm">No folder</span>
               </div>
