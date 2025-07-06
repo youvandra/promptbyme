@@ -159,11 +159,12 @@ export const PromptFolderSelector: React.FC<PromptFolderSelectorProps> = ({
           )}
         </div>
         <ChevronDown 
-          size={16} 
-          className={\`text-zinc-400 transition-transform duration-200 ${
-            isOpen ? 'rotate-180' : ''
-          }`} 
-        />
+            size={16} 
+            className={`text-zinc-400 transition-transform duration-200 ${
+              isOpen ? 'rotate-180' : ''
+            }`} 
+          />
+
       </button>
 
       <AnimatePresence>
