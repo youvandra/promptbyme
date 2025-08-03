@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Menu, Zap, Plus } from 'lucide-react'
+import { Menu, Zap, Plus, ArrowRight } from 'lucide-react'
 import { PromptEditor } from '../../components/prompts/PromptEditor'
 import { AuthModal } from '../../components/auth/AuthModal'
 import { Toast } from '../../components/ui/Toast'
 import { BoltBadge } from '../../components/ui/BoltBadge'
 import { SideNavbar } from '../../components/navigation/SideNavbar'
-import { CinematicLandingPage } from '../../components/landing/CinematicLandingPage'
 import { useAuthStore } from '../../store/authStore'
 import { usePromptStore } from '../../store/promptStore'
 import { useFolderStore } from '../../store/folderStore'
@@ -14,6 +13,7 @@ import { useToast } from '../../hooks/useToast'
 export const HomePage: React.FC = () => {
   const [promptEditorKey, setPromptEditorKey] = useState(0)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showPromptEditor, setShowPromptEditor] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { toast, showToast, hideToast } = useToast()
   
@@ -40,6 +40,14 @@ export const HomePage: React.FC = () => {
     }
   }, [user, fetchFolders, subscribeToUserPrompts])
 
+  const handleGetStarted = () => {
+    if (!user) {
+      setShowAuthModal(true)
+    } else {
+      setShowPromptEditor(true)
+    }
+  }
+
   const handleCreatePrompt = async (
     title: string, 
     content: string, 
@@ -50,11 +58,6 @@ export const HomePage: React.FC = () => {
     outputSample?: string | null,
     mediaUrls?: string[] | null
   ) => {
-    if (!user) {
-      setShowAuthModal(true)
-      return
-    }
-
     try {
       const promptData = {
         user_id: user.id,
@@ -80,8 +83,6 @@ export const HomePage: React.FC = () => {
   }
 
   const handleCreateVersion = async (title: string, content: string, commitMessage: string) => {
-    if (!user) return
-
     try {
       // This would be called when editing an existing prompt
       // For now, we'll just show a success message since we don't have a specific prompt ID
@@ -107,14 +108,14 @@ export const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-zinc-950 text-white relative">
       {/* Layout Container */}
-      <div className={`flex min-h-screen ${user ? 'lg:pl-64' : ''}`}>
-        {/* Side Navbar - Only shows when user is logged in */}
-        {user && <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />}
+      <div className={`flex min-h-screen ${(user && showPromptEditor) ? 'lg:pl-64' : ''}`}>
+        {/* Side Navbar - Only shows when user is logged in and wants to create prompt */}
+        {user && showPromptEditor && <SideNavbar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />}
         
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-h-screen">
-          {/* Mobile Header for logged users */}
-          {user && (
+          {/* Mobile Header for logged users with prompt editor */}
+          {user && showPromptEditor && (
             <header className="lg:hidden relative z-10 border-b border-zinc-800/50 backdrop-blur-xl">
               <div className="px-4 py-4">
                 <div className="flex items-center justify-between">
@@ -145,7 +146,7 @@ export const HomePage: React.FC = () => {
 
           {/* Main Content */}
           <main className="relative z-10 flex-1">
-            {user ? (
+            {user && showPromptEditor ? (
               <div className="w-full max-w-6xl px-6 mx-auto py-12">
                 {/* Hero Section */}
                 <div className="text-center mb-12">
@@ -168,8 +169,66 @@ export const HomePage: React.FC = () => {
                 />
               </div>
             ) : (
-              /* Cinematic Landing Page */
-              <CinematicLandingPage onSignInClick={() => setShowAuthModal(true)} />
+              /* Simple Landing Page */
+              <div className="min-h-screen flex items-center justify-center px-4">
+                <div className="max-w-4xl mx-auto text-center">
+                  {/* Header with logo and sign in */}
+                  <div className="absolute top-0 left-0 right-0 p-6">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src="/Logo Promptby.me(1).png" 
+                          alt="promptby.me logo" 
+                          className="w-8 h-8 object-contain"
+                        />
+                        <h1 className="text-xl font-semibold text-white">
+                          promptby.me
+                        </h1>
+                      </div>
+                      
+                      <button
+                        onClick={() => setShowAuthModal(true)}
+                        className="px-6 py-2 bg-white/5 backdrop-blur-xl border border-white/10 hover:border-white/20 text-white font-medium rounded-xl transition-all duration-300 hover:bg-white/10"
+                      >
+                        Sign in
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Main content */}
+                  <div className="space-y-8">
+                    <div>
+                      <h1 className="text-6xl md:text-8xl font-bold text-white mb-6 leading-tight">
+                        Design before
+                        <span className="block bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                          you prompt
+                        </span>
+                      </h1>
+                      
+                      <p className="text-xl md:text-2xl text-zinc-300 leading-relaxed max-w-3xl mx-auto mb-12">
+                        Map your next build with structured, reusable prompts.
+                      </p>
+                    </div>
+
+                    <div className="space-y-6">
+                      <button
+                        onClick={handleGetStarted}
+                        className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white font-semibold text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/25"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
+                        <span className="relative flex items-center justify-center gap-2">
+                          Start Creating
+                          <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform duration-300" />
+                        </span>
+                      </button>
+                      
+                      <p className="text-zinc-400 text-sm">
+                        No account needed to get started
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </main>
         </div>
